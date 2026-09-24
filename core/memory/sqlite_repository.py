@@ -115,20 +115,51 @@ def _escape_like(text: str) -> str:
 class SqliteMemoryRepository:
     """SQLite implementation of :class:`MemoryRepository`."""
 
-    def __init__(self, path: str | Path | None = None) -> None:
-        self._path = str(path) if path is not None else str(default_db_path())
-        if self._path != ":memory:":
-            Path(self._path).parent.mkdir(parents=True, exist_ok=True)
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        *,
+        connection: sqlite3.Connection | None = None,
+        auto_commit: bool = True,
+    ) -> None:
+        """Create a SQLite memory repository.
+
+        ``connection`` lets a caller share an existing sqlite3 connection (used
+        by the ingestion pipeline so a memory write can share one transaction
+        with the ingestion receipt write). When ``auto_commit`` is False the
+        repository never commits; the caller owns the transaction.
+        """
         self._lock = threading.Lock()
-        self._conn = sqlite3.connect(self._path, check_same_thread=False)
+        if connection is not None:
+            self._conn = connection
+            self._path = "<shared>"
+            self._owns_connection = False
+        else:
+            self._path = str(path) if path is not None else str(default_db_path())
+            if self._path != ":memory:":
+                Path(self._path).parent.mkdir(parents=True, exist_ok=True)
+            self._conn = sqlite3.connect(self._path, check_same_thread=False)
+            self._owns_connection = True
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA foreign_keys=ON")
+        self._auto_commit = auto_commit
         self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA foreign_keys=ON")
         with self._lock:
             self._conn.executescript(_SCHEMA)
+            if self._owns_connection:
+                self._conn.commit()
+
+    @property
+    def sqlite_connection(self) -> sqlite3.Connection:
+        return self._conn
+
+    def _commit(self) -> None:
+        if self._auto_commit:
             self._conn.commit()
 
     def close(self) -> None:
+        if not self._owns_connection:
+            return
         with self._lock:
             self._conn.close()
 
@@ -206,7 +237,7 @@ class SqliteMemoryRepository:
                     f"memory_id {memory.memory_id!r} already exists"
                 ) from exc
             self._replace_people(cur, memory)
-            self._conn.commit()
+            self._commit()
         return memory
 
     def get(self, user_id: str, memory_id: str) -> Memory | None:
@@ -251,7 +282,7 @@ class SqliteMemoryRepository:
             if cur.rowcount == 0:
                 raise MemoryNotFoundError(f"memory {memory.memory_id!r} not found")
             self._replace_people(cur, memory)
-            self._conn.commit()
+            self._commit()
         return memory
 
     def delete(self, user_id: str, memory_id: str) -> bool:
@@ -261,7 +292,7 @@ class SqliteMemoryRepository:
                 "DELETE FROM memories WHERE user_id = ? AND memory_id = ?",
                 (user_id, memory_id),
             )
-            self._conn.commit()
+            self._commit()
         return cur.rowcount > 0
 
     def search(self, query: MemoryQuery) -> list[Memory]:

@@ -30,21 +30,27 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
-core/                 Phase 1 — Core Brain implementation
+core/                 Phases 1–2 — Core Brain implementation
   memory/             Memory Engine (deterministic lifecycle, SQLite storage)
+  ingestion/          Ingestion pipeline (validation, dedup, receipts, mapping)
 docs/memory_engine.md Memory Engine design
-tests/                contract + engine validation (stdlib unittest)
+docs/ingestion.md     Ingestion pipeline design
+tests/                contract + engine + ingestion validation (stdlib unittest)
 pyproject.toml        package metadata (one dependency: pydantic)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
 ## Current development phase
 
-Phase 1 — **Memory Engine** (in progress). Built: deterministic classification,
-confidence, importance baseline, temporal validity, conflict resolution
-(supersession), SQLite persistence behind a repository port, filtered
-retrieval, user isolation. Not built yet: LLM integration, embeddings/vector
-search, reasoning, context, feedback/learning, frontend, connectors.
+Phase 2 — **Ingestion pipeline** (in progress). Built: Phase 1 Memory Engine
+(deterministic classification, confidence, importance baseline, temporal
+validity, conflict resolution, SQLite persistence behind repository ports,
+filtered retrieval, user isolation) plus the ingestion pipeline: schema +
+business validation, deterministic dedup (idempotency/event id, per-user
+receipts that survive restart), event-type→memory mappings with provenance,
+and one-transaction atomicity between memories and receipts. Not built yet:
+LLM integration, embeddings/vector search, reasoning, context,
+feedback/learning, frontend, connectors.
 
 ## How contracts are used
 

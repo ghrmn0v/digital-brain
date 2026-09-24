@@ -13,7 +13,7 @@ from ..common.envelope import EventEnvelope
 from ..common.ids import PersonId
 from ..common.types import UtcDateTime
 
-_SourceEventType = Annotated[str, Field(pattern=r"^source\.[a-z0-9]+(\.[a-z0-9]+)+$")]
+_SourceEventType = Annotated[str, Field(pattern=r"^source\.[a-z0-9_]+(\.[a-z0-9_]+)+$")]
 
 
 class Subject(BaseModel):
