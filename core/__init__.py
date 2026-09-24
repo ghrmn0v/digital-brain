@@ -2,8 +2,8 @@
 
 Phase 1 provides the deterministic Memory Engine, Phase 2 the ingestion
 pipeline, Phase 3 the LLM Gateway + Understanding, Phase 4 the Context Engine +
-semantic search abstraction. No embeddings yet; lexical search is the
-deterministic MVP.
+semantic search abstraction, Phase 5 People Intelligence (people, relationships,
+preferences). No embeddings yet; lexical search is the deterministic MVP.
 """
 
 from .context import (
@@ -49,6 +49,15 @@ from .memory import (
     SqliteMemoryRepository,
     TemporalValidityError,
 )
+from .people import (
+    DeveloperPreferences,
+    PeopleIntelligence,
+    PeopleLimits,
+    PeopleSummary,
+    PersonProfile,
+    Preference,
+    PreferenceDomain,
+)
 from .understanding import (
     DeveloperAnalysis,
     DeveloperContext,
@@ -73,6 +82,7 @@ __all__ = [
     "ContextValidationError",
     "DeveloperAnalysis",
     "DeveloperContext",
+    "DeveloperPreferences",
     "DeterministicEventProcessor",
     "EventProcessingError",
     "EventProcessor",
@@ -101,6 +111,12 @@ __all__ = [
     "MemoryService",
     "MemoryStatusFilter",
     "MemoryValidationError",
+    "PeopleIntelligence",
+    "PeopleLimits",
+    "PeopleSummary",
+    "PersonProfile",
+    "Preference",
+    "PreferenceDomain",
     "RankConfig",
     "Ranker",
     "ReceiptStorageError",

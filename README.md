@@ -30,27 +30,31 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
-core/                 Phases 1–4 — Core Brain implementation
+core/                 Phases 1–5 — Core Brain implementation
   memory/             Memory Engine (deterministic lifecycle, SQLite storage)
   ingestion/          Ingestion pipeline (validation, dedup, receipts, mapping)
   understanding/      LLM Gateway + Understanding (provider abstraction,
                       structured UnderstandingResult, DeveloperContext analysis)
   context/            Context Engine + Semantic Search (deterministic ranking,
                       bounded Context for Reasoning, user isolation)
+  people/             People Intelligence (identification, relationships,
+                      interaction refs, preferences, developer preferences)
 docs/memory_engine.md Memory Engine design
 docs/ingestion.md     Ingestion pipeline design
 docs/understanding.md Understanding / LLM gateway design
 docs/context.md       Context Engine / semantic search design
+docs/people.md        People Intelligence / preferences design
 docs/developer-mode/  Developer Mode hackathon spec + live doc
 PHASES.md             phase tracker (0–7)
-tests/                contract + engine + ingestion + understanding + context tests
+tests/                contract + engine + ingestion + understanding + context
+                      + people tests
 pyproject.toml        package metadata (one dependency: pydantic)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
 ## Current development phase
 
-Phase 4 — **Context Engine + Semantic Search** (complete). Built so far:
+Phase 5 — **People Intelligence** (complete). Built so far:
 
 - Memory Engine (deterministic lifecycle, SQLite, user isolation).
 - Ingestion pipeline (validation, dedup, receipts, deterministic mappings,
@@ -64,9 +68,15 @@ Phase 4 — **Context Engine + Semantic Search** (complete). Built so far:
   (`ContextEngine.build_context`) with bug-finding/decision/preference lanes,
   strict user isolation + anti-spoofing, structured degraded/current-only
   failure behavior.
+- People: `PeopleIntelligence` (identification by name/alias tokens,
+  relationship facts, interaction-history references, per-person profiles,
+  mention-ranked people lists) + preferences (user and developer preferences,
+  deterministic domain classification, `record_preference` through the Memory
+  Engine with conflict-based supersession, per-domain bounds), powerful user
+  isolation, all traceable to memory ids — no second database.
 
-Not built yet: people/relationships, reasoning/intent/bug detection, action
-planning, feedback/learning, embeddings/vector store, connectors, frontend.
+Not built yet: reasoning/intent/bug detection, action planning, feedback/
+learning, embeddings/vector store, connectors, frontend.
 
 ## Developer Mode (hackathon)
 
