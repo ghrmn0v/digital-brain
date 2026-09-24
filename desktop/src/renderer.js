@@ -130,6 +130,23 @@ const runtime = {
   offline: false,
 };
 
+const bubble = document.getElementById("speech-bubble");
+let bubbleTimer = 0;
+
+function showBubble(context) {
+  if (!context || !context.body_preview) return;
+  const speaker = context.sender_name || "unknown";
+  bubble.querySelector(".speaker").textContent = speaker;
+  bubble.querySelector(".text").textContent = context.body_preview;
+  bubble.style.display = "block";
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(hideBubble, 7000);
+}
+
+function hideBubble() {
+  bubble.style.display = "none";
+}
+
 const hud = document.getElementById("hud");
 const hudTag = document.getElementById("hud-tag");
 const wsDot = document.getElementById("ws-dot");
@@ -153,6 +170,7 @@ function returnToIdle() {
   runtime.spec = resolve("IDLE");
   runtime.until = performance.now() + 1500;
   stateLabel.textContent = "IDLE";
+  hideBubble();
 }
 
 function tickLoop() {
@@ -274,6 +292,7 @@ function connect() {
       const msg = JSON.parse(event.data);
       if (msg.type === "fly_behavior") {
         applyDecision({ ...msg.decision, behavior_id: msg.behavior_id });
+        if (msg.context) showBubble(msg.context);
       }
     } catch {
       hudTag.textContent = "malformed ws payload";
@@ -300,7 +319,7 @@ async function post(path, body) {
     if (!res.ok) throw new Error(`http ${res.status}`);
     const data = await res.json();
     if (path === "/events") {
-      applyDecision({ ...data, behavior_id: `behavior_${data.event}` });
+      applyDecision({ ...data, behavior_id: data.behaviorId });
     }
     return data;
   } catch {

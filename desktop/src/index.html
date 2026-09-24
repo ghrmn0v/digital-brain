@@ -53,9 +53,23 @@
     button:hover { border-color: var(--accent); }
     button.primary { background: var(--accent); color: #06121f; font-weight: 700; border: none; }
     #priority-value { float: right; color: var(--accent); font-weight: 700; }
+
+    #speech-bubble {
+      position: fixed; left: 50%; top: 22%; z-index: 20;
+      display: none; max-width: 340px;
+      background: #121820; color: var(--text);
+      border: 1px solid var(--accent); border-radius: 12px;
+      padding: 10px 14px; font-size: 13px; line-height: 1.4;
+      box-shadow: 0 0 18px rgba(74, 163, 255, 0.35);
+      transform: translateX(-50%);
+      pointer-events: none; backdrop-filter: blur(6px);
+    }
+    #speech-bubble .speaker { display: block; color: var(--accent); font-weight: 700; margin-bottom: 3px; font-size: 12px; }
   </style>
 </head>
 <body>
+  <div id="speech-bubble"><span class="speaker"></span><span class="text"></span></div>
+
   <div id="hud">
     <div class="row">
       <span id="ws-dot"></span>

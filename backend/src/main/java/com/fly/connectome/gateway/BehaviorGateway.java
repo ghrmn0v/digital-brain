@@ -72,6 +72,7 @@ public class BehaviorGateway {
                 throw new IllegalStateException("python returned an error for " + event.name());
             }
             return new BehaviorDecision(
+                    null,
                     text(node, "event"),
                     text(node, "source"),
                     node.path("priority").asDouble(event.priority()),

@@ -29,7 +29,7 @@ public class FallbackPolicy {
             case "ATTENTION", "CURIOUS", "LISTENING" -> "LOW";
             default -> "BACKGROUND";
         };
-        return BehaviorDecision.fallback(event.name(), event.source(), event.priority(), fetch, level);
+        return BehaviorDecision.fallback(event, fetch, level);
     }
 
     public Map<String, Object> pythonDownHealth() {

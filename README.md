@@ -6,9 +6,10 @@ loaded through the same pipeline.
 
 ## Layout
 
-- `connectome/` — Python behavior engine (real brain, stdlib-only)
-- `backend/`    — Spring Boot (incoming, Faza 1)
-- `desktop/`    — Electron + Three.js (incoming, Faza 2)
+- `connectome/`       — Python behavior engine (real brain, stdlib-only, learns)
+- `backend/`          — Spring Boot service boundary (events, WhatsApp webhook, WS)
+- `desktop/`          — Electron + Three.js (incoming, Faza 2)
+- `whatsapp-gateway/` — WhatsApp → Spring Boot gateway (isolated from rendering)
 
 ## Run
 
@@ -44,6 +45,32 @@ Endpoints:
 - `GET  /api/v1/states`   — fly state machine from python
 - `GET  /api/v1/events/contract` — documented event contract
 - `WS   /ws/fly`          — live behavior stream for Electron/Three.js
+- `POST /api/v1/whatsapp/webhook` — WhatsApp gateway ingestion (normalized to event)
+- `GET  /api/v1/whatsapp/webhook` — probe/status
+
+### WhatsApp → Fly pipeline
+
+```
+WhatsApp → whatsapp-gateway (Node/whatsapp-web.js)
+        → Spring Boot /api/v1/whatsapp/webhook (normalization: type→event+priority)
+        → Python behavior engine (connectome brain decides)
+        → WebSocket broadcast → Electron/Three.js Fly (behavior + speech bubble)
+```
+
+The gateway never talks to the renderer; Spring Boot normalizes every message into
+the internal event contract (`source=whatsapp`). Message body is truncated to 80
+chars and only the preview is forwarded to the UI.
+
+Run the gateway:
+
+```
+cd whatsapp-gateway
+npm install
+FLY_BACKEND_URL=http://localhost:8080/api/v1/whatsapp/webhook node server.js   # scan the QR once
+```
+
+WhatsApp session (`whatsapp-gateway/.wwebjs_auth/`) is intentionally git-ignored
+(credentials are never committed).
 
 ### Electron + Three.js visual layer
 

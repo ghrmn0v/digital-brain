@@ -1,7 +1,9 @@
 import json
+import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from connectome.event_processor import normalize_event, normalize_feedback
 from connectome.loader import load_wiring
@@ -10,14 +12,20 @@ from connectome.policy import PRIORITY_LEVEL, decide
 from connectome.reward import map_feedback
 from connectome.simulate import inject_event
 from connectome.state_machine import states
+from connectome.store import SqliteStore
 
 DEFAULT_PORT = 8601
+DEFAULT_DB = os.environ.get("FLY_DB", str(Path.home() / ".fly" / "connectome.db"))
 
 
 class FlyBrainService:
-    def __init__(self, steps: int = 40):
+    def __init__(self, steps: int = 40, store: Optional[SqliteStore] = None):
         self.graph = load_wiring()
         self.brain = Brain(self.graph)
+        self.store = store or SqliteStore()
+        persisted = self.store.load_weights()
+        if persisted:
+            self.brain.weights.update(persisted)
         self.steps = steps
         self.lock = threading.RLock()
 
@@ -27,6 +35,8 @@ class FlyBrainService:
             "service": "fly-python-behavior",
             "graph": self.graph.meta.get("name", "unknown"),
             "neurons": self.graph.meta.get("neurons", 0),
+            "decisions": self.store.counts().get("decisions", 0),
+            "feedback": self.store.counts().get("feedback", 0),
         }
 
     def behavior(self, raw: Dict[str, Any]) -> Dict[str, Any]:
@@ -36,7 +46,7 @@ class FlyBrainService:
             for _ in range(self.steps):
                 self.brain.step()
             decision = decide(self.brain, event)
-            return {
+            result = {
                 "event": event.name,
                 "source": event.source,
                 "priority": event.priority,
@@ -46,6 +56,8 @@ class FlyBrainService:
                 "confidence": decision["confidence"],
                 "activity": {gid: round(a, 4) for gid, a in self.brain.mbon_vector().items()},
             }
+            self.store.record_decision(result, behavior_id=event.id)
+            return result
 
     def feedback(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         with self.lock:
@@ -61,6 +73,8 @@ class FlyBrainService:
                 if abs(self.brain.weights[k] - before[k]) > 1e-6
                 and self.graph.nodes[k[0]].type == "kc"
             }
+            self.store.record_feedback(fb.feedback, reward.value, behavior_id=fb.behavior_id)
+            self.store.save_weights(self.brain.weights)
             return {
                 "behavior_id": fb.behavior_id,
                 "feedback": fb.feedback,
@@ -130,11 +144,12 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 
-def make_server(port: int = DEFAULT_PORT, steps: int = 40) -> ThreadingHTTPServer:
+def make_server(port: int = DEFAULT_PORT, steps: int = 40, db_path: Optional[str] = None) -> ThreadingHTTPServer:
+    store = SqliteStore(db_path)
     handler = type(
         "FlyHandler",
         (Handler,),
-        {"service": FlyBrainService(steps=steps)},
+        {"service": FlyBrainService(steps=steps, store=store)},
     )
     return ThreadingHTTPServer(("127.0.0.1", port), handler)
 
@@ -145,10 +160,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Fly behavior engine HTTP service")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--steps", type=int, default=40)
+    parser.add_argument("--db", default=DEFAULT_DB, help="sqlite path for learning persistence")
     args = parser.parse_args()
 
-    server = make_server(port=args.port, steps=args.steps)
-    print(f"fly-python-behavior listening on 127.0.0.1:{args.port}", flush=True)
+    Path(args.db).parent.mkdir(parents=True, exist_ok=True)
+    server = make_server(port=args.port, steps=args.steps, db_path=args.db)
+    print(f"fly-python-behavior listening on 127.0.0.1:{args.port} (db={args.db})", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

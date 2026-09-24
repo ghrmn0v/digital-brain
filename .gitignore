@@ -12,6 +12,10 @@ dist/
 build/
 out/
 
+# WhatsApp credentials / session — never commit (PDF: security)
+.wwebjs_auth/
+.wwebjs_cf/
+
 target/
 .gradle/
 *.log

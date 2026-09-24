@@ -45,7 +45,7 @@ class FlyControllerTest {
     void acceptsValidEventAndReturnsDecision() throws Exception {
         when(normalization.normalize(any())).thenReturn(IMPORTANT);
         when(gateway.decide(IMPORTANT)).thenReturn(new BehaviorDecision(
-                "important_message", "whatsapp", 0.9, "IMPORTANT", "HIGH", 0.44, Map.of(), false));
+                null, "important_message", "whatsapp", 0.9, "IMPORTANT", "HIGH", 0.44, Map.of(), false));
 
         mockMvc.perform(post("/api/v1/events")
                         .contentType(MediaType.APPLICATION_JSON)
