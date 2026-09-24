@@ -1,1 +1,1 @@
-hello
+bura sadonun partidi 
