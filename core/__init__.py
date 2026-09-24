@@ -2,10 +2,18 @@
 
 Phase 1 provides the deterministic Memory Engine, Phase 2 the ingestion
 pipeline, Phase 3 the LLM Gateway + Understanding, Phase 4 the Context Engine +
-semantic search abstraction, Phase 5 People Intelligence (people, relationships,
-preferences). No embeddings yet; lexical search is the deterministic MVP.
+semantic search abstraction, Phase 5 People Intelligence, Phase 6 Reasoning +
+Intent + Action Planning + Developer Brain Events. No embeddings yet; lexical
+search is the deterministic MVP.
 """
 
+from .actions import (
+    ActionPlan,
+    ActionPlanner,
+    ActionPlanningError,
+    ActionValidationError,
+)
+from .brain_events import BrainEventEmitter, DevModePipeline, DevOutcome
 from .context import (
     Context,
     ContextEngine,
@@ -58,6 +66,25 @@ from .people import (
     Preference,
     PreferenceDomain,
 )
+from .reasoning import (
+    BugDetector,
+    BugFinding,
+    CodeReviewer,
+    IntentAnalyzer,
+    IntentKind,
+    IntentUnderstanding,
+    ReasoningEngine,
+    ReasoningError,
+    ReasoningLimits,
+    ReasoningResult,
+    ReasoningValidationError,
+    ReviewCategory,
+    ReviewFinding,
+    Severity,
+    TestFailure,
+    TestResultInterpretation,
+    TestResultInterpreter,
+)
 from .understanding import (
     DeveloperAnalysis,
     DeveloperContext,
@@ -75,6 +102,14 @@ from .understanding import (
 )
 
 __all__ = [
+    "ActionPlan",
+    "ActionPlanner",
+    "ActionPlanningError",
+    "ActionValidationError",
+    "BrainEventEmitter",
+    "BugDetector",
+    "BugFinding",
+    "CodeReviewer",
     "Context",
     "ContextEngine",
     "ContextLimits",
@@ -119,17 +154,30 @@ __all__ = [
     "PreferenceDomain",
     "RankConfig",
     "Ranker",
+    "ReasoningEngine",
+    "ReasoningError",
+    "ReasoningLimits",
+    "ReasoningResult",
+    "ReasoningValidationError",
     "ReceiptStorageError",
+    "ReviewCategory",
+    "ReviewFinding",
     "ScoredMemory",
     "SearchMetadata",
     "SearchQuery",
     "SemanticSearch",
+    "Severity",
     "SqliteEventReceiptRepository",
     "SqliteMemoryRepository",
     "TemporalValidityError",
+    "TestFailure",
+    "TestResultInterpretation",
+    "TestResultInterpreter",
     "UnderstandingError",
     "UnderstandingIntent",
     "UnderstandingResult",
     "build_gateway",
     "build_ingestion",
+    "DevModePipeline",
+    "DevOutcome",
 ]

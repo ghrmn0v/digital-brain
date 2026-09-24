@@ -27,8 +27,9 @@ Developer → Product / Repository Context → Core Brain
 | Ingestion pipeline | `core/ingestion/` | ✅ Phase 2 |
 | Context + semantic search | `core/context/` | ✅ Phase 4 |
 | People + relationships + preferences | `core/people/` | ✅ Phase 5 |
-| Reasoning + intent + bug detection | `core/reasoning/` (planned) | ❌ Phase 6 |
-| Action planning | `core/actions/` (planned) | ❌ Phase 6 |
+| Reasoning + intent + bug detection | `core/reasoning/` | ✅ Phase 6 |
+| Action planning | `core/actions/` | ✅ Phase 6 |
+| Developer events (Bug/Fix/Test/Review/Deploy) | `core/brain_events/` | ✅ Phase 6 |
 | Feedback + learning | `core/learning/` (planned) | ❌ Phase 7 |
 
 ## Brain → Product boundary (action permission)
@@ -47,8 +48,8 @@ Core Brain  →  Proposal (Pure data, ProposedAction)  →  Permission  →  Pro
 ## Brain → Fly event flow
 
 Core Brain emits typed `BrainEvent`s (`contracts/brain_events/events.py` —
-open, additive enum). The developer-mode event pipeline (Phase 6 builds the
-emitters):
+open, additive enum). Phase 6 ships the emitters and the `DevModePipeline`
+(`core/brain_events/pipeline.py`) that produces a deterministic demo flow:
 
 ```
 developer.bug_detected
@@ -70,7 +71,7 @@ Fly renders them and moves to the relevant file/line.
 
 ## Supported developer events
 
-Planned set (added to `BrainEventType` when Phase 6 lands):
+Implemented in Phase 6 (`developer.*` added to `BrainEventType`):
 
 | event type | payload essentials |
 |---|---|
@@ -80,7 +81,28 @@ Planned set (added to `BrainEventType` when Phase 6 lands):
 | `developer.review_finding` | file, line, severity, explanation, confidence, category |
 | `developer.deploy_proposed` | environment, repository, reason, test status, risk/confidence, requested permission |
 
-## MVP limitations (current, Phase 5 done)
+How the pipeline behaves (all deterministic, Core Brain PROPOSES only):
+
+- Intent: word-boundary keyword classification (`bug`, `review`, `test`,
+  `deploy`, `fix`, `explain`); `deploy to production` is DEPLOY, not a
+  false-positive review. Optional LLM may only enrich keywords — never the
+  target file/line.
+- Bug detection: source scans for potential null derefs and division-by-zero
+  (guarded code is NOT reported) plus secret literals, bare `except:`, TODO
+  markers, in-loop string concatenation. Wording is honest ("Possible …") with
+  bounded confidence — no fake certainty, no fabricated line numbers.
+- Test interpretation: counts pass/fail/skip/error EXACTLY as supplied; never
+  fabricates a result; confidence = passed / (passed + failed + errors).
+- Action planning: `code.fix`/`deploy` request `EXPLICIT` permission,
+  `run_tests`/`review` request `READ`. `deploy` is proposed ONLY when
+  `ask_deploy=True` AND tests are green AND no high-warrant fix is pending.
+  Proposals are pure data with no execution surface; a `correlation_id` spans
+  the whole flow.
+- End-to-end demo: `DevModePipeline().run(ctx[, ask_deploy=...])` →
+  `bug_detected → fix_proposed → test_result → review_finding → deploy_proposed`,
+  proven in `tests/test_devmode_e2e.py` and `docs/reasoning.md`.
+
+## MVP limitations (current, Phase 6 done)
 
 - Semantic search is lexical/deterministic (no embeddings, no vector store yet);
   the `SemanticSearch` port keeps room for an embedding-based implementation
@@ -94,7 +116,12 @@ Planned set (added to `BrainEventType` when Phase 6 lands):
   memory (identity resolution/merging is intentionally not built yet).
 - Fallback/heuristic understanding is keyword-based with low, honest
   confidence — it is a deterministic stand-in, not an AI.
-- No bug detection / reasoning / action planning yet (Phase 6).
+- Bug detection/reasoning is deterministic source scanning + keyword intent:
+  a real (optionally LLM-assisted) understanding of deep multi-file bugs,
+  semantic refactors or non-local regressions is NOT built yet; findings stay
+  conservative (honest "possible …", bounded confidence).
+- Repeat fix proposals are allowed (one per finding) but bounded
+  (`max_proposals=5`); deduplication/learning across sessions comes in Phase 7.
 - No feedback/learning loop yet (Phase 7).
 - No real provider configured; `heuristic` is the default so the MVP is
   reproducible offline. Register a real provider via `register_provider(...)`.

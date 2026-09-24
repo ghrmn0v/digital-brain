@@ -54,7 +54,7 @@ CONTRACTS.md          ownership boundaries + versioning + execution rule
 
 ## Current development phase
 
-Phase 5 — **People Intelligence** (complete). Built so far:
+Phase 6 — **Reasoning + Intent + Action Planning** (complete). Built so far:
 
 - Memory Engine (deterministic lifecycle, SQLite, user isolation).
 - Ingestion pipeline (validation, dedup, receipts, deterministic mappings,
@@ -74,17 +74,29 @@ Phase 5 — **People Intelligence** (complete). Built so far:
   deterministic domain classification, `record_preference` through the Memory
   Engine with conflict-based supersession, per-domain bounds), powerful user
   isolation, all traceable to memory ids — no second database.
+- Reasoning + intent + action planning: deterministic `ReasoningEngine`
+  (keyword intent classification with word-boundary matching, source scans for
+  null derefs / division-by-zero / secrets / bare `except:`, project review
+  with test-coverage, honest test-result interpretation that never fabricates
+  pass/fail) + pure-data `ActionPlanner` (fix/run_tests/review/deploy
+  proposals request EXPLICIT or READ permission — nothing is ever executed)
+  + `DevModePipeline` that emits the five `developer.*` Brain Events with a
+  shared correlation id.
 
-Not built yet: reasoning/intent/bug detection, action planning, feedback/
-learning, embeddings/vector store, connectors, frontend.
+Not built yet: feedback/learning, embeddings/vector store, connectors,
+frontend.
 
 ## Developer Mode (hackathon)
 
 The MVP workflow targets: context in → Core Brain understands → detects a
 potential bug → `developer.bug_detected` → explains → proposes a fix →
 Product asks permission → executes → tests interpreted → review findings →
-deploy proposed (never auto) → feedback → learning. See
-`docs/developer-mode.md` and `docs/developer-mode/SPEC.md`.
+deploy proposed (never auto) → feedback → learning. A ready end-to-end demo
+exists: `DevModePipeline().run(developer_context)` produces `developer.bug_detected`
+→ `developer.fix_proposed` → `developer.test_result` → `developer.review_finding`
+→ (if asked and green) `developer.deploy_proposed`, all correlation-linked and
+fully deterministic — see `tests/test_devmode_e2e.py` and `docs/reasoning.md`.
+See `docs/developer-mode.md` and `docs/developer-mode/SPEC.md`.
 
 ## How contracts are used
 

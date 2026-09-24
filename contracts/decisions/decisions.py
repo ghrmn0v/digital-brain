@@ -33,6 +33,10 @@ class ActionType(str, Enum):
     SCHEDULE_EVENT = "schedule_event"
     UPDATE_CALENDAR = "update_calendar"
     UPDATE_PERSON_NOTE = "update_person_note"
+    RUN_TESTS = "run_tests"
+    CODE_FIX = "code.fix"
+    REVIEW = "review"
+    DEPLOY = "deploy"
     GENERIC = "generic"
 
 
@@ -46,6 +50,7 @@ class PermissionLevel(str, Enum):
     WRITE = "write"
     SEND_MESSAGE = "send_message"
     SCHEDULE = "schedule"
+    EXPLICIT = "explicit"
     EXTERNAL = "external"
 
 

@@ -11,7 +11,7 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 3 | LLM Gateway + Understanding (`core/understanding/`) | ✅ COMPLETE |
 | 4 | Context + Semantic Search (`core/context/`) | ✅ COMPLETE |
 | 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE |
-| 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`) | ❌ NOT STARTED |
+| 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`, `core/brain_events/`) | ✅ COMPLETE |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ❌ NOT STARTED |
 
 Guiding rules (from SPEC.md, enforced every phase):
@@ -124,3 +124,57 @@ Guiding rules (from SPEC.md, enforced every phase):
   `test_people_context_integration.py`).
 - Verification: full suite `216` OK (baseline 186 + 30 new), `compileall` clean.
 - Docs: `docs/people.md`, README, `docs/developer-mode.md` updated.
+## Phase 6 — Reasoning + Intent + Action Planning (complete)
+
+- Contract additions (additive — existing enum iteration tests stay valid):
+  - `contracts/decisions/decisions.py`: `ActionType` += `RUN_TESTS`,
+    `CODE_FIX`, `REVIEW`, `DEPLOY`; `PermissionLevel` += `EXPLICIT`.
+  - `contracts/brain_events/events.py`: `BrainEventType` += the five
+    `developer.*` event types (bug_detected, fix_proposed, test_result,
+    review_finding, deploy_proposed) with documented payload shapes.
+- Added `core/reasoning/`:
+  - `exceptions.py` — `ReasoningError` / `ReasoningValidationError`.
+  - `models.py` — `Severity`, `IntentKind`, `ReviewCategory`, `BugFinding`,
+    `ReviewFinding`, `TestFailure`, `TestResultInterpretation`, `IntentUnderstanding`,
+    `ReasoningResult`, bounded `ReasoningLimits`.
+  - `intent.py` — `IntentAnalyzer`: deterministic keyword classification with
+    WORD-BOUNDARY matching (short tokens like `pr`/`bug` no longer false-match
+    substrings); optional LLM keywords may only enrich, never set target file.
+  - `checks.py` — per-file source scans (`scan_file`): null-deref, division by
+    zero, secret-literal (regex brace bug fixed — was `{{3,}}` in a non-f-string),
+    bare `except:`, TODO/FIXME marker, in-loop string concat; guarded code not
+    reported; bounded per-file issues; `FoundIssue` dataclass.
+  - `bug_detection.py` — `BugDetector` maps `FoundIssue` → `BugFinding`
+    (honest "Possible …" language, bounded confidence < 1, per-finding id).
+  - `review.py` — `CodeReviewer`: project-level review (test-coverage for
+    changed files missing a test file, bare-except/maintainability), maps to
+    `ReviewCategory`.
+  - `test_interpretation.py` — `TestResultInterpreter`: summarizes counted
+    pass/fail/skip/error EXACTLY as supplied; NEVER fabricates results;
+    confidence = passed / (passed + failed + errors).
+  - `reasoning.py` — `ReasoningEngine` facade (validates context is a
+    `DeveloperContext`, runs intent → bugs → review → tests in one pass; local
+    `UnderstandingPort` protocol so reasoning never depends on core.context).
+- Added `core/actions/`:
+  - `models.py` — `ActionPlan` wraps a contract `BrainDecision`; proposals are
+    pure data, no execution surface.
+  - `exceptions.py` — `ActionPlanningError` / `ActionValidationError`.
+  - `planner.py` — `ActionPlanner`: code.fix/deploy request `EXPLICIT` permission,
+    run_tests/review request `READ`; runs tests only when results supplied; deploys
+    ONLY when `ask_deploy=True` AND tests green AND no high-warrant fix proposed;
+    bounded `max_proposals=5`; shared `correlation_id`; user/mismatch isolation.
+- Added `core/brain_events/`:
+  - `emitter.py` — `BrainEventEmitter` builds `contracts.brain_events.BrainEvent`
+    with deterministic payloads for each developer event type.
+  - `pipeline.py` — `DevModePipeline` + `DevOutcome`: reason → plan → events
+    (bug → fix → test → review → deploy) sharing one correlation_id. Nothing is
+    executed — Core Brain PROPOSES only.
+- Design decisions:
+  - Repetition of fix proposals is allowed (one per finding) BUT prioritized
+    and bounded; review role is a `REVIEW` *action proposal* if findings are
+    high-warrant, otherwise only emitted as event.
+  - Developer Brain Events wrap contract envelopes purely (id, actor, source).
+- Tests: 37 new (`test_reasoning.py`, `test_actions.py`,
+  `test_brain_events.py`, `test_devmode_e2e.py`).
+- Verification: full suite `253` OK (baseline 216 + 37 new), `compileall` clean.
+- Docs: `docs/reasoning.md`, README, `docs/developer-mode.md` updated.
