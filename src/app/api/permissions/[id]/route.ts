@@ -1,0 +1,38 @@
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { authorizeRequest } from "@/lib/api/auth";
+import { parseJsonBody } from "@/lib/api/request";
+import { apiData, apiNoContent, withApiErrors } from "@/lib/api/response";
+import { permissionService, permissionUpdateSchema } from "@/modules/permissions";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const permissionIdSchema = z.string().min(1).max(64);
+
+export async function PATCH(
+  request: NextRequest,
+  context: RouteContext<"/api/permissions/[id]">,
+) {
+  return withApiErrors(request, async (requestId) => {
+    authorizeRequest(request);
+    const { id } = await context.params;
+    const input = await parseJsonBody(request, permissionUpdateSchema);
+    return apiData(
+      await permissionService.update(permissionIdSchema.parse(id), input),
+      requestId,
+    );
+  });
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: RouteContext<"/api/permissions/[id]">,
+) {
+  return withApiErrors(request, async (requestId) => {
+    authorizeRequest(request);
+    const { id } = await context.params;
+    await permissionService.remove(permissionIdSchema.parse(id));
+    return apiNoContent(requestId);
+  });
+}

@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CalendarEventStatus {
+  TENTATIVE
+  CONFIRMED
+  CANCELLED
+}
+
+enum JobSource {
+  LINKEDIN
+  MANUAL
+  CORE_BRAIN
+  OTHER
+}
+
+enum JobStatus {
+  SEEN
+  SAVED
+  IGNORED
+  APPLIED
+  ARCHIVED
+}
+
+enum PermissionLevel {
+  AUTOMATIC
+  ASK_FIRST
+  OFF
+}
+
+enum AutomationTriggerKind {
+  EVENT
+  SCHEDULE
+  MANUAL
+}
+
+enum ActionStatus {
+  PENDING_APPROVAL
+  RUNNING
+  COMPLETED
+  REJECTED
+  FAILED
+}
+
+enum ConnectorHealthStatus {
+  HEALTHY
+  DEGRADED
+  DISCONNECTED
+  ERROR
+}
+
+enum EventDeliveryStatus {
+  PENDING
+  DELIVERING
+  DELIVERED
+  FAILED
+}
+
+enum AutomationRunStatus {
+  PENDING
+  COMPLETED
+  REJECTED
+  FAILED
+  SKIPPED
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  title          String
+  description    String?
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  dueAt          DateTime?
+  completedAt    DateTime?
+  recurrenceRule String?
+  seriesId       String?
+  source         String       @default("local")
+  externalId     String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status, dueAt])
+  @@index([seriesId])
+}
+
+model CalendarEvent {
+  id             String              @id @default(cuid())
+  title          String
+  description    String?
+  startsAt       DateTime
+  endsAt         DateTime
+  allDay         Boolean             @default(false)
+  timeZone       String?
+  status         CalendarEventStatus @default(CONFIRMED)
+  recurrenceRule String?
+  reminderAt     DateTime?
+  source         String              @default("local")
+  externalId     String?
+  metadata       Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([source, externalId])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@index([reminderAt])
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  source          JobSource @default(LINKEDIN)
+  externalId      String
+  title           String
+  company         String
+  location        String?
+  employmentType  String?
+  description     String?
+  url             String?
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryCurrency  String?
+  skills          Json?
+  relevanceReason String?
+  status          JobStatus @default(SEEN)
+  publishedAt     DateTime?
+  firstSeenAt     DateTime  @default(now())
+  lastSeenAt      DateTime  @default(now())
+  appliedAt       DateTime?
+  archivedAt      DateTime?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status, lastSeenAt])
+  @@index([company])
+}
+
+model Permission {
+  id          String          @id @default(cuid())
+  action      String
+  level       PermissionLevel @default(ASK_FIRST)
+  source      String          @default("local")
+  description String?
+  enabled     Boolean         @default(true)
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([source, action])
+  @@index([enabled])
+}
+
+model Automation {
+  id              String                @id @default(cuid())
+  name            String
+  description     String?
+  enabled         Boolean               @default(false)
+  triggerKind     AutomationTriggerKind @default(EVENT)
+  triggerValue    String?
+  conditions      Json?
+  action          String
+  actionPayload   Json?
+  cooldownSeconds Int?
+  lastRunAt       DateTime?
+  nextRunAt       DateTime?
+  lastError       String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  runs AutomationRun[]
+
+  @@index([enabled, triggerKind])
+  @@index([nextRunAt])
+}
+
+model Connector {
+  id             String                @id
+  name           String
+  type           String
+  version        String                @default("1.0.0")
+  enabled        Boolean               @default(false)
+  status         ConnectorHealthStatus @default(DISCONNECTED)
+  credentialsRef String?
+  lastSyncAt     DateTime?
+  lastError      String?
+  metadata       Json?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([enabled, status])
+}
+
+model ActionExecution {
+  id              String           @id
+  source          String
+  action          String
+  payload         Json
+  status          ActionStatus     @default(PENDING_APPROVAL)
+  permissionLevel PermissionLevel?
+  idempotencyKey  String?          @unique
+  correlationId   String?
+  result          Json?
+  error           String?
+  decidedBy       String?
+  decisionReason  String?
+  attempts        Int              @default(0)
+  version         Int              @default(1)
+  requestedAt     DateTime
+  decidedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  automationRuns AutomationRun[]
+
+  @@index([status, requestedAt])
+  @@index([action])
+  @@index([source, correlationId])
+}
+
+model IntegrationEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  source    String
+  type      String
+  timestamp DateTime
+  payload   Json
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  deliveries EventDelivery[]
+
+  @@index([source, type])
+  @@index([createdAt])
+}
+
+model EventDelivery {
+  id            String              @id @default(cuid())
+  eventId       String
+  consumer      String
+  status        EventDeliveryStatus @default(PENDING)
+  attempts      Int                 @default(0)
+  nextAttemptAt DateTime            @default(now())
+  deliveredAt   DateTime?
+  lastError     String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  event IntegrationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, consumer])
+  @@index([status, nextAttemptAt])
+}
+
+model AutomationRun {
+  id                String              @id @default(cuid())
+  automationId      String
+  actionExecutionId String?
+  eventId           String?
+  status            AutomationRunStatus @default(PENDING)
+  error             String?
+  startedAt         DateTime            @default(now())
+  completedAt       DateTime?
+
+  automation      Automation       @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  actionExecution ActionExecution? @relation(fields: [actionExecutionId], references: [id], onDelete: SetNull)
+
+  @@index([automationId, startedAt])
+  @@index([status, startedAt])
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model IdempotencyRecord {
+  id          String   @id @default(cuid())
+  scope       String
+  key         String
+  requestHash String
+  statusCode  Int
+  response    Json
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@unique([scope, key])
+  @@index([expiresAt])
+}
