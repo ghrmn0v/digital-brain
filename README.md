@@ -18,12 +18,13 @@ loaded through the same pipeline.
 - `connectome/connectome/store.py` — SQLite persistence (decisions/feedback/weights, survives restart)
 - `connectome/connectome/reference/` — flywire_live_service (real FlyWire caveclient prototype)
 - `connectome/connectome/training/analysis.py` — offline metrics (reward_rate, policy_agreement, distribution)
+- `connectome/connectome/training/evaluation.py` — Faza 6: learned policy vs real baseline (reward + verdict)
 - `connectome/connectome/training/rl/` — Faza 5 offline RL experiment (torch-optional, isolated from inference)
 
 ## Learning roadmap (per spec)
 
 Rule-based baseline (Faza 1) → structured data collection (2) → reward signals (3) →
-offline experiments (4) → **offline RL experiment (5, here)** → evaluate vs baseline (6) →
+offline experiments (4) → offline RL experiment (5) → **evaluate vs baseline (6, here)** →
 gradual production influence (7). Production inference never uses an untested model.
 
 ## Run
@@ -100,6 +101,27 @@ python3 -m connectome.training.rl.offline_exp --episodes 400   # with torch inst
 The experiment warms up the RL network offline and reports policy agreement against
 the deterministic baseline on the WhatsApp message-type cases. Outputs land in
 `connectome/connectome/training/rl/experiments/` (git-ignored: reproducible artifacts).
+
+### Evaluate learned policy vs baseline (Faza 6)
+
+```
+cd connectome
+python3 -m connectome.training.evaluation
+```
+
+Runs the real rule-based baseline (connectome brain) and the trained RL policy
+(Faza 5 snapshot) on the same scenarios, scoring each reaction through the
+REWARD_MAP-based user-feedback model, then emits a Phase 7 readiness verdict:
+
+```
+policy agreement vs baseline: 40%
+mean reward delta:            +0.0000
+verdict:                      COLLECT_MORE_DATA
+safe to influence production: False
+```
+
+The phase-7 gate is deliberate: production absorbs the learned policy only when it
+matches the baseline reaction (or strictly improves reward) on every scenario.
 
 ### Electron + Three.js visual layer
 

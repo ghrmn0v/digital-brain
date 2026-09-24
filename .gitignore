@@ -19,6 +19,7 @@ out/
 # RL experiment artifacts — reproducible from code + data, not secrets
 connectome/connectome/training/rl/experiments/*.pt
 connectome/connectome/training/rl/experiments/*.json
+connectome/connectome/training/evaluation_reports/*.json
 
 target/
 .gradle/
