@@ -30,27 +30,45 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
-core/                 Phases 1–2 — Core Brain implementation
+core/                 Phases 1–3 — Core Brain implementation
   memory/             Memory Engine (deterministic lifecycle, SQLite storage)
   ingestion/          Ingestion pipeline (validation, dedup, receipts, mapping)
+  understanding/      LLM Gateway + Understanding (provider abstraction,
+                      structured UnderstandingResult, DeveloperContext analysis)
 docs/memory_engine.md Memory Engine design
 docs/ingestion.md     Ingestion pipeline design
-tests/                contract + engine + ingestion validation (stdlib unittest)
+docs/understanding.md Understanding / LLM gateway design
+docs/developer-mode/  Developer Mode hackathon spec + live doc
+PHASES.md             phase tracker (0–7)
+tests/                contract + engine + ingestion + understanding tests
 pyproject.toml        package metadata (one dependency: pydantic)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
 ## Current development phase
 
-Phase 2 — **Ingestion pipeline** (in progress). Built: Phase 1 Memory Engine
-(deterministic classification, confidence, importance baseline, temporal
-validity, conflict resolution, SQLite persistence behind repository ports,
-filtered retrieval, user isolation) plus the ingestion pipeline: schema +
-business validation, deterministic dedup (idempotency/event id, per-user
-receipts that survive restart), event-type→memory mappings with provenance,
-and one-transaction atomicity between memories and receipts. Not built yet:
-LLM integration, embeddings/vector search, reasoning, context,
-feedback/learning, frontend, connectors.
+Phase 3 — **LLM Gateway + Understanding** (in progress). Built so far:
+
+- Memory Engine (deterministic lifecycle, SQLite, user isolation).
+- Ingestion pipeline (validation, dedup, receipts, deterministic mappings,
+  atomicity).
+- Understanding: provider-independent `LLMGateway` (`understand`, `analyze`,
+  `generate_structured`), strict output validation, deterministic offline
+  fallback (`heuristic`), configurable provider selection (registry),
+  transport-independent `DeveloperContext` → `DeveloperAnalysis` with trusted
+  stats and user isolation.
+
+Not built yet: semantic/vector search, context engine, people/relationships,
+reasoning/intent/bug detection, action planning, feedback/learning,
+embeddings, connectors, frontend.
+
+## Developer Mode (hackathon)
+
+The MVP workflow targets: context in → Core Brain understands → detects a
+potential bug → `developer.bug_detected` → explains → proposes a fix →
+Product asks permission → executes → tests interpreted → review findings →
+deploy proposed (never auto) → feedback → learning. See
+`docs/developer-mode.md` and `docs/developer-mode/SPEC.md`.
 
 ## How contracts are used
 

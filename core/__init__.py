@@ -1,7 +1,8 @@
 """Core Brain implementation.
 
-Phase 1 provides the deterministic Memory Engine. Phase 2 adds the ingestion
-pipeline. No LLM, embeddings or semantic/various search yet.
+Phase 1 provides the deterministic Memory Engine, Phase 2 the ingestion
+pipeline, Phase 3 the LLM Gateway + Understanding. No embeddings or semantic
+search yet.
 """
 
 from .ingestion import (
@@ -33,18 +34,42 @@ from .memory import (
     SqliteMemoryRepository,
     TemporalValidityError,
 )
+from .understanding import (
+    DeveloperAnalysis,
+    DeveloperContext,
+    GatewayConfig,
+    InvalidLLMOutputError,
+    LLMGateway,
+    LLMGatewayError,
+    LLMProvider,
+    LLMProviderError,
+    LLMTimeoutError,
+    UnderstandingError,
+    UnderstandingIntent,
+    UnderstandingResult,
+    build_gateway,
+)
 
 __all__ = [
+    "DeveloperAnalysis",
+    "DeveloperContext",
     "DeterministicEventProcessor",
     "EventProcessingError",
     "EventProcessor",
     "EventReceiptRepository",
     "EventValidationError",
+    "GatewayConfig",
     "IngestionError",
     "IngestionOutcome",
     "IngestionReceipt",
     "IngestionResult",
     "IngestionService",
+    "InvalidLLMOutputError",
+    "LLMGateway",
+    "LLMGatewayError",
+    "LLMProvider",
+    "LLMProviderError",
+    "LLMTimeoutError",
     "MappingRule",
     "MemoryCandidate",
     "MemoryClassifier",
@@ -59,5 +84,9 @@ __all__ = [
     "SqliteEventReceiptRepository",
     "SqliteMemoryRepository",
     "TemporalValidityError",
+    "UnderstandingError",
+    "UnderstandingIntent",
+    "UnderstandingResult",
+    "build_gateway",
     "build_ingestion",
 ]
