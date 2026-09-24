@@ -12,10 +12,35 @@ loaded through the same pipeline.
 
 ## Run
 
+### Python behavior engine
+
 ```
 cd connectome
 python3 -m unittest discover -s tests
+python3 -m connectome.server --port 8601
+```
+
+CLI demo:
+
+```
 python3 -m connectome.simulate --event important_message --priority 0.9 --source whatsapp --context '{"topic":"job","urgency":"high"}'
 python3 -m connectome.simulate --event important_message --priority 0.9 --feedback marked_useful
 python3 -m connectome.simulate --event important_message --priority 0.9 --json
-``` 
+```
+
+### Spring Boot service boundary
+
+```
+cd backend
+mvn test
+mvn spring-boot:run
+```
+
+Endpoints:
+
+- `POST /api/v1/events`   — Brain event in, Fly behavior decision out (broadcast over WS)
+- `POST /api/v1/feedback` — user feedback → reward signal
+- `GET  /api/v1/health`   — service + python health
+- `GET  /api/v1/states`   — fly state machine from python
+- `GET  /api/v1/events/contract` — documented event contract
+- `WS   /ws/fly`          — live behavior stream for Electron/Three.js 

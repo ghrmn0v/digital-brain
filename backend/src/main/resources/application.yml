@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+app:
+  python:
+    base-url: ${FLY_PYTHON_URL:http://127.0.0.1:8601}
+    connect-timeout: 2s
+    read-timeout: 4s
+
+logging:
+  level:
+    com.fly.connectome: DEBUG
