@@ -35,6 +35,23 @@ class TestStateMachine(unittest.TestCase):
         with self.assertRaises(KeyError):
             machine.transition_to("NOPE")
 
+    def test_flight_cycle_takeoff_fly_land(self):
+        machine = StateMachine()
+        self.assertEqual(machine.transition_to("TAKEOFF"), "TAKEOFF")
+        self.assertEqual(machine.transition_to("FLYING"), "FLYING")
+        self.assertEqual(machine.transition_to("LANDING"), "LANDING")
+        self.assertEqual(machine.transition_to("IDLE"), "IDLE")
+
+    def test_takeoff_not_permitted_from_warning(self):
+        machine = StateMachine()
+        machine.force("WARNING")
+        self.assertIsNone(machine.transition_to("TAKEOFF"))
+
+    def test_success_celebrates_with_flight(self):
+        machine = StateMachine()
+        machine.force("SUCCESS")
+        self.assertEqual(machine.transition_to("FLYING"), "FLYING")
+
 
 if __name__ == "__main__":
     unittest.main()

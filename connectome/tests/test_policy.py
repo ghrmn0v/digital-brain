@@ -36,6 +36,26 @@ class TestPolicy(unittest.TestCase):
         for state in states:
             self.assertIn(state, PRIORITY_LEVEL)
 
+    def test_flight_states_are_scored(self):
+        decision = self._decision("notification", 0.8)
+        for state in ("TAKEOFF", "FLYING", "LANDING"):
+            self.assertIn(state, decision["scores"])
+            self.assertGreaterEqual(decision["scores"][state], 0.0)
+
+    def test_flight_becomes_competitive_after_reward_training(self):
+        from connectome.reward import map_feedback
+        event = normalize_event({"event": "process_completed", "source": "app", "priority": 0.92})
+        untrained = self._decision("process_completed", 0.92)["scores"]["FLYING"]
+        for _ in range(12):
+            inject_event(self.brain, event)
+            for _ in range(40):
+                self.brain.step()
+            self.brain.deliver_reward(map_feedback("reacted_positive").value)
+            for _ in range(3):
+                self.brain.step()
+        trained = self._decision("process_completed", 0.92)["scores"]["FLYING"]
+        self.assertGreater(trained, untrained)
+
 
 class TestBrainInjection(unittest.TestCase):
     def test_high_priority_drives_more_output_activation(self):

@@ -48,6 +48,8 @@ NORMAL = "normal"
 STATE_REACTION: Dict[str, str] = {
     "IDLE": NORMAL, "BACKGROUND": NORMAL, "SLEEPING": NORMAL,
     "THINKING": NORMAL, "PROCESSING": NORMAL, "LEARNING": NORMAL,
+    "LANDING": NORMAL,
+    "TAKEOFF": "face_user", "FLYING": "face_user",
     "LISTENING": "face_user", "ATTENTION": "face_user", "CURIOUS": "face_user",
     "IMPORTANT": "frontflip", "WAITING": "frontflip", "SUCCESS": "frontflip",
     "WARNING": "backflip", "ERROR": "backflip",

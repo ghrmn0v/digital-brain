@@ -250,6 +250,21 @@ function tickLoop() {
     case "slow_pulse":
       squash = 1 + Math.sin(t * 1.1) * 0.05;
       break;
+    case "lift_off":
+      extra.y = Math.min(1, (t % 1.2) / 1.2) * 0.4;
+      fly.rotation.x = -Math.min(1, (t % 1.2) / 1.2) * 0.25;
+      break;
+    case "fly_circle":
+      fly.position.x += Math.cos(t * 1.6) * 0.35;
+      fly.position.z += Math.sin(t * 1.6) * 0.35;
+      fly.rotation.y += spec.speed * 0.06;
+      break;
+    case "swoop": {
+      const phase = (t % 1.2) / 1.2;
+      extra.y = -Math.min(1, phase) * 0.35;
+      fly.rotation.x = Math.min(1, phase) * 0.2;
+      break;
+    }
     case "circle":
       fly.position.x += Math.cos(t * 0.9) * 0.02;
       fly.position.z += Math.sin(t * 0.9) * 0.02;

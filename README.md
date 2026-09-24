@@ -15,12 +15,23 @@ loaded through the same pipeline.
 ## Connectome internals
 
 - `connectome/connectome/`        — engine: wiring, rate-model brain, states, policy, server (stdlib-only)
+- `connectome/connectome/model.py` — rate-model brain with dopamine-gated plasticity: `DAN_PAM`
+  (reward) / `DAN_PPL` (punishment) modulate the plastic KC→MBON synapses on feedback
 - `connectome/connectome/store.py` — SQLite persistence (decisions/feedback/weights, survives restart)
 - `connectome/connectome/reference/` — flywire_live_service (real FlyWire caveclient prototype)
 - `connectome/connectome/training/analysis.py` — offline metrics (reward_rate, policy_agreement, distribution)
 - `connectome/connectome/training/dataset.py` — labeled training set from the live store (CSV + JSONL)
 - `connectome/connectome/training/evaluation.py` — Faza 6: learned policy vs real baseline (reward + verdict)
 - `connectome/connectome/training/rl/` — Faza 5 offline RL experiment (torch-optional, isolated from inference)
+
+## Flight capability
+
+Besides the cognitive states, the fly has an explicit motor flight cycle:
+`TAKEOFF → FLYING → LANDING`. It launches when it commits to an event, circles
+while flying, and settles back to a perch; `SUCCESS` triggers a celebration flight
+(`SUCCESS → FLYING`). Flight states are decided by the same brain (`policy.py`
+MBON patterns) and can be reinforced through the DAN reward/punishment pathway,
+so "take off / land" is a learned behavior rather than a scripted animation.
 
 ## Learning roadmap (per spec)
 
