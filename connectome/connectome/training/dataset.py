@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -122,7 +123,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=None)
     args = parser.parse_args(argv)
 
-    store = SqliteStore(args.db)
+    db_path = args.db or os.environ.get("FLY_DB") or str(Path.home() / ".fly" / "connectome.db")
+    store = SqliteStore(db_path)
     try:
         dataset = build_dataset(store, limit=args.limit)
         written = write_dataset(dataset, args.out)
