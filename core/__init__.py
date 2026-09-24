@@ -1,10 +1,25 @@
 """Core Brain implementation.
 
 Phase 1 provides the deterministic Memory Engine, Phase 2 the ingestion
-pipeline, Phase 3 the LLM Gateway + Understanding. No embeddings or semantic
-search yet.
+pipeline, Phase 3 the LLM Gateway + Understanding, Phase 4 the Context Engine +
+semantic search abstraction. No embeddings yet; lexical search is the
+deterministic MVP.
 """
 
+from .context import (
+    Context,
+    ContextEngine,
+    ContextLimits,
+    ContextStatus,
+    ContextValidationError,
+    LexicalSemanticSearch,
+    RankConfig,
+    Ranker,
+    ScoredMemory,
+    SearchMetadata,
+    SearchQuery,
+    SemanticSearch,
+)
 from .ingestion import (
     DeterministicEventProcessor,
     EventProcessingError,
@@ -51,6 +66,11 @@ from .understanding import (
 )
 
 __all__ = [
+    "Context",
+    "ContextEngine",
+    "ContextLimits",
+    "ContextStatus",
+    "ContextValidationError",
     "DeveloperAnalysis",
     "DeveloperContext",
     "DeterministicEventProcessor",
@@ -65,6 +85,7 @@ __all__ = [
     "IngestionResult",
     "IngestionService",
     "InvalidLLMOutputError",
+    "LexicalSemanticSearch",
     "LLMGateway",
     "LLMGatewayError",
     "LLMProvider",
@@ -80,7 +101,13 @@ __all__ = [
     "MemoryService",
     "MemoryStatusFilter",
     "MemoryValidationError",
+    "RankConfig",
+    "Ranker",
     "ReceiptStorageError",
+    "ScoredMemory",
+    "SearchMetadata",
+    "SearchQuery",
+    "SemanticSearch",
     "SqliteEventReceiptRepository",
     "SqliteMemoryRepository",
     "TemporalValidityError",

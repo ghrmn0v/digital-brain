@@ -25,7 +25,7 @@ Developer → Product / Repository Context → Core Brain
 | Understanding / LLM gateway | `core/understanding/` | ✅ Phase 3 |
 | Memory engine | `core/memory/` | ✅ Phase 1 |
 | Ingestion pipeline | `core/ingestion/` | ✅ Phase 2 |
-| Context + semantic search | `core/context/` (planned) | ❌ Phase 4 |
+| Context + semantic search | `core/context/` | ✅ Phase 4 |
 | People + relationships + preferences | `core/people/` (planned) | ❌ Phase 5 |
 | Reasoning + intent + bug detection | `core/reasoning/` (planned) | ❌ Phase 6 |
 | Action planning | `core/actions/` (planned) | ❌ Phase 6 |
@@ -80,12 +80,17 @@ Planned set (added to `BrainEventType` when Phase 6 lands):
 | `developer.review_finding` | file, line, severity, explanation, confidence, category |
 | `developer.deploy_proposed` | environment, repository, reason, test status, risk/confidence, requested permission |
 
-## MVP limitations (current, Phase 3 done)
+## MVP limitations (current, Phase 4 done)
 
+- Semantic search is lexical/deterministic (no embeddings, no vector store yet);
+  the `SemanticSearch` port keeps room for an embedding-based implementation
+  without API change.
+- Repository/file awareness depends on optional `metadata` conventions; memories
+  without project metadata rank on general relevance.
+- Developer *preferences* surface through the context engine only when
+  relevant; no dedicated preference store yet (Phase 5).
 - Fallback/heuristic understanding is keyword-based with low, honest
   confidence — it is a deterministic stand-in, not an AI.
-- No semantic (vector) search yet; `MemoryService.retrieve_relevant_memories()`
-  remains the deterministic retrieval path.
 - No bug detection / reasoning / action planning yet (Phase 6).
 - No feedback/learning loop yet (Phase 7).
 - No real provider configured; `heuristic` is the default so the MVP is

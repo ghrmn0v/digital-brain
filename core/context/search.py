@@ -50,6 +50,12 @@ class LexicalSemanticSearch:
         self._store = memory_store
         self._ranker = ranker if ranker is not None else Ranker(now=now)
         self._max_candidates = max_candidates
+        self._last_pool_size: int = 0
+
+    @property
+    def last_pool_size(self) -> int:
+        """Number of memories retrieved for the most recent search (0 before)."""
+        return self._last_pool_size
 
     def search(self, query: SearchQuery) -> list[ScoredMemory]:
         """Rank the user's memories for a query (deterministic, bounded)."""
@@ -66,6 +72,8 @@ class LexicalSemanticSearch:
             memories = self._store.list_memories(filter_query)
         except Exception as exc:  # port boundary: any store error degrades cleanly
             raise SearchError(f"memory store failure: {exc}") from exc
+
+        self._last_pool_size = len(memories)
 
         results = self._ranker.rank(query, memories)
         if query.top_k is not None:

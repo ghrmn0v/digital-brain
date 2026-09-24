@@ -9,7 +9,7 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 1 | Memory Engine (`core/memory/`) | ✅ COMPLETE |
 | 2 | Ingestion Pipeline (`core/ingestion/`) | ✅ COMPLETE |
 | 3 | LLM Gateway + Understanding (`core/understanding/`) | ✅ COMPLETE |
-| 4 | Context + Semantic Search (`core/context/`) | 🔄 IN PROGRESS (2026-09-25) |
+| 4 | Context + Semantic Search (`core/context/`) | ✅ COMPLETE |
 | 5 | People + Relationships + Preferences (`core/people/`) | ❌ NOT STARTED |
 | 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`) | ❌ NOT STARTED |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ❌ NOT STARTED |
@@ -57,34 +57,32 @@ Guiding rules (from SPEC.md, enforced every phase):
 ## Phase status notes
 
 - Phase 0: see `CONTRACTS.md`; Phase 1: `docs/memory_engine.md`;
-  Phase 2: `docs/ingestion.md`; Phase 3: `docs/understanding.md`.
+  Phase 2: `docs/ingestion.md`; Phase 3: `docs/understanding.md`;
+  Phase 4: `docs/context.md`.
 - Developer Mode docs: `docs/developer-mode.md` (updated per phase).
 
-## Phase 4 — Context + Semantic Search (in progress)
+## Phase 4 — Context + Semantic Search (complete)
 
-- Started 2026-09-25. Built so far (`core/context/`):
-  - `exceptions.py` — `ContextError` → `ContextValidationError` /
-    `ContextEngineError` / `SearchError`.
-  - `ports.py` — `MemoryStore`, `SemanticSearch`, `UnderstandingPort`
-    (runtime-checkable protocols; `MemoryService` and `LLMGateway` satisfy
-    them unchanged).
-  - `fields.py` — metadata conventions (`repository` / `file` / `kind`),
+- Added `core/context/`:
+  - `ports.py` — `MemoryStore` / `SemanticSearch` / `UnderstandingPort`
+    (runtime-checkable; `MemoryService` and `LLMGateway` satisfy them).
+  - `fields.py` — lenient metadata conventions (`repository` / `file` / `kind`),
     bug-finding/decision detection, `normalize_repository`.
-  - `models.py` — `SearchQuery` (user-scoped), `ScoredMemory` (score +
-    matched_fields + ranking_reason + repo/file match),
-    `SearchMetadata`, `Context` (bounded; category lists reference memories by
-    `MemoryId`), `ContextStatus` (full / current_only / degraded),
-    `ContextLimits`.
-  - `ranking.py` — deterministic 7-factor ranker: lexical (Dice), repository,
-    file, importance, recency (exponential decay), status, type; weighted
-    normalized sum; matched-signal gate (no lexical/repo/file signal → excluded);
-    `ranking_reason` for traceability.
-  - `search.py` — `LexicalSemanticSearch` (reads via `MemoryStore.list_memories`,
-    wraps store failures as `SearchError`, `top_k` bound) + port re-exports.
-- Architecture rule: Context Engine owns NO memory storage; it queries
-  `MemoryService` through ports only. Vector/embedding search can replace
-  `LexicalSemanticSearch` behind `SemanticSearch` without API change.
-- Outstanding: `engine.py` (`ContextEngine.build_context`), package `__init__`,
-  `core/__init__` exports, full test suite (search ranking, isolation,
-  engine limits/missing-data, traceability, failure degraded, end-to-end),
-  docs (`docs/context.md`, README), `compileall`, report + STOP.
+  - `models.py` — `SearchQuery`, `ScoredMemory` (score + matched_fields +
+    ranking_reason + repo/file match), `SearchMetadata`, bounded `Context`
+    (category lists reference memories by `MemoryId`), `ContextStatus`
+    (full / current_only / degraded), validated `ContextLimits`.
+  - `ranking.py` — deterministic 7-factor ranker (lexical Dice, repository,
+    file, importance, recency exponential decay, status, type), weighted
+    normalized sum, relevance gate (no signal → excluded), `ranking_reason`.
+  - `search.py` — `LexicalSemanticSearch` over `MemoryStore.list_memories`,
+    store failures → `SearchError`, `top_k` bound.
+  - `engine.py` — `ContextEngine.build_context(...)` → bounded `Context`
+    (identity validated from trusted DeveloperContext, optional Phase 3
+    understanding keywords, category lanes, hard caps, DEGRADED/CURRENT_ONLY).
+- Architecture rule: Context Engine owns NO memory; queries MemoryService only
+  through ports; future embedding/vector search replaces `LexicalSemanticSearch`
+  behind `SemanticSearch` without API change.
+- Tests: 42 new (search 16, engine 14, isolation 6, traceability 5, e2e 1).
+- Verification: full suite `186` OK (baseline 144 + 42 new), `compileall` clean.
+- Docs: `docs/context.md`, README, `docs/developer-mode.md` updated.

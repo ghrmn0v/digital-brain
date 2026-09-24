@@ -30,37 +30,43 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
-core/                 Phases 1–3 — Core Brain implementation
+core/                 Phases 1–4 — Core Brain implementation
   memory/             Memory Engine (deterministic lifecycle, SQLite storage)
   ingestion/          Ingestion pipeline (validation, dedup, receipts, mapping)
   understanding/      LLM Gateway + Understanding (provider abstraction,
                       structured UnderstandingResult, DeveloperContext analysis)
+  context/            Context Engine + Semantic Search (deterministic ranking,
+                      bounded Context for Reasoning, user isolation)
 docs/memory_engine.md Memory Engine design
 docs/ingestion.md     Ingestion pipeline design
 docs/understanding.md Understanding / LLM gateway design
+docs/context.md       Context Engine / semantic search design
 docs/developer-mode/  Developer Mode hackathon spec + live doc
 PHASES.md             phase tracker (0–7)
-tests/                contract + engine + ingestion + understanding tests
+tests/                contract + engine + ingestion + understanding + context tests
 pyproject.toml        package metadata (one dependency: pydantic)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
 ## Current development phase
 
-Phase 3 — **LLM Gateway + Understanding** (in progress). Built so far:
+Phase 4 — **Context Engine + Semantic Search** (complete). Built so far:
 
 - Memory Engine (deterministic lifecycle, SQLite, user isolation).
 - Ingestion pipeline (validation, dedup, receipts, deterministic mappings,
   atomicity).
 - Understanding: provider-independent `LLMGateway` (`understand`, `analyze`,
   `generate_structured`), strict output validation, deterministic offline
-  fallback (`heuristic`), configurable provider selection (registry),
-  transport-independent `DeveloperContext` → `DeveloperAnalysis` with trusted
-  stats and user isolation.
+  fallback (`heuristic`), configurable provider selection (registry).
+- Context: deterministic `LexicalSemanticSearch` behind a `SemanticSearch` port
+  (future vector search swaps in without API change), explainable 7-factor
+  ranking, repository/file-aware retrieval, bounded `Context` assembly
+  (`ContextEngine.build_context`) with bug-finding/decision/preference lanes,
+  strict user isolation + anti-spoofing, structured degraded/current-only
+  failure behavior.
 
-Not built yet: semantic/vector search, context engine, people/relationships,
-reasoning/intent/bug detection, action planning, feedback/learning,
-embeddings, connectors, frontend.
+Not built yet: people/relationships, reasoning/intent/bug detection, action
+planning, feedback/learning, embeddings/vector store, connectors, frontend.
 
 ## Developer Mode (hackathon)
 
