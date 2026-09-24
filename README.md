@@ -30,16 +30,21 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
-tests/                lightweight contract validation (stdlib unittest)
+core/                 Phase 1 — Core Brain implementation
+  memory/             Memory Engine (deterministic lifecycle, SQLite storage)
+docs/memory_engine.md Memory Engine design
+tests/                contract + engine validation (stdlib unittest)
 pyproject.toml        package metadata (one dependency: pydantic)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
 ## Current development phase
 
-Phase 0 — **Contracts Foundation** (in progress). Only the shared contracts
-exist. Memory Engine, LLM integration, embeddings/vector search, reasoning,
-frontend, and connectors are NOT implemented and must not be built yet.
+Phase 1 — **Memory Engine** (in progress). Built: deterministic classification,
+confidence, importance baseline, temporal validity, conflict resolution
+(supersession), SQLite persistence behind a repository port, filtered
+retrieval, user isolation. Not built yet: LLM integration, embeddings/vector
+search, reasoning, context, feedback/learning, frontend, connectors.
 
 ## How contracts are used
 

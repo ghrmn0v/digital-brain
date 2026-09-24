@@ -10,4 +10,4 @@ requires-python = ">=3.11"
 dependencies = ["pydantic>=2.8"]
 
 [tool.setuptools.packages.find]
-include = ["contracts*"]
+include = ["contracts*", "core*"]
