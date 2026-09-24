@@ -37,7 +37,7 @@ public class FlyController {
     @PostMapping("/events")
     public ResponseEntity<BehaviorDecision> processEvent(@Valid @RequestBody EventRequest request) {
         EventRequest.Normalized event = normalization.normalize(request);
-        BehaviorDecision decision = gateway.decide(event).withBehaviorId("behavior_" + event.id());
+        BehaviorDecision decision = gateway.decide(event).withBehaviorId(event.id());
         broadcaster.broadcast(Map.of(
                 "type", "fly_behavior",
                 "behavior_id", decision.behaviorId(),

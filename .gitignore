@@ -20,6 +20,8 @@ out/
 connectome/connectome/training/rl/experiments/*.pt
 connectome/connectome/training/rl/experiments/*.json
 connectome/connectome/training/evaluation_reports/*.json
+# generated training datasets — reproducible from the live store with the CLI
+connectome/connectome/training/datasets/
 
 target/
 .gradle/

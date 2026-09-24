@@ -18,6 +18,7 @@ loaded through the same pipeline.
 - `connectome/connectome/store.py` — SQLite persistence (decisions/feedback/weights, survives restart)
 - `connectome/connectome/reference/` — flywire_live_service (real FlyWire caveclient prototype)
 - `connectome/connectome/training/analysis.py` — offline metrics (reward_rate, policy_agreement, distribution)
+- `connectome/connectome/training/dataset.py` — labeled training set from the live store (CSV + JSONL)
 - `connectome/connectome/training/evaluation.py` — Faza 6: learned policy vs real baseline (reward + verdict)
 - `connectome/connectome/training/rl/` — Faza 5 offline RL experiment (torch-optional, isolated from inference)
 
@@ -137,3 +138,14 @@ fly keeps moving. Feedback buttons drive real learning through the backend.
 
 `desktop/models/` holds the low-poly fly asset (OBJ + texture) from the reference
 prototype, ready for an optional visual upgrade. 
+### Collect a labeled training dataset
+
+```
+cd connectome
+python3 -m connectome.training.dataset --db /tmp/opencode/fly_test.db
+```
+
+Exports every recorded decision joined to its user feedback (via `behavior_id`, which is kept
+canonical end-to-end: `behaviorId == event.id` from the Spring boundary through the WS message
+into the feedback loop) as CSV + JSONL in `connectome/connectome/training/datasets/` (git-ignored),
+with dataset statistics (labeled/unlabeled, reward balance).

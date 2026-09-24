@@ -35,7 +35,7 @@ public class WhatsAppWebhookController {
     @PostMapping("/webhook")
     public ResponseEntity<BehaviorDecision> handleMessage(@Valid @RequestBody WhatsAppMessageRequest message) {
         EventRequest.Normalized event = mapper.map(message);
-        BehaviorDecision decision = gateway.decide(event).withBehaviorId("behavior_" + event.id());
+        BehaviorDecision decision = gateway.decide(event).withBehaviorId(event.id());
         broadcaster.broadcast(Map.of(
                 "type", "fly_behavior",
                 "behavior_id", decision.behaviorId(),

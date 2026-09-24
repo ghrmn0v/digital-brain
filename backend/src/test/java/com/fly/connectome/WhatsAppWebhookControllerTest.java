@@ -1,6 +1,7 @@
 package com.fly.connectome;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -55,7 +57,29 @@ class WhatsAppWebhookControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fetch").value("ATTENTION"))
-                .andExpect(jsonPath("$.behaviorId").isNotEmpty());
+                .andExpect(jsonPath("$.behaviorId").value("evt_wa_1"));
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void webhookBroadcastsSameBehaviorIdGoneToPython() throws Exception {
+        when(mapper.map(any())).thenReturn(IMAGE_EVENT);
+        when(gateway.decide(IMAGE_EVENT)).thenReturn(new BehaviorDecision(
+                null, "notification", "whatsapp", 0.75, "ATTENTION", "LOW", 0.5, Map.of(), false));
+
+        mockMvc.perform(post("/api/v1/whatsapp/webhook")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"sender":"+994501112233","senderName":"Sado","body":"hi","type":"image","timestamp":1758700000}
+                                """))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Map> payload = ArgumentCaptor.forClass(Map.class);
+        verify(broadcaster).broadcast(payload.capture());
+        String behaviorIdSentToWs = (String) payload.getValue().get("behavior_id");
+        // the id handed to the WebSocket must equal the event id (== the id python stored the decision under),
+        // otherwise user feedback can never be linked back to the decision in the learning store.
+        assert behaviorIdSentToWs.equals("evt_wa_1");
     }
 
     @Test
