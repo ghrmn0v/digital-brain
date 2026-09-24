@@ -43,4 +43,16 @@ Endpoints:
 - `GET  /api/v1/health`   — service + python health
 - `GET  /api/v1/states`   — fly state machine from python
 - `GET  /api/v1/events/contract` — documented event contract
-- `WS   /ws/fly`          — live behavior stream for Electron/Three.js 
+- `WS   /ws/fly`          — live behavior stream for Electron/Three.js
+
+### Electron + Three.js visual layer
+
+```
+cd desktop
+npm install
+node --test test/
+npm start
+```
+
+When the backend stack is down, the app falls back to a local demo cycle so the
+fly keeps moving. Feedback buttons drive real learning through the backend. 

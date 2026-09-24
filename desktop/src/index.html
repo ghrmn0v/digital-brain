@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; connect-src 'self' ws://127.0.0.1:8080 http://127.0.0.1:8080; style-src 'self' 'unsafe-inline'" />
+  <title>Fly / Connectome</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: rgba(18, 24, 32, 0.82);
+      --line: #24303c;
+      --text: #d7e0e8;
+      --muted: #7f8fa3;
+      --accent: #4aa3ff;
+      --ok: #2ecc71;
+      --warn: #e67e22;
+      --bad: #e74c3c;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; overflow: hidden; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+    canvas { display: block; }
+
+    #hud {
+      position: fixed; top: 14px; left: 16px; z-index: 10;
+      font-size: 12px; color: var(--muted); background: var(--panel);
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+      backdrop-filter: blur(6px);
+    }
+    #hud .row { display: flex; align-items: center; gap: 8px; }
+    #state { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+    #ws-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
+
+    #panel {
+      position: fixed; right: 16px; top: 14px; bottom: 14px; width: 300px; z-index: 10;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+      padding: 14px; overflow-y: auto; backdrop-filter: blur(6px);
+      font-size: 13px;
+    }
+    #panel h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    #panel label { display: block; margin: 10px 0 4px; color: var(--muted); font-size: 12px; }
+    #panel select, #panel input[type="text"], #panel input[type="range"] { width: 100%; }
+    #panel select, #panel input[type="text"] {
+      background: #10161e; color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 7px 9px; font-size: 13px;
+    }
+    #panel .row { display: flex; gap: 8px; margin-top: 8px; }
+    button {
+      flex: 1; background: #17202b; color: var(--text); border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 6px; font-size: 12px; cursor: pointer;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); color: #06121f; font-weight: 700; border: none; }
+    #priority-value { float: right; color: var(--accent); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div class="row">
+      <span id="ws-dot"></span>
+      <span id="state">IDLE</span>
+    </div>
+    <div id="hud-tag"></div>
+  </div>
+
+  <div id="panel">
+    <h3>Fly control</h3>
+    <label for="event-picker">Event</label>
+    <select id="event-picker"></select>
+    <label for="priority">Priority <span id="priority-value">0.5</span></label>
+    <input type="range" id="priority" min="0" max="1" step="0.05" value="0.5" />
+    <label for="topic">Context topic</label>
+    <input type="text" id="topic" value="job" />
+    <div class="row">
+      <button class="primary" id="send">Send event</button>
+      <button id="demo-cycle">Demo cycle</button>
+    </div>
+
+    <h3>Feedback</h3>
+    <div class="row">
+      <button data-feedback="looked">Looked</button>
+      <button data-feedback="marked_useful">Useful</button>
+    </div>
+    <div class="row">
+      <button data-feedback="dismissed">Dismiss</button>
+      <button data-feedback="marked_unnecessary">Unneeded</button>
+    </div>
+    <div class="row">
+      <button data-feedback="interacted">Interact</button>
+      <button data-feedback="ignored">Ignored</button>
+    </div>
+  </div>
+
+  <script type="module" src="./renderer.js"></script>
+</body>
+</html>
