@@ -17,7 +17,7 @@ EXTERNAL WORLD → CONNECTORS → normalized events → CORE BRAIN
 |---|---|---|
 | **Core Brain** | Hüseyn | Memory, context, people, relationships, semantic search, reasoning, intent, action planning, preferences, importance, feedback, learning, personalization, brain events, decisions |
 | **Product / Connectors** | Ayxan | LinkedIn / Calendar / Tasks / Jobs connectors, permissions, automation, action execution, main UI, dashboard, People / Memory / Timeline / Jobs views |
-| **Connectome / Fly** | Fly | WhatsApp → Fly pipeline, Spring Boot backend, Python RL / behavior engine, feedback & reward signals, Electron, Three.js Fly |
+| **Connectome / Fly** | Sadeddin | WhatsApp → Fly pipeline, Spring Boot backend, Python RL / behavior engine, feedback & reward signals, Electron, Three.js Fly |
 
 ## Repository structure
 
