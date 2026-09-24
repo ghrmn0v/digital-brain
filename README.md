@@ -10,6 +10,21 @@ loaded through the same pipeline.
 - `backend/`          — Spring Boot service boundary (events, WhatsApp webhook, WS)
 - `desktop/`          — Electron + Three.js (incoming, Faza 2)
 - `whatsapp-gateway/` — WhatsApp → Spring Boot gateway (isolated from rendering)
+- `doc/`              — spec (`job need to be done.pdf`)
+
+## Connectome internals
+
+- `connectome/connectome/`        — engine: wiring, rate-model brain, states, policy, server (stdlib-only)
+- `connectome/connectome/store.py` — SQLite persistence (decisions/feedback/weights, survives restart)
+- `connectome/connectome/reference/` — flywire_live_service (real FlyWire caveclient prototype)
+- `connectome/connectome/training/analysis.py` — offline metrics (reward_rate, policy_agreement, distribution)
+- `connectome/connectome/training/rl/` — Faza 5 offline RL experiment (torch-optional, isolated from inference)
+
+## Learning roadmap (per spec)
+
+Rule-based baseline (Faza 1) → structured data collection (2) → reward signals (3) →
+offline experiments (4) → **offline RL experiment (5, here)** → evaluate vs baseline (6) →
+gradual production influence (7). Production inference never uses an untested model.
 
 ## Run
 
@@ -72,6 +87,20 @@ FLY_BACKEND_URL=http://localhost:8080/api/v1/whatsapp/webhook node server.js   #
 WhatsApp session (`whatsapp-gateway/.wwebjs_auth/`) is intentionally git-ignored
 (credentials are never committed).
 
+### Offline RL experiment (Faza 5)
+
+Requires torch in an isolated interpreter (system python is stdlib-only):
+
+```
+cd connectome
+python3 -m unittest discover -s tests                     # 50 tests (no torch needed)
+python3 -m connectome.training.rl.offline_exp --episodes 400   # with torch installed
+```
+
+The experiment warms up the RL network offline and reports policy agreement against
+the deterministic baseline on the WhatsApp message-type cases. Outputs land in
+`connectome/connectome/training/rl/experiments/` (git-ignored: reproducible artifacts).
+
 ### Electron + Three.js visual layer
 
 ```
@@ -82,4 +111,7 @@ npm start
 ```
 
 When the backend stack is down, the app falls back to a local demo cycle so the
-fly keeps moving. Feedback buttons drive real learning through the backend. 
+fly keeps moving. Feedback buttons drive real learning through the backend.
+
+`desktop/models/` holds the low-poly fly asset (OBJ + texture) from the reference
+prototype, ready for an optional visual upgrade. 
