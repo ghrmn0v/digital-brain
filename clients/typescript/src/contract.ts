@@ -548,6 +548,91 @@ export interface PersonResolutionResult {
   readonly memory_id?: string | null;
 }
 
+// -- retrieval (search) and conversation (chat) ---------------------------------
+
+/** The Brain's coarse memory taxonomy; additive, and an unknown value is an error. */
+export type MemoryTypeWire =
+  | "fact"
+  | "episode"
+  | "interaction"
+  | "relationship"
+  | "preference"
+  | "event"
+  | "observation";
+
+export interface SearchParams {
+  readonly user_id: string;
+  readonly text?: string;
+  readonly keywords?: readonly string[];
+  readonly memory_type?: MemoryTypeWire | null;
+  readonly person_id?: string | null;
+  readonly importance_min?: number | null;
+  readonly limit?: number;
+  readonly correlation_id?: string | null;
+}
+
+export interface MemoryHitWire {
+  readonly memory_id: string;
+  readonly type: string;
+  readonly content: string;
+  readonly content_truncated?: boolean;
+  readonly score: number;
+  readonly matched_fields?: readonly string[];
+  readonly ranking_reason?: string;
+  readonly confidence: number;
+  readonly importance: number;
+  readonly status: string;
+  readonly source_provider?: string | null;
+  readonly source_component?: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+  readonly person_ids?: readonly string[];
+  readonly related_event_ids?: readonly string[];
+  readonly correlation_id?: string | null;
+}
+
+export interface SearchResultWire {
+  readonly user_id: string;
+  readonly query: string;
+  readonly items: readonly MemoryHitWire[];
+  readonly total_returned: number;
+  readonly truncated?: boolean;
+  readonly correlation_id?: string | null;
+}
+
+export interface ChatParams {
+  readonly user_id: string;
+  readonly message: string;
+  readonly session_id?: string | null;
+  readonly limit?: number;
+  readonly target_event_id?: string | null;
+  readonly record_learning?: boolean;
+  readonly correlation_id?: string | null;
+}
+
+export interface ChatGroundingWire {
+  readonly memory_id: string;
+  readonly type: string;
+  readonly score: number;
+  readonly content: string;
+  readonly content_truncated?: boolean;
+}
+
+export interface ChatResultWire {
+  readonly user_id: string;
+  readonly session_id?: string | null;
+  readonly message: string;
+  readonly answer: string;
+  readonly confidence: number;
+  readonly provider: string;
+  readonly fallback_used?: boolean;
+  readonly grounded_in?: readonly ChatGroundingWire[];
+  readonly context_fact_count?: number;
+  readonly missing_context?: readonly string[];
+  readonly learning_recorded?: number;
+  readonly correlation_id?: string | null;
+}
+
 export interface AssistanceProfileResult {
   readonly user_id: string;
   readonly feedback_count: number;
@@ -603,6 +688,8 @@ export const API_METHODS = [
   { method: "feedback_history", paramsDef: "FeedbackHistoryParams", resultDef: "FeedbackHistoryResult", hasUserIdParam: true },
   { method: "personalization_profile", paramsDef: "UserParams", resultDef: "AssistanceProfileResult", hasUserIdParam: true },
   { method: "resolve_person", paramsDef: "ResolvePersonParams", resultDef: "PersonResolutionWire", hasUserIdParam: true },
+  { method: "search", paramsDef: "SearchParams", resultDef: "SearchResultWire", hasUserIdParam: true },
+  { method: "chat", paramsDef: "ChatParams", resultDef: "ChatResultWire", hasUserIdParam: true },
 ] as const satisfies readonly ApiMethodDescriptor[];
 
 export type ApiMethod = (typeof API_METHODS)[number]["method"];
@@ -625,6 +712,8 @@ export interface MethodParamsMap {
   feedback_history: FeedbackHistoryParams;
   personalization_profile: UserParams;
   resolve_person: ResolvePersonParams;
+  search: SearchParams;
+  chat: ChatParams;
 }
 
 export interface MethodResultMap {
@@ -645,6 +734,8 @@ export interface MethodResultMap {
   feedback_history: FeedbackHistoryResult;
   personalization_profile: AssistanceProfileResult;
   resolve_person: PersonResolutionResult;
+  search: SearchResultWire;
+  chat: ChatResultWire;
 }
 
 export type MethodParams<M extends ApiMethod> = MethodParamsMap[M];

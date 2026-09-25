@@ -8,6 +8,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  API_METHODS,
   BrainApiError,
   BrainContractError,
   HttpBrainClient,
@@ -59,11 +60,16 @@ test("ping answers over HTTP", async () => {
 test("describe exposes the v1 registry including people_timeline", async () => {
   const result = await client.call("describe");
   const methods = result.methods ?? [];
-  assert.equal(methods.length, 17);
+  // Derived from the client's own table so the two cannot drift.
+  assert.equal(methods.length, API_METHODS.length);
   assert.ok(methods.includes("people_timeline"));
   assert.ok(methods.includes("resolve_person"));
+  assert.ok(methods.includes("search"));
+  assert.ok(methods.includes("chat"));
   assert.ok("people_timeline" in (result.schemas ?? {}));
   assert.ok("resolve_person" in (result.schemas ?? {}));
+  assert.ok("search" in (result.schemas ?? {}));
+  assert.ok("chat" in (result.schemas ?? {}));
 });
 
 test("request ids are minted per client and echoed by the server", async () => {

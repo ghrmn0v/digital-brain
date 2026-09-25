@@ -140,7 +140,11 @@ public final class BrainRequests {
                 "learning_status",
                 "feedback_history",
                 "personalization_profile",
-                "resolve_person");
+                "resolve_person",
+                // Appended, never inserted: the order mirrors the canonical
+                // registry so a caller comparing tables sees the same sequence.
+                "search",
+                "chat");
         return methods;
     }
 }

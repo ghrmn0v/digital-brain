@@ -31,19 +31,23 @@ from contracts.brain_events.events import BrainEvent
 from contracts.common.ids import UserId
 from contracts.common.types import Source
 from contracts.feedback.feedback import Feedback
-from contracts.memory.memory import Memory
+from contracts.memory.memory import Memory, MemoryType
 from core.brain_events import DevModePipeline, DevOutcome
 from core.brain_events.dispatch import BrainEventDispatcher
 from core.brain_events.emitter import BrainEventEmitter
 from core.brain_events.sink import CollectingEventSink, EventSink, NullEventSink
 from core.context import Context, ContextEngine
 from core.context.personalization import (
+    ContextFact,
     PersonalContext,
     PersonalContextBuilder,
     personal_system_prompt,
     personalized_user_prompt,
 )
+from core.context.models import ScoredMemory, SearchQuery
+from core.context.ports import SemanticSearch
 from core.context.search import LexicalSemanticSearch
+from core.observability import get_logger
 from core.ingestion import (
     IngestionOutcome,
     IngestionResult,
@@ -136,6 +140,10 @@ class PersonalInsight(BaseModel):
     provider: str
     fallback_used: bool = False
     context_fact_count: int = Field(default=0, ge=0)
+    #: The memories the answer was grounded in. Empty when the Brain had
+    #: nothing to answer from, which is the honest signal that an answer is
+    #: ungrounded rather than merely short.
+    grounding: list[ContextFact] = Field(default_factory=list, max_length=32)
     recorded_candidates: list[RecordedCandidate] = Field(default_factory=list)
 
 
@@ -171,6 +179,38 @@ def _context_only_answer(context: PersonalContext) -> PersonalizedAnswer:
     )
 
 
+class ChatOutcome(BaseModel):
+    """One conversational turn: the answer plus how it can be trusted.
+
+    Mirrors what the API puts on the wire, but provider-agnostic and free of
+    wire concerns so the Python caller gets the same guarantees as an HTTP one.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    message: str
+    answer: str
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    provider: str
+    fallback_used: bool = False
+    session_id: str | None = None
+    grounding: list[ContextFact] = Field(default_factory=list, max_length=32)
+    context_fact_count: int = Field(default=0, ge=0)
+    missing_context: list[str] = Field(default_factory=list, max_length=16)
+    learning_recorded: int = Field(default=0, ge=0)
+    correlation_id: str | None = None
+
+
+#: Placeholder anchor for a turn the caller did not tie to a real event. It is
+#: only ever passed when learning is switched off, so nothing can be written
+#: against it; a real id always replaces it.
+_UNANCHORED_TURN_ID = "chat:unanchored-turn"
+
+
+_log = get_logger("service")
+
+
 class BrainService:
     """Typed application-service boundary over the Core Brain modules."""
 
@@ -181,6 +221,7 @@ class BrainService:
         ingestion: IngestionService | None = None,
         understanding: LLMGateway | None = None,
         context: ContextEngine | None = None,
+        search: SemanticSearch | None = None,
         people: PeopleIntelligence | None = None,
         learning: LearningEngine | None = None,
         pipeline: DevModePipeline | None = None,
@@ -204,6 +245,10 @@ class BrainService:
         self._ingestion = ingestion
         self._understanding = understanding
         self._context = context
+        # The retrieval port is kept on the service so `search` and `chat` can
+        # read memory without going through a transport or a UI. When a host
+        # injects one, it is reused rather than second-guessed.
+        self._search = search
         self._people = people
         self._learning = learning
         self._now = now or _utcnow
@@ -267,6 +312,13 @@ class BrainService:
         data, _ = self._resolve_subject_person(
             data, correlation_id=correlation_id, event_source=event_source
         )
+        _log.info(
+            "event.received",
+            event_id=data.get("id"),
+            event_type=data.get("type"),
+            subject_present=bool(data.get("subject")),
+            correlation_id=correlation_id,
+        )
         result = self._ingestion.ingest(data)
         if result.outcome == IngestionOutcome.ACCEPTED and self._memory is not None:
             for memory_id in result.memory_ids:
@@ -277,6 +329,31 @@ class BrainService:
                         correlation_id=result.correlation_id,
                         **_event_source_kwargs(event_source),
                     )
+        # The outcome is the whole story of an ingest, so it is logged at a
+        # level that matches its severity: a rejection is a warning, never an
+        # error, because the request itself was handled correctly.
+        if result.outcome == IngestionOutcome.ACCEPTED:
+            _log.info(
+                "ingest.accepted",
+                event_id=result.event_id,
+                user_id=result.user_id,
+                correlation_id=result.correlation_id,
+                memory_count=len(result.memory_ids),
+            )
+        elif result.outcome == IngestionOutcome.DUPLICATE:
+            _log.info(
+                "ingest.duplicate",
+                event_id=result.event_id,
+                user_id=result.user_id,
+                duplicate_of=result.duplicate_of_event_id,
+            )
+        else:
+            _log.warning(
+                "ingest.rejected",
+                event_id=result.event_id,
+                user_id=result.user_id,
+                reason=result.reason,
+            )
         return result
 
     def _resolve_subject_person(
@@ -369,6 +446,16 @@ class BrainService:
                         correlation_id=correlation,
                         **_event_source_kwargs(event_source),
                     )
+        _log.info(
+            "learning.recorded",
+            user_id=feedback.user_id,
+            signal_kind=stored.signal.kind.value,
+            signal_topic=stored.signal.topic,
+            signal_strength=stored.signal.strength,
+            memory_id=stored.memory_id,
+            learned_preference_count=len(added),
+            correlation_id=correlation,
+        )
         return stored
 
     def _preference_signatures(self, user_id: UserId) -> set[tuple]:
@@ -428,6 +515,14 @@ class BrainService:
             correlation_id=correlation_id,
             **_event_source_kwargs(event_source),
         )
+        _log.info(
+            "preference.recorded",
+            user_id=user_id,
+            name=name,
+            domain=domain.value if domain is not None else None,
+            explicit=True,
+            correlation_id=correlation_id,
+        )
         return preference
 
     # -- developer mode: developer.* + decision created/action proposed --------
@@ -466,6 +561,15 @@ class BrainService:
             outcome.plan, **_event_source_kwargs(event_source)
         )
         outcome.events.extend([decision_event, *action_events])
+        _log.info(
+            "developer.analyzed",
+            user_id=outcome.user_id,
+            correlation_id=outcome.correlation_id,
+            bug_count=len(outcome.reasoning.bugs),
+            review_count=len(outcome.reasoning.review_findings),
+            proposed_action_count=len(outcome.plan.proposed_actions),
+            brain_event_count=len(outcome.events),
+        )
         return outcome
 
     def reason(
@@ -596,6 +700,24 @@ class BrainService:
                 correlation_id=correlation_id,
                 **_event_source_kwargs(event_source),
             )
+        # Identity resolution is the one place where "created vs reused vs
+        # ambiguous" matters to a reader, so the branch is named explicitly.
+        if resolution.ambiguous:
+            _log.warning(
+                "person.ambiguous",
+                user_id=user_id,
+                candidate_count=len(resolution.candidates),
+                wrote_nothing=True,
+                correlation_id=correlation_id,
+            )
+        else:
+            _log.info(
+                "person.resolved",
+                user_id=user_id,
+                person_id=resolution.person_id,
+                created=resolution.created,
+                correlation_id=correlation_id,
+            )
         return resolution
 
     def learning_status(self, user_id: UserId) -> LearningStatus:
@@ -691,6 +813,22 @@ class BrainService:
                 ),
             )
 
+        _log.info(
+            "insight.answered",
+            user_id=user_id,
+            provider=provider_name,
+            fallback_used=fallback_used,
+            confidence=answer.confidence,
+            context_fact_count=(
+                len(context.memories)
+                + len(context.preferences)
+                + len(context.people)
+                + len(context.learned)
+            ),
+            missing_context_count=len(missing or list(answer.missing_context)),
+            recorded_candidate_count=len(recorded),
+            correlation_id=correlation_id,
+        )
         return PersonalInsight(
             user_id=user_id,
             question=context.request,
@@ -706,8 +844,166 @@ class BrainService:
                 + len(context.people)
                 + len(context.learned)
             ),
+            grounding=list(context.memories),
             recorded_candidates=recorded,
         )
+
+    # -- retrieval and conversation ------------------------------------------
+    def search(
+        self,
+        user_id: UserId,
+        *,
+        text: str = "",
+        keywords: Sequence[str] = (),
+        memory_type: MemoryType | None = None,
+        person_id: str | None = None,
+        importance_min: float | None = None,
+        limit: int = 10,
+        correlation_id: str | None = None,
+    ) -> list[ScoredMemory]:
+        """Rank this user's memories for a question. Deterministic, user-scoped.
+
+        The Brain owned retrieval all along; this is the service-level door onto
+        it. ``user_id`` is mandatory and is passed straight into the query, so
+        isolation is a property of the call rather than a filter a caller could
+        forget. An empty query with no filters is a legitimate listing by rank.
+        """
+        if self._memory is None:
+            raise BrainServiceConfigurationError("memory not configured")
+        if limit < 1:
+            raise BrainServiceValidationError("limit must be >= 1")
+        query_text = (text or "").strip()
+        keyword_list = [str(k) for k in keywords if str(k).strip()]
+
+        if not query_text and not keyword_list:
+            # A query-less call is a listing, not a search. The lexical ranker
+            # legitimately returns nothing when it has no terms to match, so
+            # listing goes through the Memory Engine's own importance/recency
+            # ordering instead of asking the ranker to rank an empty question.
+            _log.info(
+                "search.listing",
+                user_id=user_id,
+                limit=limit,
+                correlation_id=correlation_id,
+            )
+            listed = self._memory.retrieve_relevant_memories(
+                user_id,
+                memory_type=memory_type,
+                person_id=person_id,
+                importance_min=importance_min,
+                limit=limit,
+            )
+            _log.info(
+                "search.completed",
+                user_id=user_id,
+                has_query=False,
+                returned=len(listed),
+                limit=limit,
+                correlation_id=correlation_id,
+            )
+            return [ScoredMemory(memory=item, score=item.importance) for item in listed]
+
+        query = SearchQuery(
+            user_id=user_id,
+            text=query_text,
+            keywords=keyword_list,
+            top_k=limit,
+        )
+        results = self._search_port().search(query)
+        if memory_type is not None:
+            results = [r for r in results if r.memory.type == memory_type]
+        if person_id is not None:
+            results = [r for r in results if person_id in r.memory.related_people]
+        if importance_min is not None:
+            results = [r for r in results if r.memory.importance >= importance_min]
+        _log.info(
+            "search.completed",
+            user_id=user_id,
+            has_query=bool(query_text or keywords),
+            returned=len(results),
+            limit=limit,
+            correlation_id=correlation_id,
+        )
+        return results
+
+    def chat(
+        self,
+        user_id: UserId,
+        message: str,
+        *,
+        session_id: str | None = None,
+        limit: int = 8,
+        target_event_id: str | None = None,
+        record_learning: bool = True,
+        correlation_id: str | None = None,
+    ) -> ChatOutcome:
+        """Answer one question from this user's own Brain state.
+
+        Delegates to :meth:`personalized_insight` so the conversational path and
+        the programmatic path cannot drift apart, and adds the two things a
+        caller needs to trust the answer: which memories it rests on, and
+        whether learning happened.
+
+        Learning is only recorded when ``target_event_id`` is supplied. The Brain
+        never invents a traceability id, so an unanchored turn answers without
+        writing, and says so in the outcome.
+        """
+        text = (message or "").strip()
+        if not text:
+            raise BrainServiceValidationError("message must be non-empty")
+
+        anchor = (target_event_id or "").strip() or None
+        should_record = bool(record_learning and anchor)
+        if record_learning and not anchor:
+            _log.info(
+                "chat.learning_skipped",
+                user_id=user_id,
+                session_id=session_id,
+                reason="no target_event_id: the Brain does not invent traceability ids",
+            )
+
+        insight = self.personalized_insight(
+            user_id,
+            text,
+            target_event_id=anchor or _UNANCHORED_TURN_ID,
+            correlation_id=correlation_id,
+            record_learning=should_record,
+        )
+        grounding = list(insight.grounding)[: max(1, limit)]
+        _log.info(
+            "chat.answered",
+            user_id=user_id,
+            session_id=session_id,
+            provider=insight.provider,
+            fallback_used=insight.fallback_used,
+            confidence=insight.confidence,
+            grounding_count=len(grounding),
+            learning_recorded=len(insight.recorded_candidates),
+            correlation_id=correlation_id,
+        )
+        return ChatOutcome(
+            user_id=user_id,
+            session_id=session_id,
+            message=text,
+            answer=insight.answer,
+            confidence=insight.confidence,
+            provider=insight.provider,
+            fallback_used=insight.fallback_used,
+            grounding=grounding,
+            context_fact_count=insight.context_fact_count,
+            missing_context=insight.missing_context,
+            learning_recorded=len(insight.recorded_candidates),
+            correlation_id=correlation_id,
+        )
+
+    def _search_port(self) -> SemanticSearch:
+        """The retrieval port, built over the Brain's own memory when absent."""
+        if self._search is not None:
+            return self._search
+        if self._memory is None:
+            raise BrainServiceConfigurationError("memory not configured")
+        self._search = LexicalSemanticSearch(self._memory)
+        return self._search
 
     def _personal_context_builder(self) -> PersonalContextBuilder:
         """Wire the context builder over the Brain's own subsystems."""

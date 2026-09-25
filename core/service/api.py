@@ -39,6 +39,8 @@ from contracts.api.registry import (
     describe_api_methods,
 )
 from contracts.common.types import Source
+from contracts.memory.memory import MemoryType
+from core.context.models import ScoredMemory
 from core.understanding.developer import (
     DeveloperContext,
     DeveloperFile,
@@ -60,6 +62,15 @@ def _bounded_text(value: str, max_length: int = 1900) -> str:
     if len(value) <= max_length:
         return value
     return value[: max_length - 3] + "..."
+
+
+def _bounded_text_flagged(value: str, max_length: int = 1900) -> tuple[str, bool]:
+    """Bound a string and say whether it was cut, for the ``*_truncated`` flags."""
+    if not isinstance(value, str):
+        return "", False
+    if len(value) <= max_length:
+        return value, False
+    return _bounded_text(value, max_length), True
 
 
 def _bounded_request_id(value: Any) -> str:
@@ -615,6 +626,106 @@ def _handle_personalization_profile(
     return _wire_profile(service.personalization_profile(params.user_id))
 
 
+# -- retrieval and conversation ---------------------------------------------------
+
+
+def _memory_hit_wire(scored: ScoredMemory) -> R.MemoryHitWire:
+    """Map one ranked memory to the wire, bounding its content."""
+    memory = scored.memory
+    content, truncated = _bounded_text_flagged(memory.content)
+    metadata = memory.metadata if isinstance(memory.metadata, dict) else {}
+    correlation = metadata.get("correlation_id")
+    return R.MemoryHitWire(
+        memory_id=memory.memory_id,
+        type=memory.type.value,
+        content=content,
+        content_truncated=truncated,
+        score=scored.score,
+        matched_fields=list(scored.matched_fields),
+        ranking_reason=scored.ranking_reason,
+        confidence=memory.confidence,
+        importance=memory.importance,
+        status=memory.status.value,
+        source_provider=memory.source.provider,
+        source_component=memory.source.component,
+        created_at=memory.created_at.isoformat(),
+        updated_at=memory.updated_at.isoformat(),
+        person_ids=[str(pid) for pid in memory.related_people],
+        related_event_ids=[str(eid) for eid in memory.related_events],
+        correlation_id=correlation if isinstance(correlation, str) else None,
+    )
+
+
+def _handle_search(
+    service: BrainService,
+    params: P.SearchParams,
+    source: Source | None = None,
+) -> R.SearchResultWire:
+    memory_type = MemoryType(params.memory_type) if params.memory_type else None
+    hits = service.search(
+        params.user_id,
+        text=params.text,
+        keywords=params.keywords,
+        memory_type=memory_type,
+        person_id=params.person_id,
+        importance_min=params.importance_min,
+        limit=params.limit,
+        correlation_id=params.correlation_id,
+    )
+    return R.SearchResultWire(
+        user_id=params.user_id,
+        query=params.text,
+        items=[_memory_hit_wire(hit) for hit in hits],
+        total_returned=len(hits),
+        truncated=len(hits) >= params.limit,
+        correlation_id=params.correlation_id,
+    )
+
+
+def _handle_chat(
+    service: BrainService,
+    params: P.ChatParams,
+    source: Source | None = None,
+) -> R.ChatResultWire:
+    outcome = service.chat(
+        params.user_id,
+        params.message,
+        session_id=params.session_id,
+        limit=params.limit,
+        target_event_id=params.target_event_id,
+        record_learning=params.record_learning,
+        correlation_id=params.correlation_id,
+    )
+    grounding: list[R.ChatGroundingWire] = []
+    for fact in outcome.grounding:
+        if not fact.memory_id:
+            continue
+        content, truncated = _bounded_text_flagged(fact.text)
+        grounding.append(
+            R.ChatGroundingWire(
+                memory_id=fact.memory_id,
+                type=fact.kind,
+                content=content,
+                content_truncated=truncated,
+                score=1.0,
+            )
+        )
+    return R.ChatResultWire(
+        user_id=outcome.user_id,
+        session_id=outcome.session_id,
+        message=outcome.message,
+        answer=outcome.answer,
+        confidence=outcome.confidence,
+        provider=outcome.provider,
+        fallback_used=outcome.fallback_used,
+        grounded_in=grounding,
+        context_fact_count=outcome.context_fact_count,
+        missing_context=list(outcome.missing_context),
+        learning_recorded=outcome.learning_recorded,
+        correlation_id=outcome.correlation_id,
+    )
+
+
 _BrainApiHandler = Callable[
     [BrainService, BaseModel, Source | None],
     BaseModel,
@@ -638,6 +749,8 @@ _HANDLERS: dict[ApiMethod, _BrainApiHandler] = {
     ApiMethod.FEEDBACK_HISTORY: _handle_feedback_history,
     ApiMethod.PERSONALIZATION_PROFILE: _handle_personalization_profile,
     ApiMethod.RESOLVE_PERSON: _handle_resolve_person,
+    ApiMethod.SEARCH: _handle_search,
+    ApiMethod.CHAT: _handle_chat,
 }
 
 _METHOD_VALUES = frozenset(method.value for method in API_METHOD_REGISTRY)

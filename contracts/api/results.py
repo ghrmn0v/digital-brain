@@ -463,3 +463,83 @@ class FeedbackHistoryResult(BaseModel):
 
     user_id: UserId
     items: list[FeedbackHistoryItemWire] = Field(default_factory=list)
+
+# -- retrieval (search) and conversational (chat) ----------------------------------
+
+
+class MemoryHitWire(BaseModel):
+    """One retrieved memory, with why it was retrieved.
+
+    Content is included because retrieving the memory *is* the operation, but it
+    is length-capped and ``content_truncated`` says so, so a client can render
+    a preview without ever receiving an unbounded blob.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: str
+    type: str
+    content: str
+    content_truncated: bool = False
+    score: float = Field(ge=0.0, le=1.0)
+    matched_fields: list[str] = Field(default_factory=list)
+    ranking_reason: str = ""
+    confidence: float = Field(ge=0.0, le=1.0)
+    importance: float = Field(ge=0.0, le=1.0)
+    status: str
+    source_provider: str | None = None
+    source_component: str | None = None
+    created_at: str
+    updated_at: str
+    person_ids: list[str] = Field(default_factory=list)
+    related_event_ids: list[str] = Field(default_factory=list)
+    correlation_id: str | None = None
+
+
+class SearchResultWire(BaseModel):
+    """The user's own memories for one query, best match first."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    query: str
+    items: list[MemoryHitWire] = Field(default_factory=list, max_length=50)
+    total_returned: int = Field(ge=0)
+    truncated: bool = False
+    correlation_id: str | None = None
+
+
+class ChatGroundingWire(BaseModel):
+    """One memory the answer leaned on."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: str
+    type: str
+    score: float = Field(ge=0.0, le=1.0)
+    content: str
+    content_truncated: bool = False
+
+
+class ChatResultWire(BaseModel):
+    """One grounded answer, with its provenance and honest uncertainty.
+
+    ``provider`` and ``fallback_used`` are always present so a client can tell a
+    model answer from a deterministic one. ``grounded_in`` is empty exactly when
+    the Brain had nothing to answer from.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    session_id: str | None = None
+    message: str
+    answer: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    provider: str
+    fallback_used: bool = False
+    grounded_in: list[ChatGroundingWire] = Field(default_factory=list, max_length=32)
+    context_fact_count: int = Field(default=0, ge=0)
+    missing_context: list[str] = Field(default_factory=list)
+    learning_recorded: int = Field(default=0, ge=0)
+    correlation_id: str | None = None

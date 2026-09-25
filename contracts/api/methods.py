@@ -61,3 +61,9 @@ class ApiMethod(str, Enum):
     # Declared last so every previously published method keeps its registry
     # index: adding a method must not renumber what a client already knows.
     RESOLVE_PERSON = "resolve_person"
+
+    # -- appended for direct usability ----------------------------------------
+    # Same rule: appended, never inserted, so a client that learned a method
+    # index keeps it.
+    SEARCH = "search"
+    CHAT = "chat"

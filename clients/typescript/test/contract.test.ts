@@ -38,7 +38,11 @@ test("client method table matches the canonical schema in order", () => {
   const fromSchema = schema["x-methods"].map((entry) => entry.method);
   const fromClient = API_METHODS.map((entry) => entry.method);
   assert.deepEqual(fromClient, fromSchema);
-  assert.equal(fromClient.length, 17);
+  // Derived, not remembered: appending a method must not leave a stale literal
+  // behind, while still failing if the client and the schema ever disagree.
+  assert.equal(fromClient.length, fromSchema.length);
+  assert.ok(fromClient.includes("search"));
+  assert.ok(fromClient.includes("chat"));
 });
 
 test("client params/result definition names match the canonical schema", () => {

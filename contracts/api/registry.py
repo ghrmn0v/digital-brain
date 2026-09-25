@@ -101,6 +101,11 @@ API_METHOD_SPECS: tuple[ApiMethodSpec, ...] = (
         params.ResolvePersonParams,
         results.PersonResolutionWire,
     ),
+    # Appended, not inserted: a client that learned an earlier method index
+    # keeps it. Both are additive reads/derived answers over data the Brain
+    # already owned, exposed so the Brain can be used without a UI.
+    ApiMethodSpec(ApiMethod.SEARCH, params.SearchParams, results.SearchResultWire),
+    ApiMethodSpec(ApiMethod.CHAT, params.ChatParams, results.ChatResultWire),
 )
 
 API_METHOD_REGISTRY: Mapping[ApiMethod, ApiMethodSpec] = MappingProxyType(

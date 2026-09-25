@@ -40,10 +40,38 @@ def _build_api() -> BrainApi:
 
 class ResolvePersonContractTests(unittest.TestCase):
     def test_method_is_declared_last_and_keeps_previous_indices(self) -> None:
+        """``resolve_person`` keeps index 16 forever; later methods append after it.
+
+        The rule this protects is append-only: a method, once published, never
+        moves. Asserting the literal count and "is last" would only freeze one
+        moment, so this states the invariant instead — the historical prefix is
+        untouched, ``resolve_person`` sits exactly where it was first published,
+        and anything added afterwards is appended behind it.
+        """
         names = api_method_names()
-        self.assertEqual(names[-1], ApiMethod.RESOLVE_PERSON.value)
-        self.assertEqual(len(names), 17)
-        self.assertEqual(names[:16], names[:16])
+        expected_prefix = [
+            "ping",
+            "describe",
+            "ingest",
+            "record_feedback",
+            "record_preference",
+            "understand",
+            "build_context",
+            "analyze_developer",
+            "reason",
+            "preferences",
+            "developer_preferences",
+            "people_summary",
+            "people_timeline",
+            "learning_status",
+            "feedback_history",
+            "personalization_profile",
+        ]
+        self.assertEqual(names[:16], expected_prefix)
+        self.assertEqual(names[16], ApiMethod.RESOLVE_PERSON.value)
+        # Everything published after it is strictly newer, never interleaved.
+        self.assertEqual(names[16:], ["resolve_person", *names[17:]])
+        self.assertEqual(len(set(names)), len(names))
         self.assertIn(ApiMethod.RESOLVE_PERSON, list(ApiMethod))
 
     def test_registry_binds_the_typed_models(self) -> None:

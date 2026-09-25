@@ -200,3 +200,59 @@ class FeedbackHistoryParams(UserParams):
     model_config = ConfigDict(extra="forbid")
 
     limit: int | None = Field(default=None, ge=1, le=500)
+
+class SearchParams(UserParams):
+    """Retrieve this user's own memories by relevance to a question.
+
+    This is the read path the Brain was missing: memory exists, is ranked
+    deterministically and is user-isolated, but before this method no canonical
+    call could return it. The query is free text; empty text with filters set
+    lists by rank alone.
+
+    Isolation is not optional here — ``user_id`` is required, and the service
+    refuses to widen it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(default="", max_length=4096)
+    keywords: list[str] = Field(default_factory=list, max_length=16)
+    memory_type: Literal[
+        "fact",
+        "episode",
+        "interaction",
+        "relationship",
+        "preference",
+        "event",
+        "observation",
+    ] | None = None
+    person_id: PersonId | None = None
+    importance_min: float | None = Field(default=None, ge=0.0, le=1.0)
+    limit: int = Field(default=10, ge=1, le=50)
+    correlation_id: str | None = Field(default=None, max_length=256)
+
+
+class ChatParams(UserParams):
+    """Ask the Brain a question in natural language and get a grounded answer.
+
+    One conversational turn. The Brain retrieves its own memories, preferences,
+    people and learned evidence for this user, answers from them, and reports
+    exactly which memories it used.
+
+    Two properties are deliberate and load-bearing:
+
+    * the answer is **grounded or absent** — the Brain reports the memories it
+      leaned on rather than asserting something it cannot source;
+    * a model answer is **never stored**. Learning is only recorded when the
+      caller supplies ``target_event_id``, because the Brain never invents a
+      traceability id for something it did not observe.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str = Field(min_length=1, max_length=4096)
+    session_id: str | None = Field(default=None, max_length=128)
+    limit: int = Field(default=8, ge=1, le=32)
+    target_event_id: str | None = Field(default=None, max_length=512)
+    record_learning: bool = True
+    correlation_id: str | None = Field(default=None, max_length=256)
