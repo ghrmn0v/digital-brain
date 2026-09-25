@@ -14,6 +14,21 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "src/generated/**",
     "next-env.d.ts",
+    // Other owners' subsystems share this repository but not this lint config.
+    // They keep their own conventions (Fly's Electron and gateway code is
+    // CommonJS by design), so linting them with the Product rules would report
+    // another owner's style as an error. Each has its own checks: the Core
+    // Brain client runs `tsc`, Fly runs unittest and `node --test`.
+    "core/**",
+    "contracts/**",
+    "clients/**",
+    "backend/**",
+    "connectome/**",
+    "desktop/**",
+    "whatsapp-gateway/**",
+    "docs/**",
+    "tests/**",
+    "scripts/**",
   ]),
 ]);
 

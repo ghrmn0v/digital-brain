@@ -20,3 +20,10 @@ include = ["contracts*", "core*"]
 
 [tool.setuptools.package-data]
 "contracts.schemas" = ["*.json"]
+
+[tool.pytest.ini_options]
+# The Core Brain suite only. This repository also holds Fly, whose tests live in
+# `connectome/tests/` and are stdlib unittest, not pytest; without this the root
+# run collects them too and fails on their imports. Fly's suite is run from its
+# own directory: `cd connectome && python -m unittest discover -s tests`.
+testpaths = ["tests"]
