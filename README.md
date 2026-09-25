@@ -69,6 +69,8 @@ docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSock
 docs/gemini.md          Gemini provider + long-term learning loop
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
+docs/PRODUCT.md       Product / connector layer — its own doc, kept verbatim
+docs/FLY.md           Fly / Connectome subsystem — its own doc, kept verbatim
 clients/typescript/  zero-dependency TypeScript client for both Product clients
 clients/java/       dependency-free Java client (JDK only; not compiled here)
 PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–8
@@ -78,6 +80,37 @@ tests/                contract + engine + ingestion + understanding + context
 pyproject.toml        package metadata (Pydantic + WebSocket server dependency)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
+
+## The other two subsystems in this repository
+
+This repository holds all three owners' code, so the Core Brain tree above sits
+beside the Product layer and the Fly behaviour engine:
+
+```
+src/  prisma/  next.config.ts  package.json
+                      Product — local-first Product and connector layer.
+                      Next.js + Prisma/SQLite. Owns adapters, permissions,
+                      automation, Developer Mode and event delivery.
+                      Its detailed doc is docs/PRODUCT.md.
+
+backend/  connectome/  desktop/  whatsapp-gateway/
+                      Fly / Connectome — fruit-fly-inspired behaviour engine.
+                      Spring Boot service boundary, stdlib-only Python engine,
+                      Electron client, WhatsApp gateway.
+                      Its detailed doc is docs/FLY.md.
+```
+
+Wiring between them, and who owns which side of it:
+
+| Direction | Contract | Owner of the adaptation |
+|---|---|---|
+| Product → Brain | one `ApiRequest`, `method: "ingest"`, Brain `NormalizedSourceEvent` in `params.event` | Product maps its normalized event; the Brain requires the canonical envelope |
+| Brain → Product | canonical Brain `BrainEvent` on `POST /api/brain-events` | Product maps it into its internal shape; the legacy shape stays accepted |
+| Product → Fly | `POST /api/v1/events` | Fly accepts both its own event shape and the platform normalized event |
+
+Each owner adapts on its own side of the boundary, so no subsystem has to speak
+another's internal vocabulary. The Brain proposes and never executes; Product
+decides and executes.
 
 ## Current development phase
 

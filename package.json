@@ -1,0 +1,68 @@
+{
+  "name": "digital-brain-product",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "worker": "node scripts/product-worker.mjs",
+    "lint": "eslint .",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "verify": "npm run db:validate && npm run check && npm run build",
+    "db:generate": "prisma generate",
+    "db:format": "prisma format",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "dotenv": "^18.0.3",
+    "eventemitter2": "^6.4.9",
+    "lucide-react": "^1.48.0",
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^24.13.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^5.0.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "prisma": "7.10.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.1"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true,
+    "prisma@7.10.0": true,
+    "@prisma/engines@7.10.0": true,
+    "unrs-resolver@1.12.2": true,
+    "esbuild@0.28.2": true
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "mysql2": "3.24.4"
+  }
+}
