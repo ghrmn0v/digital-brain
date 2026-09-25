@@ -13,7 +13,7 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE (+ 5B history timeline/provenance, + 5C person naming & identity resolution) |
 | 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`, `core/brain_events/`) | ✅ COMPLETE |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ✅ COMPLETE |
-| 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | 🟡 PARTIAL — Slices 1–6 done (event infra + BrainService + typed API + stdio/HTTP/WebSocket + delivery contract + canonical v1 schema + thin TypeScript client); Java client NOT STARTED |
+| 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | ✅ COMPLETE — Slices 1–8 done (event infra + BrainService + typed API + stdio/HTTP/WebSocket + delivery contract + canonical v1 schema + TypeScript client + `resolve_person` + Java client; Java not compiled locally) |
 
 Guiding rules (from SPEC.md, enforced every phase):
 
@@ -899,3 +899,73 @@ the single request-processing entry point; this slice only adapts it + the
 - Verification: Python 566 OK (547 + 19); TypeScript 61 OK (53 + 8); compileall,
   schema `--check`, `git diff --check` clean. No dependency install, no
   behaviour change, no Java work.
+
+### Phase 8 (Slice 8) — Dependency-Free Java Client
+
+- Added `clients/java/`: a thin Java client for API v1 over the same two
+  transports and the same 17-method contract as the TypeScript client. No Brain
+  logic, no UI, no dependency: `pom.xml` declares none, and the sources import
+  only `java.*` and their own package (enforced by a test).
+- `Json.java` — minimal strict JSON reader/writer over `Map`/`List`/`String`/
+  `Double`/`Boolean`/`null`, since the JDK ships no JSON API and adding Jackson
+  would break the zero-dependency property. Deterministic key order, control
+  character and escape handling, rejection of trailing content, unterminated
+  strings and non-finite numbers.
+- `BrainRequests.java` — the shared rules: request-id minting, the
+  `ApiRequest` envelope, `user_id` injection, the `ApiResponse` invariants and
+  the event consumer rules (dedupe by `BrainEvent.id` in a bounded window,
+  per-user filter, `correlation_id` grouping).
+- `BrainHttpClient.java` — `POST /v1/brain` and `GET /health` via
+  `java.net.http.HttpClient`; `request(...)` returns the envelope, `call(...)`
+  returns the result or throws `BrainApiException`.
+- `BrainWebSocketClient.java` — `/v1/brain?user_id=…` via
+  `java.net.http.WebSocket`, with responses correlated by request id (a pending
+  future is registered before the frame is written), a response timeout, live
+  events through `onEvent`, and a clean close that fails in-flight requests.
+- `BrainClient.java` + `SelfCheck.java` — entry point and a dependency-free
+  self check (`main`) that exercises JSON round trips, escaping, event dedupe
+  and filtering, correlation ids, the 17-method table and identity injection,
+  plus an optional live round trip against a running Core.
+- **Verification status (honest): this client was NOT compiled or executed
+  here.** The environment has a JRE only — no `javac`, no `jdk.compiler` module,
+  no Maven — and installing a JDK is out of scope. What *is* mechanically
+  verified is `tests/test_java_client_parity.py` (12 tests): the Java method
+  table equals `ApiMethod` and the schema bundle in order, the endpoint paths and
+  API version match the Core transports, the error codes it branches on are
+  canonical, no source calls a method outside the registry, there are no
+  third-party imports and `pom.xml` declares no dependencies. Manual review also
+  found and fixed two real defects before delivery: a `CompletableFuture`
+  assigned to a `WebSocket` field in `connect()`, and a response-correlation
+  race in `call()`. Treat the client as a reviewed first draft: a developer with
+  a JDK must run `mvn -q package` and `SelfCheck` before relying on it.
+
+### Phase 8 (Slice 9) — Public Error Mapping and Preference Precedence Fixes
+
+Two genuine bugs found by the final audit, both fixed with regression tests.
+
+- **Input errors leaked as `internal_error` (10 public paths).** People and
+  Learning own the detailed input rules, but their exceptions were not mapped at
+  the service boundary, so a whitespace-only `user_id` (or preference name,
+  value or `person_id`) reached clients as an opaque `internal_error` that hid
+  the real reason. `preferences`, `developer_preferences`, `people_summary`,
+  `people_timeline`, `resolve_person`, `record_preference`, `learning_status`,
+  `feedback_history`, `personalization_profile` and the feedback path are
+  affected. Fix: `_as_service_validation(...)` in `core/service/brain_service.py`
+  translates `PeopleValidationError` / `LearningValidationError` into
+  `BrainServiceValidationError`, which `BrainApi` already maps to
+  `validation_error`. Non-validation failures are deliberately left untouched.
+- **A learned preference silently overwrote an explicit user preference.**
+  `_learn_preferences` writes through People Intelligence, whose conflict key is
+  `<domain>:<name>` — the same key an explicit record uses, so three accepted
+  signals turned an explicit `language=Rust` into `language=Python`. Fix:
+  `_has_explicit_preference(...)` checks the active preference memories for the
+  same conflict key without the `learned` marker, and the learned write is
+  skipped. Explicit wins; the counted evidence stays visible in
+  `learning_status.preference_evidence`, and a learned preference with no
+  explicit counterpart is still written as before. A deliberate explicit
+  re-record still supersedes.
+- Tests: `tests/test_error_mapping.py` (6) and
+  `tests/test_preference_precedence.py` (6) — all 10 affected methods, valid
+  requests still succeeding, unknown-method routing unchanged, explicit-wins,
+  evidence visibility, learned-still-lands, deliberate override, provenance on
+  a learned record, and the same precedence through `BrainApi`.

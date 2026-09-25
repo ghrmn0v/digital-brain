@@ -50,6 +50,11 @@ delta_importance) and `preference_evidence` (belief weights). Persisted by
 
 1. Repeated **acceptance** of a preference hint (≥ 2 positive, rate ≥ 0.6)
    records the matching developer preference (importance grows with evidence).
+   A learned value never supersedes what the user stated explicitly: if an
+   active preference for the same `<domain>:<name>` conflict key is not marked
+   `learned`, the write is skipped and the explicit value stands. The counted
+   evidence is still visible in `learning_status.preference_evidence`, so nothing
+   is lost and nothing is overwritten.
 2. Repeated **rejection** of a topic (≥ 2 samples, positive rate ≤ 0.25)
    records an `avoid:<topic>` preference.
 3. **Accepted while tests green** records `fix-accepted-after-tests`.

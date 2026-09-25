@@ -69,8 +69,9 @@ docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSock
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
 clients/typescript/  zero-dependency TypeScript client for both Product clients
-PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–5A
-                      implemented; TS/Java clients remain)
+clients/java/       dependency-free Java client (JDK only; not compiled here)
+PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–8
+                      implemented, Java client unverified locally)
 tests/                contract + engine + ingestion + understanding + context
                       + people + reasoning + learning + service tests
 pyproject.toml        package metadata (Pydantic + WebSocket server dependency)
@@ -84,11 +85,15 @@ infrastructure + BrainService boundary), Slice 2 (Context + Learning →
 Reasoning feedback loop), Slice 3 Part A (the typed client-facing API
 contract), Slice 3 Part B (the stdio JSON-lines daemon), Slice 4A (the
 minimal HTTP transport), Slice 4B (consumer-side event-delivery guarantees),
-Slice 4C (the bounded, user-bound WebSocket transport) and Slice 5A (canonical
-v1 schema distribution) are implemented and verified; framework-free TypeScript
-and Java clients are NOT started. The Core Brain MVP (Phases 0–7) is
-feature-complete and Phases 0–7 plus the completed Phase 8 slices are fully
-connected. Built so far:
+Slice 4C (the bounded, user-bound WebSocket transport), Slice 5A (canonical
+v1 schema distribution), Slice 6 (framework-free TypeScript client), Slice 7
+(`resolve_person` as API method 17) and Slice 8 (a dependency-free Java client)
+are implemented. The Core Brain MVP (Phases 0–7) is feature-complete and
+Phases 0–7 plus the completed Phase 8 slices are fully connected. The
+TypeScript client is executed and verified against the real Core; the Java
+client is **not** compiled or run in this environment (JRE only) and its
+verification is limited to a static parity test against the canonical schema.
+Built so far:
 
 - Memory Engine (deterministic lifecycle, SQLite, user isolation).
 - Ingestion pipeline (validation, dedup, receipts, deterministic mappings,
@@ -234,8 +239,15 @@ connected. Built so far:
   transport. Run `cd clients/typescript && node --test test/` (no install
   needed). See `docs/typescript-client.md`.
 
-Not built yet: embeddings/vector store, connectors, frontend, and a Java client
-package. Mobile Product code remains responsible for
+- Java client (Phase 8 Slice 8): `clients/java/` is a dependency-free,
+  JDK-only client over the same two transports and the same 17-method contract
+  (`java.net.http.HttpClient` + `java.net.http.WebSocket`, hand-rolled strict
+  JSON, no Maven dependencies). **It has not been compiled or run here** — the
+  environment has a JRE only — so its verification is a static parity test
+  against the canonical schema, not a build. See `clients/java/README.md`.
+
+Not built yet: embeddings/vector store and connectors/frontend. Mobile Product
+code remains responsible for
 microphone/transcription UX, auth, notifications, push providers and action
 execution. Durable/broker delivery (Redis/Kafka/persistent queue, retry workers)
 is explicitly NOT part of Phase 8.

@@ -23,7 +23,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence, TypeVar
 
 from contracts.brain_events.events import BrainEvent
 from contracts.common.ids import UserId
@@ -59,6 +59,7 @@ from core.people import (
     PersonTimeline,
     Preference,
 )
+from core.learning.exceptions import LearningValidationError
 from core.people.exceptions import PeopleValidationError
 from core.people.models import DeveloperPreferences, PreferenceDomain
 from core.reasoning import ReasoningResult
@@ -83,6 +84,23 @@ def _utcnow() -> datetime:
 
 def _event_source_kwargs(source: Source | None) -> dict[str, Source]:
     return {"source": source} if source is not None else {}
+
+
+_T = TypeVar("_T")
+
+
+def _as_service_validation(operation: Callable[[], _T]) -> _T:
+    """Translate a Core module's input error into a public validation error.
+
+    People and Learning own the detailed rules (bounded non-empty ids, known
+    domains, usable names). Those errors mean "the caller sent something the
+    Brain cannot use", which is ``validation_error`` at the API boundary — never
+    an opaque ``internal_error``. Non-validation failures are left untouched.
+    """
+    try:
+        return operation()
+    except (PeopleValidationError, LearningValidationError) as exc:
+        raise BrainServiceValidationError(str(exc), cause=exc) from exc
 
 
 class BrainService:
@@ -262,7 +280,9 @@ class BrainService:
             )
 
         before = self._preference_signatures(learning_feedback.user_id)
-        stored = self._learning.record_feedback(learning_feedback)
+        stored = _as_service_validation(
+            lambda: self._learning.record_feedback(learning_feedback)
+        )
 
         self._dispatcher.learning_signal_detected(
             stored.signal,
@@ -322,15 +342,17 @@ class BrainService:
                 raise BrainServiceValidationError(
                     f"unknown preference domain: {domain!r}", cause=exc
                 ) from exc
-        preference = self._people.record_preference(
-            user_id,
-            name=name,
-            value=value,
-            domain=domain,
-            confidence=confidence,
-            importance=importance,
-            source=source,
-            metadata=metadata,
+        preference = _as_service_validation(
+            lambda: self._people.record_preference(
+                user_id,
+                name=name,
+                value=value,
+                domain=domain,
+                confidence=confidence,
+                importance=importance,
+                source=source,
+                metadata=metadata,
+            )
         )
         self._dispatcher.preference_updated(
             user_id,
@@ -446,17 +468,21 @@ class BrainService:
     def preferences(self, user_id: UserId) -> list[Preference]:
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
-        return self._people.preferences(user_id)
+        return _as_service_validation(
+            lambda: self._people.preferences(user_id)
+        )
 
     def developer_preferences(self, user_id: UserId) -> DeveloperPreferences:
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
-        return self._people.developer_preferences(user_id)
+        return _as_service_validation(
+            lambda: self._people.developer_preferences(user_id)
+        )
 
     def people_summary(self, user_id: UserId) -> PeopleSummary:
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
-        return self._people.people_summary(user_id)
+        return _as_service_validation(lambda: self._people.people_summary(user_id))
 
     def people_timeline(
         self,
@@ -467,7 +493,9 @@ class BrainService:
     ) -> PersonTimeline:
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
-        return self._people.timeline(user_id, person_id, limit=limit)
+        return _as_service_validation(
+            lambda: self._people.timeline(user_id, person_id, limit=limit)
+        )
 
     def resolve_person(
         self,
@@ -486,12 +514,11 @@ class BrainService:
         """
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
-        try:
-            resolution = self._people.resolve_person(
+        resolution = _as_service_validation(
+            lambda: self._people.resolve_person(
                 user_id, name, aliases=aliases, source=event_source
             )
-        except PeopleValidationError as exc:
-            raise BrainServiceValidationError(str(exc)) from exc
+        )
         if resolution.created and resolution.person_id is not None:
             self._dispatcher.person_created(
                 user_id,
@@ -506,19 +533,23 @@ class BrainService:
     def learning_status(self, user_id: UserId) -> LearningStatus:
         if self._learning is None:
             raise BrainServiceConfigurationError("learning not configured")
-        return self._learning.learning_status(user_id)
+        return _as_service_validation(lambda: self._learning.learning_status(user_id))
 
     def feedback_history(
         self, user_id: UserId, *, limit: int | None = None
     ) -> list[StoredFeedback]:
         if self._learning is None:
             raise BrainServiceConfigurationError("learning not configured")
-        return self._learning.feedback_history(user_id, limit=limit)
+        return _as_service_validation(
+            lambda: self._learning.feedback_history(user_id, limit=limit)
+        )
 
     def personalization_profile(self, user_id: UserId) -> AssistanceProfile:
         if self._learning is None:
             raise BrainServiceConfigurationError("learning not configured")
-        return self._learning.personalization_profile(user_id)
+        return _as_service_validation(
+            lambda: self._learning.personalization_profile(user_id)
+        )
 
     # -- lifecycle ---------------------------------------------------------------
     def close(self) -> None:

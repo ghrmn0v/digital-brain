@@ -32,6 +32,11 @@ order is the stable v1 method order.
 New methods are **appended**, never inserted: a later additive method (for
 example `resolve_person`) must not renumber what a client already knows.
 
+Both shipped clients advertise the same ordered method table and both are
+checked against this artifact: the TypeScript client in
+`test/contract.test.ts`, the Java client in
+`tests/test_java_client_parity.py`.
+
 `BrainApi.describe()` calls `describe_api_methods()` from this registry. Its
 method list and schemas therefore cannot drift into a private Core-only map.
 Core keeps only the method-to-handler implementation map.
@@ -194,12 +199,16 @@ Follow `CONTRACTS.md`:
 - run `--check`, the full test suite and compile checks;
 - only then publish SDK artifacts from the checked-in schema.
 
-## Remaining Phase 8 client work
+## Client state
 
-Slice 5A provides the shared generation input. Slice 6 added the thin,
-framework-free TypeScript client over the existing HTTP/WebSocket surface
-(`clients/typescript/`, see `docs/typescript-client.md`): its runtime method
-table and error codes are verified against this artifact, and its HTTP tests run
-live against the real Core transport. Java packaging is still open. These
-clients may live in Product-owned repositories while consuming this Core-owned
-contract artifact.
+- `clients/typescript/` (Slice 6) — framework-free, zero dependencies, fully
+  executed: its method table is verified against this artifact and its tests run
+  live against the real Core HTTP transport and over a real WebSocket. See
+  `docs/typescript-client.md`.
+- `clients/java/` (Slice 8) — dependency-free, JDK-only client over the same two
+  transports. **Not compiled or executed here** (the environment has a JRE
+  only), so its verification is limited to a static parity test against this
+  artifact. See `clients/java/README.md`.
+
+Either client may live in Product-owned repositories while consuming this
+Core-owned artifact.

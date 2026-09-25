@@ -322,13 +322,12 @@ class LearningEngine:
                     0.9,
                     round(0.3 + 0.1 * entry.positive, 3),
                 )
-                self._people.record_preference(
-                    user_id,
-                    name=f"{signal.preference_name}",
+                self._learned_preference(
+                    user_id=user_id,
+                    name=signal.preference_name,
                     value=signal.preference_value or "preferred",
                     domain=signal.preference_domain,
                     importance=importance,
-                    source=Source(provider="learning", component="feedback"),
                     metadata={
                         "learned": True,
                         "evidence": entry.model_dump(mode="json"),
@@ -348,15 +347,15 @@ class LearningEngine:
                     0.9,
                     round(0.3 + 0.1 * affinity.sample_size, 3),
                 )
-                self._people.record_preference(
-                    user_id,
+                self._learned_preference(
+                    user_id=user_id,
                     name=f"avoid:{signal.topic}",
                     value=(
                         f"avoided after {affinity.negative} rejection(s); "
                         f"positive rate {affinity.positive_rate:.2f}"
                     ),
+                    domain=None,
                     importance=importance,
-                    source=Source(provider="learning", component="feedback"),
                     metadata={
                         "learned": True,
                         "avoid_topic": signal.topic,
@@ -369,15 +368,70 @@ class LearningEngine:
             signal.tests_were_green is True
             and signal.kind in _POSITIVE_KINDS
         ):
-            self._people.record_preference(
-                user_id,
+            self._learned_preference(
+                user_id=user_id,
                 name="fix-accepted-after-tests",
                 value="tested fixes are accepted",
                 domain=_testing_domain(signal),
                 importance=min(0.9, 0.4 + 0.1 * signal.strength),
-                source=Source(provider="learning", component="feedback"),
                 metadata={"learned": True, "tests_status": "green"},
             )
+
+    def _learned_preference(
+        self,
+        *,
+        user_id: UserId,
+        name: str,
+        value: str,
+        domain: object,
+        importance: float,
+        metadata: dict[str, object],
+    ) -> None:
+        """Write a learned preference unless the user already stated one.
+
+        A learned hint and an explicit user preference share one conflict key,
+        so writing the learned value would silently supersede what the user
+        actually asked for. Explicit wins: the learned write is skipped and the
+        counted evidence stays visible in ``learning_status``.
+        """
+        if self._people is None:
+            return
+        if self._has_explicit_preference(user_id, name, domain):
+            return
+        self._people.record_preference(
+            user_id,
+            name=name,
+            value=value,
+            domain=domain,
+            importance=importance,
+            source=Source(provider="learning", component="feedback"),
+            metadata=dict(metadata),
+        )
+
+    def _has_explicit_preference(
+        self, user_id: UserId, name: str, domain: object
+    ) -> bool:
+        """True when a user-stated preference already owns this conflict key."""
+        key = _preference_conflict_key(name, domain)
+        if key is None:
+            return False
+        try:
+            memories = self._memory.list_memories(
+                MemoryQuery(
+                    user_id=user_id,
+                    memory_type=MemoryType.PREFERENCE,
+                    status=MemoryStatusFilter.ACTIVE,
+                    limit=None,
+                )
+            )
+        except Exception:
+            return False
+        for memory in memories:
+            if memory.metadata.get("preference") != key:
+                continue
+            if not memory.metadata.get("learned"):
+                return True
+        return False
 
     def _adjust_importance(
         self, feedback: Feedback, signal: LearningSignal
@@ -424,6 +478,18 @@ class LearningEngine:
     def _validate_user(user_id: UserId) -> None:
         if not user_id or not str(user_id).strip():
             raise LearningValidationError("user_id must be a non-empty string")
+
+
+def _preference_conflict_key(name: str, domain: object) -> str | None:
+    """The conflict key People Intelligence uses for one preference.
+
+    Kept identical on purpose: it is what makes an explicit record and a
+    learned record collide, which is exactly the case precedence must resolve.
+    """
+    if not isinstance(name, str) or not name.strip():
+        return None
+    value = getattr(domain, "value", None)
+    return f"{value}:{name}" if isinstance(value, str) else f"pref:{name}"
 
 
 def _testing_domain(signal: LearningSignal):

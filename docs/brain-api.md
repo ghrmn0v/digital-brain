@@ -67,6 +67,10 @@ mirror of the internal `DeveloperContext`; the adapter copies, never infers.
 - Every exit path is a typed `ApiResponse` — the adapter never leaks a raw
   exception or stack trace (internal failures become `internal_error` with only
   the exception class name in `details`).
+- Input a Core module refuses is always `validation_error`, never
+  `internal_error`: `BrainService` translates People/Learning input errors into
+  `BrainServiceValidationError` before they reach the adapter, so a
+  whitespace-only `user_id`, name, value or `person_id` reports its real reason.
 - `describe`, `reason`, `learning_status`, preferences reads are deterministic.
 - Correlation ids and user ownership are preserved end-to-end. A method-level
   `correlation_id` takes precedence over a nested event/feedback correlation;
