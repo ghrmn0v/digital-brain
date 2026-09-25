@@ -1,8 +1,11 @@
-"""BrainEventEmitter (Phase 6).
+"""BrainEventEmitter (Phase 6 + Phase 8 Slice 1).
 
 Builds validated ``contracts.brain_events.BrainEvent`` records (pure data) for
-the Developer Mode pipeline. The emitter never executes anything — it only
-serializes reasoning/proposals into events Fly and Product can consume.
+the Developer Mode pipeline and for the Brain-owned state transitions exposed
+through the event infrastructure (memory.created, preference.updated,
+learning.signal.detected, decision.created, action.proposed). The emitter
+never executes anything — it only serializes Brain state/reasoning/proposals
+into events consumers (Fly, Product, mobile, future connectors) can use.
 """
 
 from __future__ import annotations
@@ -12,7 +15,15 @@ from uuid import uuid4
 
 from contracts.brain_events.events import BrainEvent, BrainEventType
 from contracts.common.types import Source
-from contracts.decisions.decisions import ActionType, ProposedAction
+from contracts.decisions.decisions import (
+    ActionType,
+    BrainDecision,
+    ProposedAction,
+)
+from contracts.memory.memory import Memory
+
+from core.learning.models import LearningSignal
+from core.people.models import Preference
 
 from ..reasoning.models import BugFinding, ReviewFinding, TestResultInterpretation
 
@@ -143,6 +154,115 @@ class BrainEventEmitter:
                 "risk_confidence": action.confidence,
                 "required_permission_level": action.requested_permission_level.value,
                 "correlation_id": correlation_id,
+            },
+            [action.action_id],
+        )
+
+    # -- Brain-owned events (Phase 8 Slice 1) --------------------------------
+    def memory_created(
+        self, memory: Memory, *, correlation_id: str | None = None
+    ) -> BrainEvent:
+        """A memory was durably created by the Brain."""
+        return self._event(
+            BrainEventType.MEMORY_CREATED,
+            memory.user_id,
+            {
+                "memory_id": memory.memory_id,
+                "type": memory.type.value,
+                "importance": memory.importance,
+                "confidence": memory.confidence,
+                "status": memory.status.value,
+                "correlation_id": correlation_id,
+            },
+            [memory.memory_id],
+        )
+
+    def preference_updated(
+        self,
+        user_id: str,
+        preference: Preference,
+        *,
+        correlation_id: str | None = None,
+    ) -> BrainEvent:
+        """A developer/user preference was written (or superseded)."""
+        return self._event(
+            BrainEventType.PREFERENCE_UPDATED,
+            user_id,
+            {
+                "preference": preference.name,
+                "value": preference.value,
+                "source": (
+                    preference.domain.value if preference.domain else "general"
+                ),
+                "domain": (
+                    preference.domain.value if preference.domain else None
+                ),
+                "memory_id": preference.memory_id,
+                "correlation_id": correlation_id,
+            },
+            [preference.memory_id],
+        )
+
+    def learning_signal_detected(
+        self,
+        signal: LearningSignal,
+        *,
+        correlation_id: str | None = None,
+    ) -> BrainEvent:
+        """A feedback record produced a learning signal (state transition)."""
+        resolved = correlation_id or signal.correlation_id
+        return self._event(
+            BrainEventType.LEARNING_SIGNAL_DETECTED,
+            signal.user_id,
+            {
+                "signal": signal.kind.value,
+                "source": signal.source.value,
+                "value": signal.strength,
+                "topic": signal.topic,
+                "delta_importance": signal.delta_importance,
+                "correlation_id": resolved,
+            },
+            [],
+        )
+
+    def decision_created(
+        self,
+        decision: BrainDecision,
+        *,
+        correlation_id: str | None = None,
+    ) -> BrainEvent:
+        """A BrainDecision was produced (Brain proposes — nothing executed)."""
+        resolved = correlation_id or decision.correlation_id
+        return self._event(
+            BrainEventType.DECISION_CREATED,
+            decision.user_id,
+            {
+                "decision_id": decision.decision_id,
+                "confidence": decision.confidence,
+                "action_count": len(decision.proposed_actions),
+                "reason": decision.reason,
+                "correlation_id": resolved,
+            },
+            [decision.decision_id],
+        )
+
+    def action_proposed(
+        self,
+        action: ProposedAction,
+        *,
+        correlation_id: str | None = None,
+    ) -> BrainEvent:
+        """A proposed (never executed) action was added to a decision."""
+        resolved = correlation_id or action.correlation_id
+        return self._event(
+            BrainEventType.ACTION_PROPOSED,
+            action.user_id,
+            {
+                "action_id": action.action_id,
+                "action_type": action.action_type.value,
+                "requested_permission_level": action.requested_permission_level.value,
+                "reason": action.reason,
+                "correlation_id": resolved,
             },
             [action.action_id],
         )

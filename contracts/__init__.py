@@ -42,6 +42,10 @@ from .feedback.feedback import Feedback, FeedbackKind, FeedbackSource, FeedbackT
 from .memory.memory import Memory, MemoryStatus, MemoryType
 from .people.person import ExternalIdentity, Person
 
+# Client-facing API contract (Phase 8 Slice 3): envelope + per-method typed
+# params/results. Imported as the ``contracts.api`` package.
+from . import api as api
+
 __version__ = "0.1.0"
 
 __all__ = [

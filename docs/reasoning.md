@@ -1,14 +1,61 @@
-# Reasoning + Intent + Action Planning (Phase 6)
+# Reasoning + Intent + Action Planning (Phase 6 + Phase 8 Slice 2)
 
 Lifecycle of one Developer Mode pass, deterministically, offline, with no
-auto-execution:
+auto-execution. Phase 8 Slice 2 closes the context and personalization loop so
+a reasoning round can use relevant memories and learned preferences:
+
+```
+Memory / Preferences / People
+   │   (ContextEngine, Phase 4)
+   ▼
+Context  ──build_reasoning_context()──▶  ReasoningContext      (distilled, bounded)
+                                              │  (typed, user-scoped, deterministic)
+Learning / Personalization (Phase 7, explicit rules only)
+   │   (LearningProfilePort, read-only)       ▼
+   ▼                                 ReasoningEngine.reason(
+AssistanceProfile ──build_learning_influence()──▶ LearningInfluence)  ├─ IntentAnalyzer
+                                                    │                  ├─ BugDetector
+                                                    ▼                  ├─ CodeReviewer
+                                              ReasoningResult          └─ TestResultInterpreter
+                                                    ▼
+                                              ActionPlanner.plan(...)
+                                                    ▼
+                                              DevModePipeline.run(...)
+                                                    ▼
+                                              Events (developer.*, decision.created,
+                                                      action.proposed)
+```
+
+The loop, phase by phase:
+
+```
+Context
+  ↓
+Learning / Personalization
+  ↓
+Reasoning
+  ↓
+Intent / Action Planning
+  ↓
+Events
+```
+
+**Learning stays explicit-rule based and is NOT fake ML.** `AssistanceProfile`
+only contains honest counted signals (feedback counts, topic affinities,
+aggregate preference evidence). Reasoning copies those features into
+`LearningInfluence` — it never infers or invents preferences. The single
+behavioral effect is conservative: a keyword suggestion that exactly matches a
+learned avoid-topic is suppressed. No foundings, decisions or plans are
+otherwise altered by personalization.
+
+## Lifecycle (Phase 6 base flow)
 
 ```
 DeveloperContext
    │  (trusted snapshot: files, changed_files, current_file/line, git_context,
    │   user_context, test_results)
    ▼
-ReasoningEngine.reason(context, task=...)
+ReasoningEngine.reason(context, task=..., reasoning_context=..., learning-port)
    ├─ IntentAnalyzer      → IntentUnderstanding (kind, keywords, target file/line)
    ├─ BugDetector         → BugFinding[]       (per-file source scans)
    ├─ CodeReviewer        → ReviewFinding[]    (project-level, test-coverage)
@@ -17,10 +64,10 @@ ReasoningEngine.reason(context, task=...)
 ActionPlanner.plan(context, reasoning, ask_deploy=...)
    └─ ActionPlan (Pure-data ProposedAction[], BrainDecision + correlation_id)
    ▼
-DevModePipeline.run(context, ask_deploy=...)
+DevModePipeline.run(context, ask_deploy=..., reasoning_context=...)
    └─ DevOutcome
       ├─ reasoning  (IntentUnderstanding, BugFinding[], ReviewFinding[],
-      │              TestResultInterpretation)
+      │              TestResultInterpretation, context, learning)
       ├─ plan       (ActionPlan + BrainDecision)
       ├─ events     (BrainEvent[]: bug_detected → fix_proposed → test_result
       │              → review_finding → deploy_proposed, shared correlation_id)
@@ -49,6 +96,16 @@ DevModePipeline.run(context, ask_deploy=...)
 7. **Isolation.** `ReasoningEngine`/`ActionPlanner`/pipeline reject a context
    that is not a `DeveloperContext` and refuse cross-user planning
    (`ReasoningValidationError` / `ActionPlanningError`).
+8. **Distilled, never dumped context.** `build_reasoning_context` copies only
+   bounded fields (truncated memory content, ordered reference ids,
+   user-scoped) — the full `Context` never enters reasoning.
+9. **Explicit personalization only.** `LearningInfluence` is a deterministic
+   copy of the learned profile; `has_profile=False` when nothing was learned and
+   reasoning still works. Avoided topics only suppress exact keyword
+   suggestions (see `core/reasoning/profiles.py`).
+10. **No learning-state access in Reasoning.** Reasoning depends on the
+    read-only `LearningProfilePort`; it never imports a database or a
+    `LearningStateRepository`.
 
 ## Modules
 
@@ -59,7 +116,11 @@ DevModePipeline.run(context, ask_deploy=...)
 | `core/reasoning/bug_detection.py` | `BugDetector` — `FoundIssue` → `BugFinding` |
 | `core/reasoning/review.py` | `CodeReviewer` — project review incl. test-coverage |
 | `core/reasoning/test_interpretation.py` | `TestResultInterpreter` |
-| `core/reasoning/reasoning.py` | `ReasoningEngine` facade (+ local `UnderstandingPort`) |
+| `core/reasoning/context.py` | `build_reasoning_context` + `ReasoningContext` distillation (Phase 8 Slice 2) |
+| `core/reasoning/profiles.py` | `build_learning_influence` — profile → bounded reasoning input (Phase 8 Slice 2) |
+| `core/reasoning/ports.py` | `LearningProfilePort` — read-only learning seam (Phase 8 Slice 2) |
+| `core/reasoning/models.py` | `ReasoningContext`, `LearningInfluence`, `ReasoningResult.context/learning` |
+| `core/reasoning/reasoning.py` | `ReasoningEngine` facade (+ local `UnderstandingPort`, `LearningProfilePort`) |
 | `core/actions/planner.py` | `ActionPlanner` — action proposals + `BrainDecision` |
 | `core/brain_events/emitter.py` | `BrainEventEmitter` — typed `developer.*` events |
 | `core/brain_events/pipeline.py` | `DevModePipeline` / `DevOutcome` — full demo flow |
@@ -105,3 +166,21 @@ for action in outcome.plan.proposed_actions:
 
 Deploy: `DevModePipeline().run(ctx, ask_deploy=True)` emits
 `developer.deploy_proposed` only when tests are green and no fix is pending.
+
+## Closed loop (Phase 8 Slice 2)
+
+```python
+from core import build_brain_service
+from core.reasoning import build_reasoning_context
+
+svc = build_brain_service(":memory:")
+
+outcome = svc.analyze_developer(ctx, task="fix the null error in login render")
+# outcome.reasoning.context   -> ReasoningContext (distilled, user-scoped)
+# outcome.reasoning.learning  -> LearningInfluence (explicit, never invented)
+
+result = svc.reason(ctx, task="...")      # read path: Context -> Profile -> Reasoning
+```
+
+`ContextEngine` stays independent: it never imports Reasoning; the one-way
+adapter lives in `core/reasoning/context.py`. See `docs/brain-service.md`.

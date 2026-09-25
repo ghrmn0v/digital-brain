@@ -30,7 +30,9 @@ Developer → Product / Repository Context → Core Brain
 | Reasoning + intent + bug detection | `core/reasoning/` | ✅ Phase 6 |
 | Action planning | `core/actions/` | ✅ Phase 6 |
 | Developer events (Bug/Fix/Test/Review/Deploy) | `core/brain_events/` | ✅ Phase 6 |
-| Feedback + learning | `core/learning/` (planned) | ❌ Phase 7 |
+| Feedback + learning + personalization | `core/learning/` | ✅ Phase 7 |
+| Event infrastructure (EventSink/dispatcher) | `core/brain_events/` | ✅ Phase 8 Slice 1 |
+| BrainService application boundary | `core/service/` | ✅ Phase 8 Slice 1 |
 
 ## Brain → Product boundary (action permission)
 
@@ -49,7 +51,14 @@ Core Brain  →  Proposal (Pure data, ProposedAction)  →  Permission  →  Pro
 
 Core Brain emits typed `BrainEvent`s (`contracts/brain_events/events.py` —
 open, additive enum). Phase 6 ships the emitters and the `DevModePipeline`
-(`core/brain_events/pipeline.py`) that produces a deterministic demo flow:
+(`core/brain_events/pipeline.py`) that produces a deterministic demo flow;
+Phase 7 closes the loop with `core/learning/` (feedback → learning → profile).
+Phase 8 Slice 1 adds the transport-independent `EventSink` + `BrainEventDispatcher`
+(`core/brain_events/sink.py`, `dispatch.py`) and the `BrainService`
+(`core/service/brain_service.py`) — Brain events now also cover real state
+transitions (`memory.created`, `preference.updated`, `learning.signal.detected`,
+`decision.created`, `action.proposed`) and are routed to whatever sink a future
+client (PC UI, Mobile, Fly, messages) attaches:
 
 ```
 developer.bug_detected
@@ -62,7 +71,7 @@ developer.review_finding
     ↓
 developer.deploy_proposed
     ↓
-feedback  ↓  learning
+feedback  ↓  learning  ↓  decision.created / action.proposed
 ```
 
 Not every event must be present; each is independently useful. Explanations in
@@ -101,8 +110,15 @@ How the pipeline behaves (all deterministic, Core Brain PROPOSES only):
 - End-to-end demo: `DevModePipeline().run(ctx[, ask_deploy=...])` →
   `bug_detected → fix_proposed → test_result → review_finding → deploy_proposed`,
   proven in `tests/test_devmode_e2e.py` and `docs/reasoning.md`.
+- Feedback/learning (Phase 7): Product records `Feedback` →
+  `LearningEngine.record_feedback` stores a durable trace, updates the bounded
+  aggregate (counts, topic affinities, preference evidence) and applies only
+  explicit rules — repeated acceptance → preference, repeated rejection →
+  `avoid:<topic>`, green-test acceptance → testing preference, memory importance
+  adjustment. `PersonalizationEngine` produces an `AssistanceProfile` for future
+  reasoning and clients. See `docs/learning.md` and `tests/test_feedback_loop.py`.
 
-## MVP limitations (current, Phase 6 done)
+## MVP limitations (current, Phase 7 done)
 
 - Semantic search is lexical/deterministic (no embeddings, no vector store yet);
   the `SemanticSearch` port keeps room for an embedding-based implementation
@@ -121,7 +137,8 @@ How the pipeline behaves (all deterministic, Core Brain PROPOSES only):
   semantic refactors or non-local regressions is NOT built yet; findings stay
   conservative (honest "possible …", bounded confidence).
 - Repeat fix proposals are allowed (one per finding) but bounded
-  (`max_proposals=5`); deduplication/learning across sessions comes in Phase 7.
-- No feedback/learning loop yet (Phase 7).
+  (`max_proposals=5`).
+- Learning is explicit-count based (no ML): it reinforces/discourages only the
+  deterministic rules above; it does not learn arbitrary novel patterns.
 - No real provider configured; `heuristic` is the default so the MVP is
   reproducible offline. Register a real provider via `register_provider(...)`.
