@@ -25,7 +25,7 @@ test("important state is bright, large and fast", () => {
 
 test("unknown state falls back to idle spec", () => {
   const spec = resolve("MADE_UP_STATE");
-  assert.equal(spec.animation, "hover");
+  assert.equal(spec.animation, "perch");
   assert.equal(spec.fallback, true);
 });
 

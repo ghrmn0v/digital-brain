@@ -1,5 +1,7 @@
-import * as THREE from "./node_modules/three/build/three.module.js";
+import * as THREE from "../node_modules/three/build/three.module.js";
 import { resolve, positionOf } from "./animations.js";
+import { resolveDeveloperBubble, anchorFor } from "./developer.js";
+import { playStateSound, unlockAudio } from "./sound.js";
 
 const WS_URL = "ws://127.0.0.1:8080/ws/fly";
 const API_URL = "http://127.0.0.1:8080/api/v1";
@@ -8,7 +10,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0f14);
 
 const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.2, 5.5);
+camera.position.set(0, 1.5, 7.0);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -24,8 +26,27 @@ const rimLight = new THREE.DirectionalLight(0x88ccff, 0.6);
 rimLight.position.set(-4, 1, -3);
 scene.add(rimLight);
 
-function buildFly() {
+const FLY_TEXTURE_URL = "../models/fly.png";
+
+function buildFly(texture) {
   const group = new THREE.Group();
+
+  if (texture) {
+    const img = texture.image;
+    const aspect = img && img.width && img.height ? img.width / img.height : 1;
+    const height = 0.62;
+    const width = height * Math.min(Math.max(aspect, 0.5), 2.2);
+    const billboardMat = new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, height), billboardMat);
+    group.add(plane);
+    group.userData = { materials: [billboardMat], billboard: true };
+    return group;
+  }
 
   const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a2f35, roughness: 0.45, metalness: 0.2 });
   const glossy = new THREE.MeshStandardMaterial({ color: 0x3a4250, roughness: 0.25, metalness: 0.35 });
@@ -107,8 +128,25 @@ function buildFly() {
   return group;
 }
 
-const fly = buildFly();
+let fly = buildFly(null);
 scene.add(fly);
+
+new THREE.TextureLoader().load(
+  FLY_TEXTURE_URL,
+  (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const textured = buildFly(texture);
+    textured.position.copy(fly.position);
+    textured.visible = fly.visible;
+    scene.remove(fly);
+    scene.add(textured);
+    fly = textured;
+  },
+  undefined,
+  () => {
+    console.warn(`no fly image at ${FLY_TEXTURE_URL}, keeping primitive fly`);
+  },
+);
 
 const floor = new THREE.Mesh(
   new THREE.CircleGeometry(4.2, 48),
@@ -128,6 +166,11 @@ const runtime = {
   until: Infinity,
   behaviorId: null,
   offline: false,
+  anchor: null,
+  lastSound: null,
+  priorityLevel: "?",
+  flightChain: [],
+  pos: new THREE.Vector3(0, 0.3, 0),
 };
 
 const bubble = document.getElementById("speech-bubble");
@@ -138,13 +181,36 @@ function showBubble(context) {
   const speaker = context.sender_name || "unknown";
   bubble.querySelector(".speaker").textContent = speaker;
   bubble.querySelector(".text").textContent = context.body_preview;
+  const meta = bubble.querySelector(".meta");
+  if (meta) meta.textContent = "";
   bubble.style.display = "block";
   clearTimeout(bubbleTimer);
   bubbleTimer = setTimeout(hideBubble, 7000);
 }
 
+function showDeveloperBubble(context) {
+  const resolved = resolveDeveloperBubble(context);
+  if (!resolved) return;
+  bubble.querySelector(".speaker").textContent = resolved.speaker;
+  bubble.querySelector(".text").textContent = resolved.text;
+  const meta = bubble.querySelector(".meta");
+  if (meta) meta.textContent = resolved.meta;
+  bubble.style.display = "block";
+  clearTimeout(bubbleTimer);
+  bubbleTimer = setTimeout(hideBubble, resolved.durationMs);
+}
+
 function hideBubble() {
   bubble.style.display = "none";
+}
+
+function positionBubble() {
+  const head = new THREE.Vector3(fly.position.x, fly.position.y + 0.7, fly.position.z);
+  head.project(camera);
+  const x = (head.x * 0.5 + 0.5) * window.innerWidth;
+  const y = (-head.y * 0.5 + 0.5) * window.innerHeight;
+  bubble.style.left = `${Math.min(Math.max(x, 172), window.innerWidth - 172)}px`;
+  bubble.style.top = `${Math.min(Math.max(y, 128), window.innerHeight - 24)}px`;
 }
 
 const hud = document.getElementById("hud");
@@ -152,22 +218,63 @@ const hudTag = document.getElementById("hud-tag");
 const wsDot = document.getElementById("ws-dot");
 const stateLabel = document.getElementById("state");
 
-function applyDecision(decision) {
-  const state = decision.fetch || "IDLE";
+const toast = document.getElementById("toast");
+let toastTimer = 0;
+function showToast(html, cls = "") {
+  toast.innerHTML = html;
+  toast.className = cls ? `visible ${cls}` : "visible";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.className = "";
+  }, 3200);
+}
+
+function playState(state) {
   const spec = resolve(state);
   runtime.state = state;
   runtime.spec = spec;
-  runtime.behaviorId = decision.behavior_id || runtime.behaviorId;
+  runtime.anchor = null;
+  if (spec.sound && spec.sound !== runtime.lastSound) {
+    playStateSound(spec.sound);
+    runtime.lastSound = spec.sound;
+  }
   runtime.until = spec.duration_ms > 0 ? performance.now() + spec.duration_ms : spec.requires_ack ? Infinity : performance.now() + 60000;
-  stateLabel.textContent = `${state} · ${(decision.priorityLevel || "?").toLowerCase()}`;
+  stateLabel.textContent = `${state} · ${(runtime.priorityLevel || "?").toLowerCase()}`;
+}
+
+function applyDecision(decision) {
+  let state = decision.fetch || "IDLE";
+  if (state === "FLYING") {
+    runtime.flightChain = ["TAKEOFF", "FLYING", "LANDING"];
+    state = "TAKEOFF";
+  }
+  runtime.behaviorId = decision.behavior_id || runtime.behaviorId;
+  runtime.priorityLevel = decision.priorityLevel || "?";
+  playState(state);
+}
+
+function applyDeveloperEvent(msg) {
+  applyDecision({ ...msg.decision, behavior_id: msg.behavior_id });
+  runtime.anchor = anchorFor(msg.context);
+  const resolved = resolveDeveloperBubble(msg.context);
+  if (resolved) {
+    runtime.until = performance.now() + resolved.durationMs;
+  }
+  if (msg.context) showDeveloperBubble(msg.context);
 }
 
 function returnToIdle() {
   if (runtime.spec.requires_ack && performance.now() < runtime.until) {
     return;
   }
+  if (runtime.flightChain.length) {
+    playState(runtime.flightChain.shift());
+    return;
+  }
   runtime.state = "IDLE";
   runtime.spec = resolve("IDLE");
+  runtime.anchor = null;
+  runtime.lastSound = null;
   runtime.until = performance.now() + 1500;
   stateLabel.textContent = "IDLE";
   hideBubble();
@@ -178,12 +285,12 @@ function tickLoop() {
   const now = performance.now();
   const t = now / 1000;
   const spec = runtime.spec;
-  const target = positionOf(spec.position);
+  const target = positionOf(runtime.anchor || spec.position);
   const ease = Math.min(1, spec.speed * 0.02);
 
-  fly.position.x += (target[0] - fly.position.x) * ease;
-  fly.position.y += (target[1] - fly.position.y) * ease;
-  fly.position.z += (target[2] - fly.position.z) * ease;
+  runtime.pos.x += (target[0] - runtime.pos.x) * ease;
+  runtime.pos.y += (target[1] - runtime.pos.y) * ease;
+  runtime.pos.z += (target[2] - runtime.pos.z) * ease;
 
   fly.visible = spec.visibility !== "hidden";
   const opacity = spec.visibility === "bright" ? 1.0 : spec.visibility === "normal" ? 0.85 : spec.visibility === "low" ? 0.55 : 0.4;
@@ -194,14 +301,25 @@ function tickLoop() {
   const baseScale = spec.scale;
   const flapRate = 8 + spec.speed * 14;
   const flapAmp = 0.35 + spec.speed * 0.45;
-  fly.userData.wingL.rotation.x = -Math.sin(t * flapRate) * flapAmp;
-  fly.userData.wingR.rotation.x = Math.sin(t * flapRate) * flapAmp;
+  if (fly.userData.wingL) {
+    if (spec.animation === "perch" || spec.animation === "slow_pulse") {
+      fly.userData.wingL.rotation.x = -1.0;
+      fly.userData.wingR.rotation.x = 1.0;
+    } else {
+      fly.userData.wingL.rotation.x = -Math.sin(t * flapRate) * flapAmp;
+      fly.userData.wingR.rotation.x = Math.sin(t * flapRate) * flapAmp;
+    }
+  }
 
   let extra = new THREE.Vector3();
   let squash = 1;
   switch (spec.animation) {
     case "hover":
-      fly.position.y += Math.sin(t * 1.6) * 0.03;
+      extra.y += Math.sin(t * 1.6) * 0.03;
+      break;
+    case "perch":
+      squash = 1 + Math.sin(t * 1.1) * 0.05;
+      fly.rotation.z = Math.sin(t * 0.9) * 0.02;
       break;
     case "drift":
       extra.x = Math.sin(t * 0.7) * 0.25;
@@ -215,7 +333,7 @@ function tickLoop() {
       break;
     case "hover_tilt":
       fly.rotation.z = Math.sin(t * 2.0) * 0.12;
-      fly.position.y += Math.sin(t * 1.2) * 0.02;
+      extra.y += Math.sin(t * 1.2) * 0.02;
       break;
     case "stutter": {
       const step = Math.floor(t * 2.2) % 2;
@@ -223,7 +341,11 @@ function tickLoop() {
       break;
     }
     case "spin":
-      fly.rotation.y += spec.speed * 0.05;
+      if (fly.userData.billboard) {
+        fly.rotation.z = Math.sin(t * 2.0) * 0.2;
+      } else {
+        fly.rotation.y += spec.speed * 0.05;
+      }
       break;
     case "pulse":
       squash = 1 + Math.sin(t * 3.0) * 0.12;
@@ -236,7 +358,7 @@ function tickLoop() {
       extra.x = Math.sin(t * 1.4) * 0.4;
       break;
     case "happy_bounce":
-      extra.y = Math.abs(Math.sin(t * 6.0)) * 0.25;
+      extra.y = Math.abs(Math.sin(t * 6.0)) * 0.2;
       fly.rotation.z = 0;
       break;
     case "shake":
@@ -244,20 +366,25 @@ function tickLoop() {
       extra.y = (Math.random() - 0.5) * 0.2;
       break;
     case "falter":
-      extra.y = -Math.abs(Math.sin(t * 3.0)) * 0.18;
+      extra.y = -Math.abs(Math.sin(t * 3.0)) * 0.13;
       fly.rotation.z = Math.sin(t * 2.0) * 0.15;
       break;
     case "slow_pulse":
       squash = 1 + Math.sin(t * 1.1) * 0.05;
       break;
     case "lift_off":
-      extra.y = Math.min(1, (t % 1.2) / 1.2) * 0.4;
+      extra.y = Math.min(1, (t % 1.2) / 1.2) * 0.35;
       fly.rotation.x = -Math.min(1, (t % 1.2) / 1.2) * 0.25;
       break;
     case "fly_circle":
-      fly.position.x += Math.cos(t * 1.6) * 0.35;
-      fly.position.z += Math.sin(t * 1.6) * 0.35;
-      fly.rotation.y += spec.speed * 0.06;
+      extra.x = Math.cos(t * 1.5) * 0.4;
+      extra.z = Math.sin(t * 3.0) * 0.12;
+      extra.y = Math.sin(t * 2.2) * 0.16;
+      if (fly.userData.billboard) {
+        fly.rotation.z = Math.sin(t * 1.2) * 0.25;
+      } else {
+        fly.rotation.y += spec.speed * 0.06;
+      }
       break;
     case "swoop": {
       const phase = (t % 1.2) / 1.2;
@@ -266,17 +393,39 @@ function tickLoop() {
       break;
     }
     case "circle":
-      fly.position.x += Math.cos(t * 0.9) * 0.02;
-      fly.position.z += Math.sin(t * 0.9) * 0.02;
+      extra.x = Math.cos(t * 0.9) * 0.05;
+      extra.z = Math.sin(t * 0.9) * 0.05;
       break;
     default:
       break;
   }
-  fly.position.add(extra);
+  fly.position.copy(runtime.pos).add(extra);
+  fly.position.x = Math.min(3.6, Math.max(-3.6, fly.position.x));
+  fly.position.y = Math.min(2.2, Math.max(-0.9, fly.position.y));
+  fly.position.z = Math.min(2.0, Math.max(-2.4, fly.position.z));
+
+  const spriteW = (fly.userData.billboard ? 0.14 : 0.1);
+  const spriteH = (fly.userData.billboard ? 0.13 : 0.09);
+  const ndc = new THREE.Vector3(fly.position.x, fly.position.y, fly.position.z).project(camera);
+  const leftLimit = ((170 / window.innerWidth) * 2 - 1) + 0.06;
+  const rightLimit = ((window.innerWidth - 320) / window.innerWidth) * 2 - 1 - spriteW;
+  const topLimit = (1 - (90 / window.innerHeight) * 2) - spriteH;
+  const px = THREE.MathUtils.clamp(ndc.x, leftLimit, rightLimit);
+  const py = THREE.MathUtils.clamp(ndc.y, -0.86, topLimit);
+  if (px !== ndc.x || py !== ndc.y) {
+    const depth = Math.max(0.5, fly.position.distanceTo(camera.position));
+    const perNdc = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * depth;
+    fly.position.y += (py - ndc.y) * perNdc;
+    fly.position.x += (px - ndc.x) * perNdc * camera.aspect;
+  }
+
   fly.scale.set(baseScale * squash, baseScale * squash, baseScale);
 
   if (performance.now() >= runtime.until) {
     returnToIdle();
+  }
+  if (bubble.style.display !== "none") {
+    positionBubble();
   }
   renderer.render(scene, camera);
 }
@@ -305,7 +454,9 @@ function connect() {
   socket.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
-      if (msg.type === "fly_behavior") {
+      if (msg.type === "developer_event") {
+        applyDeveloperEvent(msg);
+      } else if (msg.type === "fly_behavior") {
         applyDecision({ ...msg.decision, behavior_id: msg.behavior_id });
         if (msg.context) showBubble(msg.context);
       }
@@ -339,7 +490,9 @@ async function post(path, body) {
     return data;
   } catch {
     setOffline(true);
-    demoDecision(body);
+    if (path === "/events") {
+      demoDecision(body);
+    }
     return null;
   }
 }
@@ -357,8 +510,13 @@ function demoDecision(body) {
     app_open: "CURIOUS",
     app_idle: "IDLE",
   };
-  const state = map[body.event] || (body.priority >= 0.7 ? "IMPORTANT" : "IDLE");
+  let state = map[body.event] || (body.priority >= 0.7 ? "IMPORTANT" : "IDLE");
+  const flightOn = document.getElementById("flight-mode")?.checked;
+  if (flightOn && (state === "SUCCESS" || state === "CURIOUS") && (body.priority ?? 0.5) >= 0.3) {
+    state = "FLYING";
+  }
   applyDecision({ fetch: state, priorityLevel: "LOCAL", behavior_id: `local_${body.event}` });
+  if (body.context && body.context.body_preview) showBubble(body.context);
 }
 
 function wireControls() {
@@ -378,6 +536,7 @@ function wireControls() {
   const priority = document.getElementById("priority");
   const priorityValue = document.getElementById("priority-value");
   const topic = document.getElementById("topic");
+  const msg = document.getElementById("msg");
   const sendBtn = document.getElementById("send");
   priority.addEventListener("input", () => {
     priorityValue.textContent = parseFloat(priority.value).toFixed(2);
@@ -388,13 +547,23 @@ function wireControls() {
     opt.textContent = name;
     eventPicker.appendChild(opt);
   }
-  sendBtn.addEventListener("click", () => {
-    post("/events", {
+  sendBtn.addEventListener("click", async () => {
+    const context = { topic: topic.value.trim() || "general", urgency: "medium" };
+    const message = msg.value.trim();
+    if (message) {
+      context.body_preview = message;
+      context.sender_name = "Demo";
+    }
+    const result = await post("/events", {
       event: eventPicker.value,
       source: "demo",
       priority: parseFloat(priority.value),
-      context: { topic: topic.value || "general", urgency: "medium" },
+      context,
     });
+    if (result && result.fetch) {
+      showToast(`Event <span class="t-k">sent</span> → Fly: <span class="t-r">${result.fetch}</span>`);
+    }
+    if (context.body_preview) showBubble(context);
   });
   document.getElementById("demo-cycle").addEventListener("click", () => {
     setOffline(true);
@@ -413,16 +582,74 @@ function wireControls() {
   });
   const feedbackBtns = document.querySelectorAll("[data-feedback]");
   for (const btn of feedbackBtns) {
-    btn.addEventListener("click", () => {
-      post("/feedback", { behaviorId: runtime.behaviorId || "behavior_demo", feedback: btn.dataset.feedback });
+    btn.addEventListener("click", async () => {
+      const feedback = btn.dataset.feedback;
+      const result = await post("/feedback", { behaviorId: runtime.behaviorId || "behavior_demo", feedback });
+      if (result && typeof result === "object" && "reward_value" in result) {
+        const n = result.synapse_delta ? Object.keys(result.synapse_delta).length : 0;
+        const sign = result.reward_value > 0 ? "+" : result.reward_value < 0 ? "" : "±";
+        showToast(
+          `Feedback <span class="t-k">${feedback}</span> · reward <span class="t-r">${sign}${result.reward_value}</span> · ${n} sinaps yeniləndi`,
+        );
+      } else if (result) {
+        showToast(`Feedback <span class="t-k">${feedback}</span> · qəbul edildi`);
+      } else {
+        showToast(`Feedback <span class="t-k">${feedback}</span> · offline — beynə çatmadı`);
+      }
     });
   }
+  const devMode = document.getElementById("dev-mode");
+  const syncDevMode = async () => {
+    try {
+      const res = await fetch(`${API_URL}/developer/mode`);
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const data = await res.json();
+      devMode.checked = !!data.enabled;
+    } catch {
+      setOffline(true);
+    }
+  };
+  devMode.addEventListener("change", () => {
+    post("/developer/mode", { enabled: devMode.checked });
+  });
+  syncDevMode();
+
+  const flightMode = document.getElementById("flight-mode");
+  const syncFlight = async () => {
+    try {
+      const res = await fetch(`${API_URL}/mode/flight`);
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      const data = await res.json();
+      flightMode.checked = !!data.flight;
+    } catch {
+      setOffline(true);
+    }
+  };
+  flightMode.addEventListener("change", async () => {
+    const result = await post("/mode/flight", { flight: flightMode.checked });
+    if (result && "flight" in result) {
+      showToast(
+        `Flight mode <span class="t-k">${result.flight ? "ON" : "OFF"}</span> — fly ${
+          result.flight ? "uça bilər (free flight)" : "oturur, sadəcə eventə reaksiya"
+        }`,
+      );
+    }
+  });
+  syncFlight();
 }
 
 wireControls();
 connect();
 setOffline(false);
 tickLoop();
+
+const unlockAudioOnce = () => {
+  unlockAudio();
+  window.removeEventListener("pointerdown", unlockAudioOnce);
+  window.removeEventListener("keydown", unlockAudioOnce);
+};
+window.addEventListener("pointerdown", unlockAudioOnce);
+window.addEventListener("keydown", unlockAudioOnce);
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;

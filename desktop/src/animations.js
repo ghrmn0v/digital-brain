@@ -6,15 +6,20 @@ export const POSITIONS = {
   center_upper: [0.0, 1.0, 0.0],
   bottom_center: [0.0, -1.6, 0.0],
   attention_area: [0.0, 0.3, 1.6],
+  // Developer Mode "code location" anchors (mapped from repository/file by the backend)
+  code_1: [-2.4, 0.6, 0.4],
+  code_2: [-0.8, 1.2, 0.8],
+  code_3: [0.8, 0.4, 0.6],
+  code_4: [2.4, 1.0, 0.2],
 };
 
 export const STATE_SPEC = {
   IDLE: {
-    animation: "hover",
-    movement: "none",
-    speed: 0.1,
-    position: "corner",
-    scale: 1.0,
+    animation: "perch",
+    movement: "landed",
+    speed: 0.05,
+    position: "corner_low",
+    scale: 0.7,
     visibility: "dim",
     duration_ms: 0,
     priority: 0,
@@ -83,9 +88,9 @@ export const STATE_SPEC = {
     animation: "fly_circle",
     movement: "figure_eight",
     speed: 0.9,
-    position: "center",
-    scale: 1.1,
-    visibility: "normal",
+    position: "center_upper",
+    scale: 1.15,
+    visibility: "bright",
     duration_ms: 3000,
     priority: 5,
   },
@@ -129,6 +134,7 @@ export const STATE_SPEC = {
     duration_ms: 8000,
     priority: 7,
     requires_ack: true,
+    sound: "soft_chime",
   },
   WAITING: {
     animation: "pacing",
@@ -149,6 +155,7 @@ export const STATE_SPEC = {
     visibility: "bright",
     duration_ms: 2500,
     priority: 7,
+    sound: "success",
   },
   WARNING: {
     animation: "shake",
@@ -159,6 +166,7 @@ export const STATE_SPEC = {
     visibility: "bright",
     duration_ms: 5000,
     priority: 8,
+    sound: "chime",
   },
   ERROR: {
     animation: "falter",
@@ -169,6 +177,7 @@ export const STATE_SPEC = {
     visibility: "normal",
     duration_ms: 4000,
     priority: 9,
+    sound: "error",
   },
   SLEEPING: {
     animation: "slow_pulse",
