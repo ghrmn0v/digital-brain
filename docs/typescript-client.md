@@ -44,7 +44,7 @@ what "one Core Brain, two clients" requires. A test enforces that boundary.
 
 ## Contract fidelity
 
-`src/contract.ts` mirrors `contracts/schemas/brain-api.v1.json`: all 17 methods,
+`src/contract.ts` mirrors `contracts/schemas/brain-api.v1.json`: every published method,
 their params and results, the `ApiErrorCode` enum and the frame envelopes.
 `test/contract.test.ts` asserts the runtime tables against the checked-in
 artifact — method order, params/result `$defs` names and error codes — so an

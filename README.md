@@ -69,6 +69,8 @@ docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSock
 docs/gemini.md          Gemini provider + long-term learning loop
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
+docs/operating.md     running, configuring, querying and observing the Brain
+.env.example          every variable the Brain reads (Brain-owned only)
 clients/typescript/  zero-dependency TypeScript client for both Product clients
 clients/java/       dependency-free Java client (JDK only; not compiled here)
 PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–8
@@ -88,8 +90,9 @@ contract), Slice 3 Part B (the stdio JSON-lines daemon), Slice 4A (the
 minimal HTTP transport), Slice 4B (consumer-side event-delivery guarantees),
 Slice 4C (the bounded, user-bound WebSocket transport), Slice 5A (canonical
 v1 schema distribution), Slice 6 (framework-free TypeScript client), Slice 7
-(`resolve_person` as API method 17) and Slice 8 (a dependency-free Java client)
-are implemented. The Core Brain MVP (Phases 0–7) is feature-complete and
+(`resolve_person`), Slice 8 (a dependency-free Java client) and the
+usability slice (`search` and `chat`, plus configuration and observability) are
+implemented. The Core Brain MVP (Phases 0–7) is feature-complete and
 Phases 0–7 plus the completed Phase 8 slices are fully connected. The
 TypeScript client is executed and verified against the real Core; the Java
 client is **not** compiled or run in this environment (JRE only) and its
@@ -234,8 +237,9 @@ Built so far:
   owns the canonical response/event envelopes, while stdio/WebSocket reuse them.
   `contracts/schemas/brain-api.v1.json` is a deterministic, data-free JSON
   Schema bundle
-  with request/response/error/event/frame contracts and ordered refs for all 17
-  methods (new methods are appended, so published indices stay stable). Generate
+  with request/response/error/event/frame contracts and ordered refs for every
+  published method (new methods are appended, so published indices stay stable).
+  Generate
   with `python -m contracts.api.schema`; verify drift with
   `python -m contracts.api.schema --check`. This is the shared generation input
   for framework-free TS/Java clients, not a UI or mobile framework. See
@@ -254,7 +258,7 @@ Built so far:
   needed). See `docs/typescript-client.md`.
 
 - Java client (Phase 8 Slice 8): `clients/java/` is a dependency-free,
-  JDK-only client over the same two transports and the same 17-method contract
+  JDK-only client over the same two transports and the same method contract
   (`java.net.http.HttpClient` + `java.net.http.WebSocket`, hand-rolled strict
   JSON, no Maven dependencies). **It has not been compiled or run here** — the
   environment has a JRE only — so its verification is a static parity test

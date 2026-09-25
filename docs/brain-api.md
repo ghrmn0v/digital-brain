@@ -58,9 +58,40 @@ public `contracts.api` registry.
 | `people_timeline` | `user_id`, `person_id`, optional `limit` | `PeopleTimelineResult` | active + historical, source-traceable |
 | `learning_status` / `feedback_history` / `personalization_profile` | `user_id` (+`limit?`) | typed read results | user-scoped |
 | `resolve_person` | `user_id`, `name`, optional `aliases`, `correlation_id?` | `PersonResolutionWire` | `person.created` only for a new identity |
+| `search` | `user_id`, `text?`, `keywords?`, `memory_type?`, `person_id?`, `importance_min?`, `limit?`, `correlation_id?` | `SearchResultWire` | this user's memories, ranked, with provenance |
+| `chat` | `user_id`, `message`, optional `session_id`/`limit`/`target_event_id`/`record_learning`/`correlation_id` | `ChatResultWire` | one grounded turn; cites the memories it used |
 
 Developer Mode inputs travel as `DeveloperSnapshotWire` — a field-for-field
 mirror of the internal `DeveloperContext`; the adapter copies, never infers.
+
+### `search`
+
+The retrieval read path. It exists because the Brain owned ranking and
+isolation all along but published no way to reach them: `build_context` reports
+*how many* memories are relevant, never *which*. Each hit carries `score`,
+`matched_fields`, `ranking_reason`, source provenance, `person_ids`,
+`related_event_ids` and the `correlation_id` the memory was created under, so a
+caller can trace an answer back to the event that caused it.
+
+`user_id` is required and is applied in SQL, so it cannot be widened by a
+caller. An empty `text` with no keywords lists by importance and recency rather
+than returning nothing.
+
+### `chat`
+
+One conversational turn over the user's own Brain state: retrieve, then answer,
+then report what the answer rests on. `grounded_in` lists the memories used, and
+is empty exactly when the Brain had nothing to answer from — that is the honest
+signal that an answer is ungrounded, as opposed to merely short.
+
+`provider` and `fallback_used` are always present, so a caller can always
+distinguish a model answer from a deterministic one.
+
+**A chat answer is never stored.** Learning is recorded only when the caller
+supplies `target_event_id`, because the Brain does not invent traceability ids
+for interactions it did not observe. Anything the model returns is routed
+through the existing Learning Engine like any other evidence, never written
+directly as a memory or preference.
 
 ## Guarantees (regression-tested)
 
@@ -72,6 +103,13 @@ mirror of the internal `DeveloperContext`; the adapter copies, never infers.
   `BrainServiceValidationError` before they reach the adapter, so a
   whitespace-only `user_id`, name, value or `person_id` reports its real reason.
 - `describe`, `reason`, `learning_status`, preferences reads are deterministic.
+- **A handled request is `ok: true` even when the event was rejected.**
+  `ingest` reports `outcome: "accepted" | "duplicate" | "rejected"` with a
+  `reason` in the result at HTTP 200, because the *call* succeeded and the
+  event's fate is data, not a transport failure. A consumer that treats HTTP
+  200 alone as "the event was stored" will silently lose rejected events; read
+  `outcome` instead. Rejections are logged at `warning`, so they are visible
+  even when a caller ignores the field.
 - Correlation ids and user ownership are preserved end-to-end. A method-level
   `correlation_id` takes precedence over a nested event/feedback correlation;
   the nested value is the fallback when the method value is absent. Every event
