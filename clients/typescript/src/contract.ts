@@ -361,8 +361,8 @@ export interface PlanWire {
 
 export type EmptyParams = Readonly<Record<string, never>>;
 
-export interface PingParams extends EmptyParams {}
-export interface DescribeParams extends EmptyParams {}
+export type PingParams = EmptyParams;
+export type DescribeParams = EmptyParams;
 
 export interface IngestParams {
   readonly event: NormalizedSourceEvent;
