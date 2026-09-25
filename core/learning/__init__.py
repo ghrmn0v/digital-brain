@@ -5,6 +5,16 @@ Feedback loop:  Feedback contract → deterministic signal → durable memory tr
 personalization profile for future reasoning and clients.
 """
 
+from .candidates import (
+    LearningCandidate,
+    LearningCandidateKind,
+    LearningEvidence,
+    PersonalizedAnswer,
+    RecordedCandidate,
+    answer_instruction,
+    candidate_to_feedback,
+    route_candidates,
+)
 from .exceptions import LearningError, LearningValidationError
 from .interpreter import FeedbackInterpreter
 from .learning import LearningEngine
@@ -29,6 +39,14 @@ from .ports import (
 from .state import SqliteLearningStateRepository
 
 __all__ = [
+    "LearningCandidate",
+    "LearningCandidateKind",
+    "LearningEvidence",
+    "PersonalizedAnswer",
+    "RecordedCandidate",
+    "answer_instruction",
+    "candidate_to_feedback",
+    "route_candidates",
     "AssistanceNudge",
     "AssistanceProfile",
     "FeedbackInterpreter",

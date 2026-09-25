@@ -66,6 +66,7 @@ docs/http-transport.md  minimal HTTP transport docs (endpoints, status mapping, 
 docs/websocket-transport.md bounded user-bound WebSocket protocol and lifecycle
 docs/schema-distribution.md canonical v1 JSON Schema distribution for TS/Java
 docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSocket)
+docs/gemini.md          Gemini provider + long-term learning loop
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
 clients/typescript/  zero-dependency TypeScript client for both Product clients
@@ -101,6 +102,19 @@ Built so far:
 - Understanding: provider-independent `LLMGateway` (`understand`, `analyze`,
   `generate_structured`), strict output validation, deterministic offline
   fallback (`heuristic`), configurable provider selection (registry).
+- Gemini provider + long-term learning (Phase 9 Slice 1): `GeminiProvider`
+  implements the existing `LLMProvider` port (standard library only, env
+  configuration, no hardcoded key, typed failure mapping, credential redaction)
+  and is selected with `GatewayConfig(provider="gemini")`.
+  `BrainService.personalized_insight` assembles bounded, user-scoped Brain
+  context (relevant memories, preferences, mentioned people, learned evidence —
+  each capped, truncated and labelled explicit/learned/inferred) before the
+  provider is called, so **the Brain remembers the user and Gemini does not**.
+  A provider answer is never a fact: explicit statements become explicit
+  preferences, repeated patterns become counted evidence through the Learning
+  Engine, and inferences are rejected. Explicit preferences keep outranking
+  learned ones. Deterministic 4-interaction demo:
+  `python scripts/gemini_learning_demo.py`. See `docs/gemini.md`.
 - Context: deterministic `LexicalSemanticSearch` behind a `SemanticSearch` port
   (future vector search swaps in without API change), explainable 7-factor
   ranking, repository/file-aware retrieval, bounded `Context` assembly

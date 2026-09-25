@@ -25,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence, TypeVar
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from contracts.brain_events.events import BrainEvent
 from contracts.common.ids import UserId
 from contracts.common.types import Source
@@ -35,6 +37,12 @@ from core.brain_events.dispatch import BrainEventDispatcher
 from core.brain_events.emitter import BrainEventEmitter
 from core.brain_events.sink import CollectingEventSink, EventSink, NullEventSink
 from core.context import Context, ContextEngine
+from core.context.personalization import (
+    PersonalContext,
+    PersonalContextBuilder,
+    personal_system_prompt,
+    personalized_user_prompt,
+)
 from core.context.search import LexicalSemanticSearch
 from core.ingestion import (
     IngestionOutcome,
@@ -59,12 +67,19 @@ from core.people import (
     PersonTimeline,
     Preference,
 )
+from core.learning.candidates import (
+    PersonalizedAnswer,
+    RecordedCandidate,
+    answer_instruction,
+    route_candidates,
+)
 from core.learning.exceptions import LearningValidationError
 from core.people.exceptions import PeopleValidationError
 from core.people.models import DeveloperPreferences, PreferenceDomain
 from core.reasoning import ReasoningResult
 from core.reasoning.context import ContextDistillationLimits, build_reasoning_context
 from core.reasoning.models import ReasoningContext
+from core.understanding.exceptions import LLMGatewayError
 from core.understanding import (
     DeveloperContext,
     GatewayConfig,
@@ -101,6 +116,59 @@ def _as_service_validation(operation: Callable[[], _T]) -> _T:
         return operation()
     except (PeopleValidationError, LearningValidationError) as exc:
         raise BrainServiceValidationError(str(exc), cause=exc) from exc
+
+
+class PersonalInsight(BaseModel):
+    """A personalized answer plus how the Brain arrived at it.
+
+    Provider-agnostic on purpose: which provider ran is reported as data, and
+    no provider-specific type escapes into Core.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    question: str
+    answer: str
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    used_context: bool = False
+    missing_context: list[str] = Field(default_factory=list, max_length=16)
+    provider: str
+    fallback_used: bool = False
+    context_fact_count: int = Field(default=0, ge=0)
+    recorded_candidates: list[RecordedCandidate] = Field(default_factory=list)
+
+
+def _context_only_answer(context: PersonalContext) -> PersonalizedAnswer:
+    """Deterministic answer used when no provider could be used.
+
+    Honest by construction: it reports only what the Brain already stored for
+    this user and says the model was not consulted. It never invents a fact.
+    """
+    if context.is_empty:
+        return PersonalizedAnswer(
+            answer=(
+                "I have no stored context for this request, and no language "
+                "model was available to reason over it."
+            ),
+            confidence=0.0,
+            used_context=False,
+            missing_context=["stored user context"],
+        )
+    lines = ["From your own stored context:"]
+    for fact in (
+        context.preferences + context.memories + context.people + context.learned
+    ):
+        lines.append(f"- [{fact.source}] {fact.text}")
+    return PersonalizedAnswer(
+        answer=(
+            "\n".join(lines)
+            + "\n\n(no language model was available; this is your stored "
+            "context only)"
+        ),
+        confidence=0.3,
+        used_context=True,
+    )
 
 
 class BrainService:
@@ -549,6 +617,106 @@ class BrainService:
             raise BrainServiceConfigurationError("learning not configured")
         return _as_service_validation(
             lambda: self._learning.personalization_profile(user_id)
+        )
+
+    # -- personalized reasoning (provider-agnostic) --------------------------
+    def personalized_insight(
+        self,
+        user_id: UserId,
+        question: str,
+        *,
+        target_event_id: str,
+        correlation_id: str | None = None,
+        record_learning: bool = True,
+    ) -> PersonalInsight:
+        """Answer a question with bounded Brain context, via the LLM gateway.
+
+        The order is fixed and Brain-owned:
+
+        1. assemble relevant, user-scoped context (memories, preferences,
+           mentioned people, learned evidence);
+        2. ask the configured provider for a **structured** answer;
+        3. validate it through the gateway (unvalidated text never returns);
+        4. route only evidence-backed learning candidates into the existing
+           Learning Engine — a model answer is never stored as a fact;
+        5. on provider failure, answer deterministically from the user's own
+           stored context instead of failing.
+
+        ``target_event_id`` anchors any learning to a real interaction; the
+        Brain never invents a traceability id.
+        """
+        if self._understanding is None:
+            raise BrainServiceConfigurationError("understanding not configured")
+        if self._context is None:
+            raise BrainServiceConfigurationError("context not configured")
+        if not (question or "").strip():
+            raise BrainServiceValidationError("question must be non-empty")
+        if not (target_event_id or "").strip():
+            raise BrainServiceValidationError("target_event_id is required")
+        if not isinstance(self._understanding, LLMGateway):
+            raise TypeError("understanding must be an LLMGateway")
+        if self._memory is None:
+            raise BrainServiceConfigurationError("memory not configured")
+
+        context = self._personal_context_builder().build(user_id, question)
+
+        provider_name = self._understanding.provider.name
+        fallback_used = False
+        missing: list[str] = []
+        try:
+            answer = self._understanding.generate_structured(
+                PersonalizedAnswer,
+                system=personal_system_prompt(),
+                user=personalized_user_prompt(
+                    context, instruction=answer_instruction()
+                ),
+            )
+        except LLMGatewayError:
+            # Deterministic, honest fallback: report what the Brain itself
+            # knows, and that no model was used at all.
+            answer = _context_only_answer(context)
+            provider_name = "context-only"
+            fallback_used = True
+
+        recorded: list[RecordedCandidate] = []
+        if record_learning and self._learning is not None:
+            recorded = route_candidates(
+                list(answer.candidates),
+                user_id=user_id,
+                target_event_id=target_event_id,
+                correlation_id=correlation_id,
+                record=self._learning.record_feedback,
+                record_preference=(
+                    self._people.record_preference if self._people is not None else None
+                ),
+            )
+
+        return PersonalInsight(
+            user_id=user_id,
+            question=context.request,
+            answer=answer.answer,
+            confidence=answer.confidence,
+            used_context=answer.used_context,
+            missing_context=missing or list(answer.missing_context),
+            provider=provider_name,
+            fallback_used=fallback_used,
+            context_fact_count=(
+                len(context.memories)
+                + len(context.preferences)
+                + len(context.people)
+                + len(context.learned)
+            ),
+            recorded_candidates=recorded,
+        )
+
+    def _personal_context_builder(self) -> PersonalContextBuilder:
+        """Wire the context builder over the Brain's own subsystems."""
+        if self._memory is None:
+            raise BrainServiceConfigurationError("memory not configured")
+        return PersonalContextBuilder(
+            LexicalSemanticSearch(self._memory),
+            people=self._people,
+            learning=self._learning,
         )
 
     # -- lifecycle ---------------------------------------------------------------

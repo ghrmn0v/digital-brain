@@ -14,6 +14,7 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`, `core/brain_events/`) | ✅ COMPLETE |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ✅ COMPLETE |
 | 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | ✅ COMPLETE — Slices 1–8 done (event infra + BrainService + typed API + stdio/HTTP/WebSocket + delivery contract + canonical v1 schema + TypeScript client + `resolve_person` + Java client; Java not compiled locally) |
+| 9 | Gemini provider + long-term learning loop | 🟡 PARTIAL — Slice 1 done (Gemini behind the existing LLMProvider port, bounded Brain context, candidate→learning routing, explicit-over-learned precedence, deterministic demo); real Gemini API not exercised (no key in this environment) |
 
 Guiding rules (from SPEC.md, enforced every phase):
 
@@ -969,3 +970,73 @@ Two genuine bugs found by the final audit, both fixed with regression tests.
   requests still succeeding, unknown-method routing unchanged, explicit-wins,
   evidence visibility, learned-still-lands, deliberate override, provenance on
   a learned record, and the same precedence through `BrainApi`.
+
+### Phase 9 (Slice 1) — Gemini Provider + Long-Term Learning Loop
+
+- Added a real Gemini provider as ONE implementation of the **existing**
+  `LLMProvider` port. No new architecture: the provider registry, `LLMGateway`,
+  validation and fallback semantics are untouched, and the public v1 API,
+  canonical schema and client packages are unchanged.
+- `core/understanding/gemini.py`:
+  - `GeminiConfig` reads `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_ENABLED`,
+    `GEMINI_API_BASE`, `GEMINI_TIMEOUT_SECONDS`, `GEMINI_TEMPERATURE`,
+    `GEMINI_MAX_OUTPUT_TOKENS` lazily from the environment (the Brain had no
+    other configuration source, and nothing is read at import time).
+  - `GeminiProvider` implements `complete(request) -> str` over
+    `POST {api_base}/v1beta/models/{model}:generateContent` with the
+    `x-goog-api-key` header, using the standard library only — no new
+    dependency. Registered as `gemini`, selectable through the existing
+    `GatewayConfig(provider=...)`.
+  - Failure mapping onto existing types: timeout → `LLMTimeoutError`; rate
+    limit, auth, 5xx, network, safety block → `LLMProviderError`; empty or
+    unusable output → `InvalidLLMOutputError`. The gateway's fallback therefore
+    engages unchanged.
+  - Credentials never leave the provider: not in prompts, results, events, logs
+    or error messages; `GeminiConfig.redacted()` is the only diagnostic shape.
+  - Bounded outbound prompt (32 000 chars) so a prompt limit is also a privacy
+    limit.
+- `core/context/personalization.py` — bounded, user-scoped context assembly over
+  the existing subsystems: relevant memories (SemanticSearch), relevant
+  preferences, mentioned people (`identify_people`), learned evidence (Learning
+  Engine status), each capped and truncated, with explicit / learned / inferred
+  labels preserved into the prompt. No code path can serialize the whole store.
+- `core/learning/candidates.py` — the rule that makes this a Brain and not a
+  prompt wrapper: a provider answer is never a fact.
+  `route_candidates` sends explicit statements to
+  `PeopleIntelligence.record_preference` (stored immediately, with provenance),
+  repeated patterns to `LearningEngine.record_feedback` (counted evidence that
+  becomes a preference only past the existing threshold) and rejects
+  `inference` outright with a reason. `target_event_id` is required, so nothing
+  is learned from an invented anchor.
+  Precedence is structural rather than re-implemented: an explicit preference
+  owns its `<domain>:<name>` conflict key and the existing
+  `_has_explicit_preference` policy blocks any learned write for that key.
+- `BrainService.personalized_insight(user_id, question, target_event_id=...)` —
+  Brain-owned order: assemble context → structured request through the existing
+  gateway → validated result → candidate routing → deterministic context-only
+  answer when no provider could be used. Deliberately **service level**: adding
+  an API method would change v1, the canonical schema and both clients, which
+  this slice does not need.
+- Demo: `scripts/gemini_learning_demo.py` runs four interactions (state a
+  preference → ask a related question → change the preference → ask again)
+  against a local stand-in for the Gemini endpoint; the provider performs real
+  HTTP and the Brain behaviour is real, only the model reply is scripted. Proves
+  the Brain learned, not the model.
+- Tests: `tests/test_gemini_provider.py` (30) — port conformance, registry,
+  configuration (missing key / disabled / enabled), model configurability, key
+  redaction, request translation, schema-in-instructions, prompt bounding, valid
+  and malformed responses, rate limit, auth, 5xx, timeout, network, safety
+  block, usage counters, and gateway success/fallback paths.
+  `tests/test_personalized_brain.py` (27) — relevance filtering, bounded
+  context, user scoping, preference labelling, mention-only people, weak-signal
+  labelling, prompt separation, candidate routing (explicit / implicit /
+  inference / learning failure), learning disabled, validation, and
+  explicit-over-learned precedence across provider suggestions.
+- Verification: full suite 647 OK (baseline 590 + 57); compileall, schema
+  `--check` and `git diff --check` clean; TypeScript suite unchanged.
+- Real Gemini API: **NOT EXERCISED** — no `GEMINI_API_KEY` in this environment,
+  so Google's endpoint was never called and no real-model output is claimed. The
+  request shape was checked against the published Gemini REST contract, and the
+  full provider path was exercised over real HTTP against a local server.
+- Deliberately not done: streaming, tool calling, embeddings, cost budgeting, a
+  new API method, and any Product/Fly/mobile/connector work.

@@ -24,6 +24,12 @@ from .exceptions import (
     UnderstandingError,
 )
 from .gateway import GatewayConfig, LLMGateway, build_gateway
+from .gemini import (
+    GeminiConfig,
+    GeminiProvider,
+    GeminiUsage,
+    register_gemini_provider,
+)
 from .models import UnderstandingIntent, UnderstandingResult
 from .providers import (
     HeuristicProvider,
@@ -39,6 +45,9 @@ __all__ = [
     "DeveloperContext",
     "DeveloperFile",
     "GatewayConfig",
+    "GeminiConfig",
+    "GeminiProvider",
+    "GeminiUsage",
     "GitContext",
     "HeuristicProvider",
     "InvalidLLMOutputError",
@@ -53,6 +62,7 @@ __all__ = [
     "UnderstandingIntent",
     "UnderstandingResult",
     "build_gateway",
+    "register_gemini_provider",
     "context_corpus",
     "create_provider",
     "extract_json_object",
