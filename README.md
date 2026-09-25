@@ -14,6 +14,10 @@ Core Brain və Fly ilə inteqrasiya edən, local-first Product və Connector qat
 - SQLite durable event/delivery qatı, Core Brain delivery və Fly SSE stream
 - Connector status/health UI və credential-ləri göstərmədən idarəetmə
 - Product Timeline, Settings, Dashboard və responsive UI
+- PC-only Developer Mode workspace with default-off typed capability
+- Shared, read-only Developer Information feed for PC və mobil
+- Core Brain `developer.bug_detected` projection-i və icra etməyən proposal approval/rejection auditı
+- Mövcud normalized event qatı vasitəsilə dəyişdirilmədən Fly developer event delivery
 - Runtime Zod validation, stabil API errors və mutation idempotency
 - Vitest unit/integration testləri və təmiz test SQLite DB
 
@@ -102,6 +106,16 @@ Server-only modullar `src/modules` altında qruplaşır:
 
 API sənədləri: [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md)
 
+## Developer Mode və platform sərhədləri
+
+- **Developer Mode:** yalnız PC; default `OFF`. Repo context, proposal qərarları və Fly əlaqəli developer workspace yalnız desktop layout-da görünür.
+- **Developer Information:** Core Brain tərəfindən yaradılan oxuna bilən developer məlumatı PC və mobilərdə ortaq API-dən göstərilir.
+- Mobil client Developer Mode toggle-u, lokal repo analizini, Git/test/deploy action-larını və Fly UI-ını görmür.
+- Mobil tətbiqdə `developer-information` yalnız read-only feed-dir.
+- `developer.bug_detected` hadisəsi əvvəlcə dəqiq Zod payload schema-sı ilə yoxlanılır; title və message Core Brain-dən dəyişdirilmədən saxlanılır.
+- Proposal approve/reject yalnız audit statusunu dəyişir; `ActionExecution`, Git, test və deployment başlatmır.
+- Gələcək repository, Git, testing və deployment imkanları üçün yalnız port interfeysləri mövcuddur.
+
 ## Default təhlükəsizlik davranışı
 
 - Core Brain tərəfindən task/event yaratma `ASK_FIRST`
@@ -146,4 +160,4 @@ npm run verify
 npm audit
 ```
 
-`npm run verify` Prisma sxemini, lint, TypeScript, 14+ test və production build-i yoxlayır.
+`npm run verify` Prisma sxemini, lint, TypeScript, 24+ test və production build-i yoxlayır.

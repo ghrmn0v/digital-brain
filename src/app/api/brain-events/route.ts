@@ -6,6 +6,10 @@ import {
   normalizedEventSchema,
   type NormalizedEvent,
 } from "@/lib/events";
+import {
+  developerBugDetectedPayloadSchema,
+  developerModeService,
+} from "@/modules/developer-mode";
 import { automationService } from "@/modules/automations";
 import {
   eventDeliveryService,
@@ -23,7 +27,29 @@ export async function POST(request: NextRequest) {
       normalizedEventSchema,
       2_000_000,
     )) as NormalizedEvent;
+
+    if (
+      event.source === "core_brain" &&
+      event.type === "developer.bug_detected"
+    ) {
+      developerBugDetectedPayloadSchema.parse(event.payload);
+    }
+
     const result = await integrationEventService.publish(event, ["fly"]);
+
+    if (
+      event.source === "core_brain" &&
+      event.type === "developer.bug_detected"
+    ) {
+      try {
+        await developerModeService.projectBugDetected(event);
+      } catch (error) {
+        console.error("Developer information projection failed.", {
+          eventId: event.id,
+          error,
+        });
+      }
+    }
 
     after(async () => {
       await Promise.all([

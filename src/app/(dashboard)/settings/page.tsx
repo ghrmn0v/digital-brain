@@ -6,6 +6,7 @@ import {
   RadioTower,
   Settings2,
 } from "lucide-react";
+import { DeveloperModeToggle } from "@/components/developer-mode-toggle";
 import { SettingsManager } from "@/components/settings-manager";
 import {
   Badge,
@@ -13,6 +14,10 @@ import {
   Panel,
   SectionHeading,
 } from "@/components/ui";
+import {
+  DEVELOPER_MODE_SETTING_KEY,
+  developerModeService,
+} from "@/modules/developer-mode";
 import { settingsService } from "@/modules/settings";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -53,13 +58,20 @@ function ReadinessCard({
 }
 
 export default async function SettingsPage() {
-  const settings = await settingsService.list();
+  const [settings, developerModeEnabled] = await Promise.all([
+    settingsService.list(),
+    developerModeService.isEnabled(),
+  ]);
   const sensitiveSettingPattern =
     /(?:api[-_.]?key|authorization|credential|password|secret|token)/i;
   const publicSettings = settings.filter(
-    (setting) => !sensitiveSettingPattern.test(setting.key),
+    (setting) =>
+      !sensitiveSettingPattern.test(setting.key) &&
+      setting.key !== DEVELOPER_MODE_SETTING_KEY,
   );
-  const restrictedSettingCount = settings.length - publicSettings.length;
+  const restrictedSettingCount = settings.filter((setting) =>
+    sensitiveSettingPattern.test(setting.key),
+  ).length;
   const coreBrainConfigured = Boolean(process.env.CORE_BRAIN_URL?.trim());
   const flyConfigured = Boolean(process.env.FLY_EVENTS_URL?.trim());
 
@@ -68,8 +80,12 @@ export default async function SettingsPage() {
       <PageHeader
         eyebrow="System configuration"
         title="Settings"
-        description="Manage local product settings and review integration readiness without displaying environment secrets or remote service URLs."
+        description="Manage local product settings and platform capabilities without displaying environment secrets or remote service URLs."
       />
+
+      <div className="hidden min-[900px]:block">
+        <DeveloperModeToggle enabled={developerModeEnabled} />
+      </div>
 
       <Panel>
         <SectionHeading
@@ -83,14 +99,16 @@ export default async function SettingsPage() {
             configured={coreBrainConfigured}
             icon={BrainCircuit}
           />
-          <ReadinessCard
-            name="Fly events"
-            description="The local product can deliver normalized events to a configured Fly consumer."
-            configured={flyConfigured}
-            icon={RadioTower}
-          />
+          <div className="hidden min-[900px]:block">
+            <ReadinessCard
+              name="Fly events"
+              description="The desktop product can deliver normalized events through the existing Connectome layer."
+              configured={flyConfigured}
+              icon={RadioTower}
+            />
+          </div>
         </div>
-        <div className="flex items-start gap-3 border-t border-slate-800 px-5 py-4 text-xs leading-5 text-slate-500">
+        <div className="hidden items-start gap-3 border-t border-slate-800 px-5 py-4 text-xs leading-5 text-slate-500 min-[900px]:flex">
           <Settings2 aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
           CORE_BRAIN_API_TOKEN and FLY_API_TOKEN are never read, returned, or
           rendered by this interface.

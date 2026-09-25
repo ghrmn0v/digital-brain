@@ -6,12 +6,14 @@ import { useState, type ReactNode } from "react";
 import {
   Bot,
   BrainCircuit,
+  Bug,
   BriefcaseBusiness,
   CalendarDays,
   CheckCheck,
   ChevronRight,
   CircleDot,
   Clock3,
+  Code2,
   History,
   LayoutDashboard,
   ListTodo,
@@ -23,10 +25,24 @@ import {
   Users,
   X,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/components/ui";
 
-const navigation = [
+type NavigationItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  developerModeOnly?: boolean;
+  desktopOnly?: boolean;
+};
+
+type NavigationSection = {
+  label: string;
+  items: NavigationItem[];
+};
+
+const navigation: NavigationSection[] = [
   {
     label: "Workspace",
     items: [
@@ -43,6 +59,13 @@ const navigation = [
       { href: "/automations", label: "Automations", icon: Zap },
       { href: "/permissions", label: "Permissions", icon: ShieldCheck },
       { href: "/connectors", label: "Connectors", icon: PlugZap },
+      {
+        href: "/developer",
+        label: "Developer Mode",
+        icon: Code2,
+        developerModeOnly: true,
+        desktopOnly: true,
+      },
     ],
   },
   {
@@ -51,10 +74,15 @@ const navigation = [
       { href: "/timeline", label: "Timeline", icon: History },
       { href: "/memory", label: "Memory", icon: BrainCircuit },
       { href: "/people", label: "People", icon: Users },
+      {
+        href: "/developer-information",
+        label: "Developer Updates",
+        icon: Bug,
+      },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
-] as const;
+];
 
 function isActive(pathname: string, href: string): boolean {
   return href === "/dashboard" ? pathname === href : pathname.startsWith(href);
@@ -83,7 +111,13 @@ function Brand() {
   );
 }
 
-function Navigation({ onNavigate }: { onNavigate?: () => void }) {
+function Navigation({
+  developerModeEnabled,
+  onNavigate,
+}: {
+  developerModeEnabled: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
@@ -95,11 +129,21 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
               {section.label}
             </p>
             <ul className="space-y-1">
-              {section.items.map((item) => {
+              {section.items
+                .filter(
+                  (item) =>
+                    !item.developerModeOnly || developerModeEnabled,
+                )
+                .map((item) => {
                 const active = isActive(pathname, item.href);
                 const Icon = item.icon;
                 return (
-                  <li key={item.href}>
+                  <li
+                    key={item.href}
+                    className={
+                      item.desktopOnly ? "hidden min-[900px]:block" : undefined
+                    }
+                  >
                     <Link
                       href={item.href}
                       onClick={onNavigate}
@@ -134,7 +178,7 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
                     </Link>
                   </li>
                 );
-              })}
+                })}
             </ul>
           </div>
         ))}
@@ -159,7 +203,13 @@ function SidebarFooter() {
   );
 }
 
-export function DashboardShell({ children }: { children: ReactNode }) {
+export function DashboardShell({
+  children,
+  developerModeEnabled,
+}: {
+  children: ReactNode;
+  developerModeEnabled: boolean;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -175,7 +225,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <div className="flex h-20 items-center border-b border-slate-800/80 px-5">
           <Brand />
         </div>
-        <Navigation />
+        <Navigation developerModeEnabled={developerModeEnabled} />
         <SidebarFooter />
       </aside>
 
@@ -220,7 +270,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
-            <Navigation onNavigate={() => setMobileOpen(false)} />
+            <Navigation
+              developerModeEnabled={developerModeEnabled}
+              onNavigate={() => setMobileOpen(false)}
+            />
             <SidebarFooter />
           </aside>
         </div>

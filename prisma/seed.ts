@@ -114,6 +114,12 @@ async function main() {
   });
 
   await prisma.appSetting.upsert({
+    where: { key: "product.developer_mode" },
+    update: {},
+    create: { key: "product.developer_mode", value: false },
+  });
+
+  await prisma.appSetting.upsert({
     where: { key: "jobs.daily_report_time" },
     update: {},
     create: { key: "jobs.daily_report_time", value: "09:00" },

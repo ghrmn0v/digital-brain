@@ -23,6 +23,21 @@ External source
 - Fly owns Connectome behavior, rendering, and reaction logic. Product only publishes events.
 - Product never derives job relevance or memory importance. It displays upstream explanations only when supplied.
 
+## Platform capability model
+
+```text
+Core Brain developer events
+          |
+          v
+Shared Product Developer Information API
+          |
+          +-- PC: optional Developer Mode workspace, proposal decisions, Fly
+          |
+          +-- Mobile: read-only Developer Information, no Fly/local analysis
+```
+
+Developer Mode is stored as a default-off boolean capability and exposed only through desktop presentation. Shared Developer Information is platform-independent Product data. Neither client contains repository analysis or other AI logic.
+
 ## Reliability decisions
 
 - Runtime validation uses Zod at every external/API boundary.

@@ -130,6 +130,53 @@ try {
       ],
     }),
   });
+  const developerModeBefore = await request("/api/developer-mode", {
+    headers: { "x-product-client-platform": "desktop" },
+  });
+  const developerModeEnabled = await request("/api/developer-mode", {
+    method: "PUT",
+    headers: { "x-product-client-platform": "desktop" },
+    body: JSON.stringify({ enabled: true }),
+  });
+  const actionCountBefore = await request("/api/actions?limit=1");
+  const bugEvent = {
+    id: "developer-bug-smoke-1",
+    source: "core_brain",
+    type: "developer.bug_detected",
+    timestamp: "2026-09-25T12:00:00.000Z",
+    payload: {
+      repository: "digital-brain",
+      file: "src/auth/login.ts",
+      line: 42,
+      column: 10,
+      title: "Possible null reference",
+      message: "  Core Brain explanation remains unchanged.  ",
+      severity: "warning",
+    },
+    metadata: { schemaVersion: "1.0" },
+  };
+  const developerEvent = await request("/api/brain-events", {
+    method: "POST",
+    body: JSON.stringify(bugEvent),
+  });
+  const developerInformation = await request("/api/developer-information");
+  const developerProposals = await request("/api/developer-proposals", {
+    headers: { "x-product-client-platform": "desktop" },
+  });
+  const developerApproval = await request(
+    `/api/developer-proposals/${developerProposals.body.data.proposals[0].id}/approve`,
+    {
+      method: "POST",
+      headers: { "x-product-client-platform": "desktop" },
+      body: JSON.stringify({ reason: "Smoke proposal approval" }),
+    },
+  );
+  const actionCountAfter = await request("/api/actions?limit=1");
+  const mobileDeveloperMode = await request("/api/developer-mode", {
+    method: "PUT",
+    headers: { "x-product-client-platform": "mobile" },
+    body: JSON.stringify({ enabled: false }),
+  });
 
   const summary = {
     taskCreate: taskCreate.status,
@@ -144,6 +191,17 @@ try {
     linkedInFirst: linkedinFirst.status,
     linkedInReplay: linkedinReplay.status,
     duplicateEvent: linkedinReplay.body.data.items[0].duplicateEvent,
+    developerModeDefaultOff: developerModeBefore.body.data.enabled === false,
+    developerModeEnabled: developerModeEnabled.body.data.enabled === true,
+    developerEvent: developerEvent.status,
+    developerInformation:
+      developerInformation.body.data[0]?.proposal?.message ===
+      bugEvent.payload.message,
+    developerProposalApproval: developerApproval.body.data.status,
+    noDeveloperActionExecuted:
+      actionCountBefore.body.meta.pagination.total ===
+      actionCountAfter.body.meta.pagination.total,
+    mobileDeveloperModeBlocked: mobileDeveloperMode.status === 403,
   };
 
   const passed =
@@ -157,7 +215,14 @@ try {
     summary.approval === "completed" &&
     summary.linkedInFirst === 200 &&
     summary.linkedInReplay === 200 &&
-    summary.duplicateEvent;
+    summary.duplicateEvent &&
+    summary.developerModeDefaultOff &&
+    summary.developerModeEnabled &&
+    summary.developerEvent === 201 &&
+    summary.developerInformation &&
+    summary.developerProposalApproval === "APPROVED" &&
+    summary.noDeveloperActionExecuted &&
+    summary.mobileDeveloperModeBlocked;
 
   console.log(JSON.stringify(summary, null, 2));
   if (!passed) throw new Error(`Smoke assertions failed.\n${serverLogs}`);

@@ -85,6 +85,12 @@ enum AutomationRunStatus {
   SKIPPED
 }
 
+enum DeveloperProposalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Task {
   id             String       @id @default(cuid())
   title          String
@@ -252,10 +258,26 @@ model IntegrationEvent {
   metadata  Json?
   createdAt DateTime @default(now())
 
-  deliveries EventDelivery[]
+  deliveries        EventDelivery[]
+  developerProposal DeveloperProposal?
 
   @@index([source, type])
   @@index([createdAt])
+}
+
+model DeveloperProposal {
+  id             String                  @id @default(cuid())
+  eventId        String                  @unique
+  status         DeveloperProposalStatus @default(PENDING)
+  decidedBy      String?
+  decisionReason String?
+  decidedAt      DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  event IntegrationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
 }
 
 model EventDelivery {

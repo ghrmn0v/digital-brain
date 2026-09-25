@@ -7,13 +7,20 @@ import {
   Clock3,
   MapPin,
   Plus,
+  Timer,
   Trash2,
   X,
 } from "lucide-react";
 import type { CalendarEventDto } from "@/modules/calendar/contracts";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import {
-  combineDateAndTime,
+  addDuration,
+  parseLocalDate,
+  parseLocalDateTime,
+  toDateInputValue,
+  toTimeInputValue,
+} from "@/lib/domain/calendar-time";
+import {
   formatDate,
   formatDateTime,
   formatTime,
@@ -30,7 +37,18 @@ import {
   inputClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  selectClassName,
 } from "@/components/ui";
+
+const durationOptions = [
+  { value: 30, label: "30 minutes" },
+  { value: 60, label: "1 hour" },
+  { value: 90, label: "1 hour 30 minutes" },
+  { value: 120, label: "2 hours" },
+  { value: 180, label: "3 hours" },
+  { value: 240, label: "4 hours" },
+  { value: 480, label: "8 hours" },
+] as const;
 
 function EventCard({
   event,
@@ -118,9 +136,37 @@ export function CalendarManager({
   const formRef = useRef<HTMLFormElement>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [allDay, setAllDay] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState(90);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  let timedEndPreview: Date | null = null;
+  if (!allDay && startDate && startTime) {
+    try {
+      timedEndPreview = addDuration(
+        parseLocalDateTime(startDate, startTime),
+        durationMinutes,
+      );
+    } catch {}
+  }
+
+  function toggleForm() {
+    if (!formOpen) {
+      const now = new Date();
+      const next = new Date(now);
+      next.setMinutes(Math.ceil(next.getMinutes() / 30) * 30, 0, 0);
+      setStartDate(toDateInputValue(next));
+      setStartTime(toTimeInputValue(next));
+      const nextDay = new Date(next);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setEndDate(toDateInputValue(nextDay));
+    }
+    setFormOpen((open) => !open);
+  }
 
   async function createEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -134,28 +180,31 @@ export function CalendarManager({
     const startDate = String(formData.get("startDate") ?? "");
     const endDate = String(formData.get("endDate") ?? "");
     const startTime = String(formData.get("startTime") ?? "");
-    const endTime = String(formData.get("endTime") ?? "");
 
     try {
-      if (!title || !startDate || !endDate) {
-        throw new Error("Title, start date, and end date are required.");
+      if (!title || !startDate || (allDay && !endDate)) {
+        throw new Error(
+          allDay
+            ? "Title, start date, and exclusive end date are required."
+            : "Title, start date, and start time are required.",
+        );
       }
 
       let startsAt: Date;
       let endsAt: Date;
 
       if (allDay) {
-        startsAt = new Date(`${startDate}T00:00:00`);
-        endsAt = new Date(`${endDate}T00:00:00`);
+        startsAt = parseLocalDate(startDate);
+        endsAt = parseLocalDate(endDate);
         if (endsAt <= startsAt) {
-          endsAt.setDate(endsAt.getDate() + 1);
+          endsAt = addDuration(startsAt, 24 * 60);
         }
       } else {
-        if (!startTime || !endTime) {
-          throw new Error("Start and end times are required for a timed event.");
+        if (!startTime) {
+          throw new Error("Start time is required for a timed event.");
         }
-        startsAt = combineDateAndTime(startDate, startTime);
-        endsAt = combineDateAndTime(endDate, endTime);
+        startsAt = parseLocalDateTime(startDate, startTime);
+        endsAt = addDuration(startsAt, durationMinutes);
       }
 
       if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
@@ -180,6 +229,10 @@ export function CalendarManager({
 
       formRef.current?.reset();
       setAllDay(false);
+      setStartDate("");
+      setStartTime("");
+      setEndDate("");
+      setDurationMinutes(90);
       setFormOpen(false);
       setSuccess("Calendar event created.");
       router.refresh();
@@ -212,11 +265,11 @@ export function CalendarManager({
       <Panel>
         <SectionHeading
           title="Add an event"
-          description="Times are interpreted in this browser’s IANA time zone and stored as UTC"
+          description="Choose a start time and duration; the end time is calculated reliably in this browser’s IANA time zone"
           action={
             <button
               type="button"
-              onClick={() => setFormOpen((open) => !open)}
+              onClick={toggleForm}
               aria-expanded={formOpen}
               className={formOpen ? secondaryButtonClassName : primaryButtonClassName}
             >
@@ -259,44 +312,71 @@ export function CalendarManager({
               </label>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <label className="space-y-1.5 text-xs font-medium text-slate-400">
                 <span>Start date</span>
-                <input name="startDate" type="date" required className={inputClassName} />
-              </label>
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
-                <span>{allDay ? "End date (exclusive)" : "End date"}</span>
                 <input
-                  name="endDate"
+                  name="startDate"
                   type="date"
                   required
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
                   className={inputClassName}
                 />
               </label>
-              <label
-                className={`space-y-1.5 text-xs font-medium text-slate-400 ${allDay ? "opacity-45" : ""}`}
-              >
-                <span>Start time</span>
-                <input
-                  name="startTime"
-                  type="time"
-                  required={!allDay}
-                  disabled={allDay}
-                  className={inputClassName}
-                />
-              </label>
-              <label
-                className={`space-y-1.5 text-xs font-medium text-slate-400 ${allDay ? "opacity-45" : ""}`}
-              >
-                <span>End time</span>
-                <input
-                  name="endTime"
-                  type="time"
-                  required={!allDay}
-                  disabled={allDay}
-                  className={inputClassName}
-                />
-              </label>
+              {allDay ? (
+                <label className="space-y-1.5 text-xs font-medium text-slate-400">
+                  <span>End date (exclusive)</span>
+                  <input
+                    name="endDate"
+                    type="date"
+                    required
+                    value={endDate}
+                    onChange={(event) => setEndDate(event.target.value)}
+                    className={inputClassName}
+                  />
+                </label>
+              ) : (
+                <>
+                  <label className="space-y-1.5 text-xs font-medium text-slate-400">
+                    <span>Start time</span>
+                    <input
+                      name="startTime"
+                      type="time"
+                      step={60}
+                      required
+                      value={startTime}
+                      onChange={(event) => setStartTime(event.target.value)}
+                      className={inputClassName}
+                    />
+                  </label>
+                  <label className="space-y-1.5 text-xs font-medium text-slate-400">
+                    <span>Duration</span>
+                    <select
+                      value={durationMinutes}
+                      onChange={(event) =>
+                        setDurationMinutes(Number(event.target.value))
+                      }
+                      className={selectClassName}
+                    >
+                      {durationOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="space-y-1.5 text-xs font-medium text-slate-400 sm:col-span-2 lg:col-span-1">
+                    <span>Calculated end time</span>
+                    <div className="flex min-h-11 items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/40 px-3.5 text-sm text-cyan-200">
+                      <Timer aria-hidden="true" className="h-4 w-4" />
+                      {timedEndPreview
+                        ? formatTime(timedEndPreview.toISOString())
+                        : "Choose start time"}
+                    </div>
+                  </label>
+                </>
+              )}
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -313,7 +393,11 @@ export function CalendarManager({
                 <p className="text-xs text-slate-500">
                   {allDay
                     ? "The end date is exclusive; the same date creates a one-day event."
-                    : "End must be later than start."}
+                    : `Ends at ${
+                        timedEndPreview
+                          ? formatTime(timedEndPreview.toISOString())
+                          : "the calculated time"
+                      }.`}
                 </p>
                 <button
                   type="submit"

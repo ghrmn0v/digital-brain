@@ -191,6 +191,54 @@ Normalized event:
 
 Integration events and per-consumer deliveries are persisted in SQLite. Delivery retries are bounded; the local worker calls the retry endpoint periodically through `npm run worker`.
 
+## Developer Mode və Developer Information
+
+Developer Mode bir PC capability-dir; Developer Information isə hər iki platformda oxuna bilən Core Brain məlumatıdır.
+
+| Method | Endpoint | Platform | Purpose |
+| --- | --- | --- | --- |
+| `GET/PUT` | `/api/developer-mode` | Desktop only | Read or change the default-off capability |
+| `GET` | `/api/developer-information` | Desktop + mobile | Read shared Core Brain developer information |
+| `GET` | `/api/developer-proposals` | Desktop only | Read actionable bug proposals while mode is enabled |
+| `POST` | `/api/developer-proposals/:id/approve` | Desktop only | Record proposal approval only |
+| `POST` | `/api/developer-proposals/:id/reject` | Desktop only | Record proposal rejection only |
+
+Desktop requests use the presentation capability header:
+
+```http
+X-Product-Client-Platform: desktop
+```
+
+This header separates product presentation; it is not an intelligence or authorization boundary.
+
+The accepted future event namespace is:
+
+- `developer.bug_detected`
+- `developer.explanation`
+- `developer.fix_proposed`
+- `developer.test_result`
+- `developer.review_finding`
+- `developer.deploy_status`
+
+Only `developer.bug_detected` has a detailed Product projection in the current foundation. Its payload is:
+
+```json
+{
+  "repository": "digital-brain",
+  "file": "src/auth/login.ts",
+  "line": 42,
+  "column": 10,
+  "title": "Possible null reference",
+  "message": "user may be undefined before accessing user.email",
+  "severity": "warning",
+  "context": {}
+}
+```
+
+`title` and `message` are opaque Core Brain output. Product validates and displays them without summarizing, rewriting, or generating replacements.
+
+Approval and rejection update only `DeveloperProposal.status` and audit fields. They never call `actionService`, a Git adapter, a test runner, a deployment adapter, or Fly.
+
 ## Timeline and settings
 
 | Method | Endpoint | Purpose |

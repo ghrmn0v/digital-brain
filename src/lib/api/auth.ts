@@ -35,6 +35,18 @@ function readBearerToken(request: Request): string | null {
   return authorization.slice("Bearer ".length).trim() || null;
 }
 
+export function requireLocalUser(request: Request): RequestActor {
+  const actor = authorizeRequest(request);
+  if (actor.kind !== "local_user") {
+    throw new ApiError(
+      403,
+      "LOCAL_USER_REQUIRED",
+      "This operation is only available to the local product user.",
+    );
+  }
+  return actor;
+}
+
 export function authorizeRequest(request: Request): RequestActor {
   const configuredToken = process.env.SERVICE_API_TOKEN?.trim();
   const bearerToken = readBearerToken(request);
