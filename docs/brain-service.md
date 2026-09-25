@@ -50,6 +50,7 @@ BrainService(
 | `build_context(developer_context, *, task=None)` | bounded Context | — |
 | `preferences / developer_preferences / people_summary(user_id)` | people reads | — |
 | `people_timeline(user_id, person_id, *, limit=None)` | chronological active + historical person view with provenance | — |
+| `resolve_person(user_id, name, *, aliases=(), correlation_id=None, event_source=None)` | deterministic person identity resolution (never merges) | `person.created` only when a new identity is written |
 | `learning_status / feedback_history / personalization_profile(user_id)` | learning reads | — |
 | `close()` | release the wiring | — |
 
@@ -68,6 +69,12 @@ inspectable with their memory id, lifecycle status, validity dates, durability
 classification and source/correlation evidence. Durability stays
 `unspecified` when structured evidence is insufficient. Product renders the
 returned data; Core owns no timeline UI.
+
+`resolve_person` is the one identity transition on this boundary, and it is the
+single place that emits `person.created`: a freshly minted identity emits once,
+an exact match and an ambiguous name emit nothing. `ingest` delegates to it, so
+resolving a named subject during ingestion and calling the method directly share
+exactly one emission site.
 
 ## Platform independence
 

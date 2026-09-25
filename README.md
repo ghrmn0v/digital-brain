@@ -215,8 +215,9 @@ connected. Built so far:
   owns the canonical response/event envelopes, while stdio/WebSocket reuse them.
   `contracts/schemas/brain-api.v1.json` is a deterministic, data-free JSON
   Schema bundle
-  with request/response/error/event/frame contracts and ordered refs for all 16
-  methods. Generate with `python -m contracts.api.schema`; verify drift with
+  with request/response/error/event/frame contracts and ordered refs for all 17
+  methods (new methods are appended, so published indices stay stable). Generate
+  with `python -m contracts.api.schema`; verify drift with
   `python -m contracts.api.schema --check`. This is the shared generation input
   for framework-free TS/Java clients, not a UI or mobile framework. See
   `docs/schema-distribution.md`.

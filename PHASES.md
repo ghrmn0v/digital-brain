@@ -847,3 +847,55 @@ the single request-processing entry point; this slice only adapts it + the
   `git diff --check` clean. No dependency install.
 - Still deliberately absent: fuzzy/phonetic matching, cross-name merging,
   transliteration, and re-aliasing an already-resolved person.
+
+### Phase 8 (Slice 7) — `resolve_person` as Client API Method 17
+
+- Promotes the Phase 5C identity resolver to a client-callable method, fully
+  additive: v1 stays v1 and **no existing method index changes** — the new
+  member is declared last, so every previously published registry position keeps
+  its meaning.
+- Contract layer:
+  - `ApiMethod.RESOLVE_PERSON = "resolve_person"` (appended last by rule).
+  - `ResolvePersonParams(user_id, name, aliases?, correlation_id?)` —
+    `name` 1–200 chars, at most 8 aliases, `extra="forbid"`.
+  - `PersonResolutionWire` — `user_id`, `name`, nullable `person_id`, `aliases`,
+    `created`, `ambiguous`, `candidates`, nullable `memory_id`.
+  - `API_METHOD_REGISTRY` entry binding those two models; `describe`,
+    `x-methods` and the schema `minItems/maxItems` all derive from it (now 17).
+  - `contracts/schemas/brain-api.v1.json` regenerated; `--check` clean.
+- Service: new `BrainService.resolve_person(user_id, name, *, aliases,
+  correlation_id, event_source)` is now the **single** `person.created`
+  emission site. `ingest` delegates to it instead of emitting separately, so
+  direct calls and ingest-time resolution cannot double-emit.
+  `PeopleValidationError` is translated to `BrainServiceValidationError` at the
+  boundary — a blank name was reaching clients as `internal_error` instead of
+  the correct `validation_error`.
+- Adapter: `_handle_resolve_person` in `core/service/api.py` plus the handler
+  map entry. HTTP, stdio and WebSocket all reach it through
+  `BrainApi.handle`, so exposure is automatic; the WebSocket ownership check is
+  generic over top-level `params.user_id`, which is now covered by a test.
+- TypeScript client: `ResolvePersonParams` / `PersonResolutionResult` types,
+  `API_METHODS` entry (`hasUserIdParam: true`), both method maps and the public
+  exports. The schema-parity test in `contract.test.ts` fails if the table and
+  the artifact disagree, so the client cannot silently drift.
+- Behaviour deliberately unchanged: exact (normalized) name reuses the existing
+  person; an unknown name mints the same deterministic `per_<slug>_<digest>`
+  id; an ambiguous name returns candidates and writes nothing; token overlap is
+  never identity proof; the identity memory keeps its `kind`,
+  `person_key`, `durability` and provider; `person.created` fires only for a new
+  person.
+- Ambiguity is returned as `ok=true` data (`ambiguous=true`, `person_id=null`)
+  rather than an error: the call succeeded, its answer is "ambiguous", and the
+  client decides. Documented in `docs/brain-api.md`.
+- Tests: `tests/test_resolve_person_api.py` (19 new) — registry/describe/params
+  bindings, the method being declared last, create-once + reuse, single
+  `person.created` emission with correlation id, ambiguous-without-writing,
+  token overlap, aliases, traceable identity memory, user isolation, typed
+  validation errors, composition with `people_summary`/`people_timeline`, the
+  WebSocket cross-user rejection and matching-identity path, and the
+  people-not-configured guard. TypeScript: 8 new (6 live HTTP against the real
+  Core transport, 2 over a real WebSocket) and the two hardcoded method counts
+  updated to 17.
+- Verification: Python 566 OK (547 + 19); TypeScript 61 OK (53 + 8); compileall,
+  schema `--check`, `git diff --check` clean. No dependency install, no
+  behaviour change, no Java work.

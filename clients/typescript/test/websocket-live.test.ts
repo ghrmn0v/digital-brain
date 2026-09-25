@@ -63,6 +63,29 @@ test("people_timeline comes back over the socket with provenance intact", async 
   assert.equal(entry.durability, "temporary");
 });
 
+test("resolve_person travels with the injected identity over a real socket", async () => {
+  const result = await client.call("resolve_person", { name: "Ali Ahmadov" });
+  assert.equal(result.user_id, "usr_ali");
+  assert.equal(result.created, true);
+  assert.equal(result.ambiguous, false);
+  assert.equal(result.person_id, "per_ali_1a2b3c4d");
+  const last = server.requests[server.requests.length - 1] as { params?: Record<string, unknown> };
+  assert.equal(last.params?.["user_id"], "usr_ali", "the client identity is injected");
+  assert.equal(last.params?.["name"], "Ali Ahmadov");
+});
+
+test("a conflicting identity for resolve_person is refused locally", async () => {
+  const before = server.requests.length;
+  await assert.rejects(
+    () => client.call("resolve_person", { name: "Ali", user_id: "usr_bəkir" } as never),
+    (error: unknown) => {
+      assert.equal((error as { kind?: string }).kind, "identity");
+      return true;
+    },
+  );
+  assert.equal(server.requests.length, before, "nothing is sent over the wire");
+});
+
 test("events arrive before the response and are delivered once", async () => {
   const seen: BrainEvent[] = [];
   const unsubscribe = client.onEvent((event) => {

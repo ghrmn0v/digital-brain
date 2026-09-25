@@ -23,7 +23,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 from contracts.brain_events.events import BrainEvent
 from contracts.common.ids import UserId
@@ -178,19 +178,10 @@ class BrainService:
             data = dict(data)
             data["correlation_id"] = correlation_id
 
-        data, resolved = self._resolve_subject_person(
+        data, _ = self._resolve_subject_person(
             data, correlation_id=correlation_id, event_source=event_source
         )
         result = self._ingestion.ingest(data)
-        if resolved is not None and resolved.created:
-            self._dispatcher.person_created(
-                str(result.user_id),
-                str(resolved.person_id),
-                resolved.name,
-                memory_id=resolved.memory_id,
-                correlation_id=correlation_id,
-                **_event_source_kwargs(event_source),
-            )
         if result.outcome == IngestionOutcome.ACCEPTED and self._memory is not None:
             for memory_id in result.memory_ids:
                 memory = self._get_memory_safe(result.user_id, memory_id)
@@ -224,10 +215,13 @@ class BrainService:
         if not isinstance(user_id, str) or not user_id:
             return data, None
         try:
-            resolution = self._people.resolve_person(
-                UserId(user_id), name, source=event_source
+            resolution = self.resolve_person(
+                UserId(user_id),
+                name,
+                correlation_id=correlation_id,
+                event_source=event_source,
             )
-        except (PeopleValidationError, PeopleError):
+        except (BrainServiceValidationError, PeopleError):
             return data, None
         if resolution.person_id is None:
             return data, resolution
@@ -474,6 +468,40 @@ class BrainService:
         if self._people is None:
             raise BrainServiceConfigurationError("people not configured")
         return self._people.timeline(user_id, person_id, limit=limit)
+
+    def resolve_person(
+        self,
+        user_id: UserId,
+        name: str,
+        *,
+        aliases: Sequence[str] = (),
+        correlation_id: str | None = None,
+        event_source: Source | None = None,
+    ) -> PersonResolution:
+        """Resolve one person name; emit ``person.created`` only on creation.
+
+        The single emission site for a new identity: an exact match returns the
+        existing person, an ambiguous name returns candidates without writing,
+        and only a freshly minted id produces an event.
+        """
+        if self._people is None:
+            raise BrainServiceConfigurationError("people not configured")
+        try:
+            resolution = self._people.resolve_person(
+                user_id, name, aliases=aliases, source=event_source
+            )
+        except PeopleValidationError as exc:
+            raise BrainServiceValidationError(str(exc)) from exc
+        if resolution.created and resolution.person_id is not None:
+            self._dispatcher.person_created(
+                user_id,
+                resolution.person_id,
+                resolution.name,
+                memory_id=resolution.memory_id,
+                correlation_id=correlation_id,
+                **_event_source_kwargs(event_source),
+            )
+        return resolution
 
     def learning_status(self, user_id: UserId) -> LearningStatus:
         if self._learning is None:

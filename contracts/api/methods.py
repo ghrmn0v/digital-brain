@@ -16,6 +16,7 @@ Grouped by the BrainService surface they mirror:
 - people reads:        preferences, developer_preferences, people_summary,
                         people_timeline
 - learning reads:      learning_status, feedback_history, personalization_profile
+- people identity:     resolve_person (appended last; additive)
 
 Only contracts here — no implementation logic.
 """
@@ -55,3 +56,8 @@ class ApiMethod(str, Enum):
     LEARNING_STATUS = "learning_status"
     FEEDBACK_HISTORY = "feedback_history"
     PERSONALIZATION_PROFILE = "personalization_profile"
+
+    # -- appended in Slice 7 ---------------------------------------------------
+    # Declared last so every previously published method keeps its registry
+    # index: adding a method must not renumber what a client already knows.
+    RESOLVE_PERSON = "resolve_person"

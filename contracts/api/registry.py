@@ -96,6 +96,11 @@ API_METHOD_SPECS: tuple[ApiMethodSpec, ...] = (
         params.UserParams,
         results.AssistanceProfileResult,
     ),
+    ApiMethodSpec(
+        ApiMethod.RESOLVE_PERSON,
+        params.ResolvePersonParams,
+        results.PersonResolutionWire,
+    ),
 )
 
 API_METHOD_REGISTRY: Mapping[ApiMethod, ApiMethodSpec] = MappingProxyType(

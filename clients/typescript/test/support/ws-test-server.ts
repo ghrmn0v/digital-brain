@@ -298,6 +298,17 @@ function cannedResult(method: string, userId: string): unknown {
       return { ok: true, service: "digital-brain", api_version: "v1" };
     case "preferences":
       return { user_id: userId, preferences: [], domains: [] };
+    case "resolve_person":
+      return {
+        user_id: userId,
+        name: "Ali Ahmadov",
+        person_id: "per_ali_1a2b3c4d",
+        aliases: [],
+        created: true,
+        ambiguous: false,
+        candidates: [],
+        memory_id: "mem_1",
+      };
     case "people_timeline":
       return {
         user_id: userId,

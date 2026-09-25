@@ -189,6 +189,26 @@ class PersonTimelineEntryWire(BaseModel):
     provenance: PersonTimelineSourceWire
 
 
+class PersonResolutionWire(BaseModel):
+    """Outcome of resolving one person name for one user.
+
+    ``person_id`` is present exactly when the name is not ambiguous. An
+    ambiguous result lists the competing ids in ``candidates`` and never merges
+    them; ``created`` is true only when a new identity memory was written.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    name: str = Field(min_length=1, max_length=200)
+    person_id: str | None = None
+    aliases: list[str] = Field(default_factory=list, max_length=8)
+    created: bool = False
+    ambiguous: bool = False
+    candidates: list[str] = Field(default_factory=list, max_length=8)
+    memory_id: str | None = None
+
+
 class PeopleTimelineResult(BaseModel):
     """Bounded historical timeline for one user-owned person."""
 

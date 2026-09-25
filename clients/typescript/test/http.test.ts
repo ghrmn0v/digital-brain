@@ -59,9 +59,11 @@ test("ping answers over HTTP", async () => {
 test("describe exposes the v1 registry including people_timeline", async () => {
   const result = await client.call("describe");
   const methods = result.methods ?? [];
-  assert.equal(methods.length, 16);
+  assert.equal(methods.length, 17);
   assert.ok(methods.includes("people_timeline"));
+  assert.ok(methods.includes("resolve_person"));
   assert.ok("people_timeline" in (result.schemas ?? {}));
+  assert.ok("resolve_person" in (result.schemas ?? {}));
 });
 
 test("request ids are minted per client and echoed by the server", async () => {
@@ -300,6 +302,89 @@ test("a name-only subject is resolved by Core into a named person", async () => 
   const sameAli = (after.people ?? []).filter((person) => person.name === "Ali Ahmadov");
   assert.equal(sameAli.length, 1, "the same name must converge on one person");
   assert.equal(sameAli[0]?.mention_count, 2);
+});
+
+test("resolve_person creates a person once and reuses it afterwards", async () => {
+  const first = await client.call("resolve_person", { name: "Bəkir Əhmədov" });
+  assert.equal(first.user_id, "usr_ali");
+  assert.equal(first.created, true);
+  assert.equal(first.ambiguous, false);
+  assert.ok((first.person_id ?? "").startsWith("per_"));
+  assert.ok((first.memory_id ?? "").length > 0);
+
+  const again = await client.call("resolve_person", { name: "  bəkir   ƏHMƏDOV " });
+  assert.equal(again.person_id, first.person_id);
+  assert.equal(again.created, false);
+  assert.equal(again.memory_id ?? null, null);
+});
+
+test("resolve_person accepts aliases and resolves through them", async () => {
+  const created = await client.call("resolve_person", {
+    name: "Nigar Rahimova",
+    aliases: ["Nigar", "Niqa"],
+  });
+  assert.deepEqual(created.aliases, ["Nigar", "Niqa"]);
+  const byAlias = await client.call("resolve_person", { name: "Niqa" });
+  assert.equal(byAlias.person_id, created.person_id);
+  assert.equal(byAlias.created, false);
+});
+
+test("resolve_person reports an ambiguous name without inventing an id", async () => {
+  await client.call("resolve_person", { name: "Murad" });
+  // A second, connector-owned person that also answers to "Murad".
+  const shadow = await client.call("ingest", {
+    event: {
+      ...event("evt_shadow", "usr_ali", "another murad"),
+      subject: { person_id: "per_connector_murad", person_name: "Murad" },
+    },
+  });
+  assert.ok(shadow.event_id.length > 0);
+
+  const ambiguous = await client.call("resolve_person", { name: "Murad" });
+  assert.equal(ambiguous.ambiguous, true);
+  assert.equal(ambiguous.person_id ?? null, null);
+  assert.equal(ambiguous.created, false);
+  assert.ok((ambiguous.candidates ?? []).includes("per_connector_murad"));
+  assert.ok((ambiguous.candidates ?? []).length >= 2);
+});
+
+test("resolve_person keeps users isolated", async () => {
+  const other = new HttpBrainClient({ baseUrl: server.baseUrl, userId: "usr_bəkir" });
+  try {
+    const mine = await client.call("resolve_person", { name: "Sevinc" });
+    const theirs = await other.call("resolve_person", { name: "Sevinc" });
+    assert.notEqual(mine.person_id, theirs.person_id);
+    const summary = await client.call("people_summary");
+    const ids = (summary.people ?? []).map((person) => person.person_id);
+    assert.ok(ids.includes(mine.person_id ?? ""));
+    assert.ok(!ids.includes(theirs.person_id ?? ""));
+  } finally {
+    other.close();
+  }
+});
+
+test("resolve_person rejects an invalid name with the canonical code", async () => {
+  await assert.rejects(
+    () => client.call("resolve_person", { name: "   " }),
+    (error: unknown) => {
+      assert.ok(error instanceof BrainApiError);
+      assert.equal(error.typedCode, "validation_error");
+      return true;
+    },
+  );
+});
+
+test("the injected identity reaches resolve_person", async () => {
+  const injected = new HttpBrainClient({ baseUrl: server.baseUrl, userId: "usr_nigar" });
+  try {
+    const resolution = await injected.call("resolve_person", { name: "Tural" });
+    assert.equal(resolution.user_id, "usr_nigar");
+    const summary = await injected.call("people_summary");
+    assert.equal(summary.user_id, "usr_nigar");
+    assert.equal(summary.people?.[0]?.name, "Tural");
+  } finally {
+    injected.close();
+  }
 });
 
 test("HTTP client advertises that it has no event stream", () => {

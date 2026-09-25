@@ -29,6 +29,9 @@ contracts/api/registry.py
 one typed result model. The public registry is an immutable mapping and its
 order is the stable v1 method order.
 
+New methods are **appended**, never inserted: a later additive method (for
+example `resolve_person`) must not renumber what a client already knows.
+
 `BrainApi.describe()` calls `describe_api_methods()` from this registry. Its
 method list and schemas therefore cannot drift into a private Core-only map.
 Core keeps only the method-to-handler implementation map.

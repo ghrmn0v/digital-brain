@@ -495,6 +495,30 @@ def _handle_people_summary(
     )
 
 
+def _handle_resolve_person(
+    service: BrainService,
+    params: P.ResolvePersonParams,
+    source: Source | None = None,
+) -> R.PersonResolutionWire:
+    resolution = service.resolve_person(
+        params.user_id,
+        params.name,
+        aliases=params.aliases,
+        correlation_id=params.correlation_id,
+        event_source=source,
+    )
+    return R.PersonResolutionWire(
+        user_id=resolution.user_id,
+        name=resolution.name,
+        person_id=resolution.person_id,
+        aliases=list(resolution.aliases),
+        created=resolution.created,
+        ambiguous=resolution.ambiguous,
+        candidates=list(resolution.candidates),
+        memory_id=resolution.memory_id,
+    )
+
+
 def _handle_people_timeline(
     service: BrainService,
     params: P.PeopleTimelineParams,
@@ -613,6 +637,7 @@ _HANDLERS: dict[ApiMethod, _BrainApiHandler] = {
     ApiMethod.LEARNING_STATUS: _handle_learning_status,
     ApiMethod.FEEDBACK_HISTORY: _handle_feedback_history,
     ApiMethod.PERSONALIZATION_PROFILE: _handle_personalization_profile,
+    ApiMethod.RESOLVE_PERSON: _handle_resolve_person,
 }
 
 _METHOD_VALUES = frozenset(method.value for method in API_METHOD_REGISTRY)

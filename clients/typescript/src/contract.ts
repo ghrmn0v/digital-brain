@@ -424,6 +424,13 @@ export interface FeedbackHistoryParams {
   readonly limit?: number | null;
 }
 
+export interface ResolvePersonParams {
+  readonly user_id: string;
+  readonly name: string;
+  readonly aliases?: readonly string[];
+  readonly correlation_id?: string | null;
+}
+
 export interface IngestionResultWire {
   readonly outcome: string;
   readonly event_id: string;
@@ -523,6 +530,22 @@ export interface FeedbackHistoryResult {
   readonly items?: readonly FeedbackHistoryItemWire[];
 }
 
+/**
+ * Outcome of resolving one person name. `person_id` is present exactly when the
+ * name is not ambiguous; an ambiguous result lists the competing ids in
+ * `candidates` and never merges them.
+ */
+export interface PersonResolutionResult {
+  readonly user_id: string;
+  readonly name: string;
+  readonly person_id?: string | null;
+  readonly aliases?: readonly string[];
+  readonly created?: boolean;
+  readonly ambiguous?: boolean;
+  readonly candidates?: readonly string[];
+  readonly memory_id?: string | null;
+}
+
 export interface AssistanceProfileResult {
   readonly user_id: string;
   readonly feedback_count: number;
@@ -577,6 +600,7 @@ export const API_METHODS = [
   { method: "learning_status", paramsDef: "UserParams", resultDef: "LearningStatusResult", hasUserIdParam: true },
   { method: "feedback_history", paramsDef: "FeedbackHistoryParams", resultDef: "FeedbackHistoryResult", hasUserIdParam: true },
   { method: "personalization_profile", paramsDef: "UserParams", resultDef: "AssistanceProfileResult", hasUserIdParam: true },
+  { method: "resolve_person", paramsDef: "ResolvePersonParams", resultDef: "PersonResolutionWire", hasUserIdParam: true },
 ] as const satisfies readonly ApiMethodDescriptor[];
 
 export type ApiMethod = (typeof API_METHODS)[number]["method"];
@@ -598,6 +622,7 @@ export interface MethodParamsMap {
   learning_status: UserParams;
   feedback_history: FeedbackHistoryParams;
   personalization_profile: UserParams;
+  resolve_person: ResolvePersonParams;
 }
 
 export interface MethodResultMap {
@@ -617,6 +642,7 @@ export interface MethodResultMap {
   learning_status: LearningStatusResult;
   feedback_history: FeedbackHistoryResult;
   personalization_profile: AssistanceProfileResult;
+  resolve_person: PersonResolutionResult;
 }
 
 export type MethodParams<M extends ApiMethod> = MethodParamsMap[M];

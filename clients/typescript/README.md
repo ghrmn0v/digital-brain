@@ -23,7 +23,7 @@ platform globals `fetch`, `WebSocket`, `AbortController`, `setTimeout` and
 | Runtime dependencies | none |
 | `HttpBrainClient` | `POST {baseUrl}/v1/brain` + `GET {baseUrl}/health` |
 | `WebSocketBrainClient` | `{wsBase}/v1/brain?user_id=…`, response **and** event frames |
-| Typed surface | all 16 v1 methods, params and results |
+| Typed surface | all 17 v1 methods, params and results |
 | Errors | `BrainApiError` / `BrainTransportError` / `BrainContractError` |
 
 The HTTP transport bundled with the Core wires `NullEventSink`, so it has no

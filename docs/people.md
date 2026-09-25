@@ -113,8 +113,9 @@ A person only becomes nameable when a name reaches a memory next to their
   records `metadata["person_name"]` on the memory. `people_summary` then shows
   the name, `profile` labels the person, and `identify_people` can find them in
   ordinary text. A name without a person id is never stored as one.
-- **resolution** — `PeopleIntelligence.resolve_person(user_id, name)` returns a
-  stable `PersonResolution`:
+- **resolution** — `PeopleIntelligence.resolve_person(user_id, name)` (exposed to
+  clients as the `resolve_person` API method) returns a stable
+  `PersonResolution`:
 
   | situation | result |
   |---|---|

@@ -179,6 +179,21 @@ class PeopleTimelineParams(UserParams):
     limit: int | None = Field(default=None, ge=1, le=200)
 
 
+class ResolvePersonParams(UserParams):
+    """Resolve one person name to a stable id for this user.
+
+    The name is compared exactly (normalized case/whitespace). An unknown name
+    yields a new identity; a name already used by two people comes back
+    ``ambiguous`` with candidates and writes nothing.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=200)
+    aliases: list[str] = Field(default_factory=list, max_length=8)
+    correlation_id: str | None = Field(default=None, max_length=256)
+
+
 class FeedbackHistoryParams(UserParams):
     """Recent feedback history for one user (clockwork ordering)."""
 

@@ -57,6 +57,7 @@ public `contracts.api` registry.
 | `preferences` / `developer_preferences` / `people_summary` | `user_id` | typed read results | user-scoped |
 | `people_timeline` | `user_id`, `person_id`, optional `limit` | `PeopleTimelineResult` | active + historical, source-traceable |
 | `learning_status` / `feedback_history` / `personalization_profile` | `user_id` (+`limit?`) | typed read results | user-scoped |
+| `resolve_person` | `user_id`, `name`, optional `aliases`, `correlation_id?` | `PersonResolutionWire` | `person.created` only for a new identity |
 
 Developer Mode inputs travel as `DeveloperSnapshotWire` — a field-for-field
 mirror of the internal `DeveloperContext`; the adapter copies, never infers.
@@ -79,6 +80,13 @@ mirror of the internal `DeveloperContext`; the adapter copies, never infers.
 - `people_timeline` returns a bounded oldest-first view of active and historical
   person memories, with memory ids, lifecycle status, dates, durability and
   source/correlation evidence.
+- `resolve_person` compares the name **exactly** (normalized case/whitespace):
+  a match returns the existing person, an unknown name returns a deterministic
+  `per_…` id with `created=true` and `memory_id`, and a name already used by two
+  people returns `ok=true` with `ambiguous=true`, `person_id=null` and both ids
+  in `candidates`. Ambiguity is data, not an error: nothing is written and no
+  person is ever merged. `person.created` is emitted only when a new identity is
+  recorded.
 - Finding ids are minted fresh per pass (uniqueness), content/counts are
   deterministic across passes.
 - `contracts/api` and `core/service/api.py` import NO transport, socket,
