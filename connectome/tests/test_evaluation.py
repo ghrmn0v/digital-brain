@@ -72,6 +72,12 @@ class VerdictTest(unittest.TestCase):
 
 class SnapshotTest(unittest.TestCase):
     def test_load_rl_reactions_from_phase5_snapshot(self):
+        # The snapshot is produced by the offline RL experiment (torch, run
+        # separately), not a checked-in fixture, so a clean checkout has no file
+        # to read. The loader's own contract is covered unconditionally by
+        # test_missing_snapshot_raises below.
+        if not ev.DEFAULT_SNAPSHOT.exists():
+            self.skipTest(f"offline RL snapshot not produced yet: {ev.DEFAULT_SNAPSHOT}")
         reactions = ev.load_rl_reactions(ev.DEFAULT_SNAPSHOT)
         self.assertEqual(set(reactions.keys()), set(ev.SCENARIOS.keys()))
         self.assertTrue(all(reaction in set(ev.ENGAGED) for reaction in reactions.values()))
