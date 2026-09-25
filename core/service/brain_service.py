@@ -51,7 +51,15 @@ from core.learning import (
     StoredFeedback,
 )
 from core.memory import MemoryService, SqliteMemoryRepository
-from core.people import PeopleIntelligence, PeopleSummary, PersonTimeline, Preference
+from core.people import (
+    PeopleError,
+    PeopleIntelligence,
+    PeopleSummary,
+    PersonResolution,
+    PersonTimeline,
+    Preference,
+)
+from core.people.exceptions import PeopleValidationError
 from core.people.models import DeveloperPreferences, PreferenceDomain
 from core.reasoning import ReasoningResult
 from core.reasoning.context import ContextDistillationLimits, build_reasoning_context
@@ -153,6 +161,12 @@ class BrainService:
     ) -> IngestionResult:
         """Ingest a source event; emit memory.created per new memory.
 
+        When the event names its subject but carries no ``person_id``, the
+        identity is resolved here — deterministically, without merging — so the
+        produced memory is linked to a real person and the name becomes
+        searchable. An ambiguous name links nothing: the event is still ingested,
+        it just stays unattached to a person.
+
         Duplicate events are receipted and produce NO memories, hence NO
         duplicate events (idempotency preserved).
         """
@@ -164,7 +178,19 @@ class BrainService:
             data = dict(data)
             data["correlation_id"] = correlation_id
 
+        data, resolved = self._resolve_subject_person(
+            data, correlation_id=correlation_id, event_source=event_source
+        )
         result = self._ingestion.ingest(data)
+        if resolved is not None and resolved.created:
+            self._dispatcher.person_created(
+                str(result.user_id),
+                str(resolved.person_id),
+                resolved.name,
+                memory_id=resolved.memory_id,
+                correlation_id=correlation_id,
+                **_event_source_kwargs(event_source),
+            )
         if result.outcome == IngestionOutcome.ACCEPTED and self._memory is not None:
             for memory_id in result.memory_ids:
                 memory = self._get_memory_safe(result.user_id, memory_id)
@@ -175,6 +201,39 @@ class BrainService:
                         **_event_source_kwargs(event_source),
                     )
         return result
+
+    def _resolve_subject_person(
+        self,
+        data: Mapping[str, Any],
+        *,
+        correlation_id: str | None,
+        event_source: Source | None,
+    ) -> tuple[Mapping[str, Any], PersonResolution | None]:
+        """Attach a resolved ``person_id`` to a named-but-unidentified subject."""
+        if self._people is None:
+            return data, None
+        subject = data.get("subject")
+        if not isinstance(subject, Mapping):
+            return data, None
+        if subject.get("person_id"):
+            return data, None
+        name = subject.get("person_name")
+        if not isinstance(name, str) or not name.strip():
+            return data, None
+        user_id = data.get("user_id")
+        if not isinstance(user_id, str) or not user_id:
+            return data, None
+        try:
+            resolution = self._people.resolve_person(
+                UserId(user_id), name, source=event_source
+            )
+        except (PeopleValidationError, PeopleError):
+            return data, None
+        if resolution.person_id is None:
+            return data, resolution
+        updated = dict(data)
+        updated["subject"] = {**subject, "person_id": resolution.person_id}
+        return updated, resolution
 
     def _get_memory_safe(
         self, user_id: UserId, memory_id: str

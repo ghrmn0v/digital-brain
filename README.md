@@ -108,7 +108,10 @@ connected. Built so far:
   deterministic domain classification, `record_preference` through the Memory
   Engine with conflict-based supersession, per-domain bounds), plus a bounded
   `people_timeline` view that preserves superseded history, durability labels and
-  source/correlation evidence. All views are powerful-user-isolated and
+  source/correlation evidence, and deterministic identity resolution
+  (`resolve_person`: exact name match reuses a person, an unknown name gets a
+  stable `per_…` id plus one traceable identity memory, an ambiguous name is
+  reported and **never merged**). All views are powerful-user-isolated and
   traceable to memory ids — no second database.
 - Reasoning + intent + action planning: deterministic `ReasoningEngine`
   (keyword intent classification with word-boundary matching, source scans for

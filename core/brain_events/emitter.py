@@ -214,6 +214,32 @@ class BrainEventEmitter:
             source=source,
         )
 
+    def person_created(
+        self,
+        user_id: str,
+        person_id: str,
+        name: str,
+        *,
+        memory_id: str | None = None,
+        correlation_id: str | None = None,
+        source: Source | None = None,
+    ) -> BrainEvent:
+        """A person identity was resolved and recorded for the first time."""
+        payload: dict[str, Any] = {
+            "person_id": person_id,
+            "name": name,
+            "correlation_id": correlation_id,
+        }
+        if memory_id is not None:
+            payload["memory_id"] = memory_id
+        return self._event(
+            BrainEventType.PERSON_CREATED,
+            user_id,
+            payload,
+            [memory_id] if memory_id is not None else [],
+            source=source,
+        )
+
     def preference_updated(
         self,
         user_id: str,

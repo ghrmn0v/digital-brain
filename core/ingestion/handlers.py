@@ -9,6 +9,10 @@ ACCEPTs them without writing memory).
 Provenance on every produced candidate: the source, the source event id,
 timestamps, provider and correlation id are preserved in metadata /
 ``related_events`` so each memory is traceable back to exactly one event.
+
+When the event names the person it is about (``subject.person_name`` next to a
+resolved ``subject.person_id``), the name is recorded as ``metadata
+["person_name"]`` so People Intelligence can label and mention that person.
 """
 
 from __future__ import annotations
@@ -40,6 +44,22 @@ def _subject_people(event: NormalizedSourceEvent) -> list[str]:
     return []
 
 
+def _subject_person_name(event: NormalizedSourceEvent) -> str | None:
+    """The connector's name for the referenced person, when it gave one.
+
+    A name is only meaningful next to a person id — ``collect_aliases`` ignores
+    names on memories that reference nobody, and a bare name must never imply an
+    identity Core did not resolve.
+    """
+    subject = event.subject
+    if subject is None or not subject.person_id:
+        return None
+    name = subject.person_name
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+    return None
+
+
 def _candidate(
     event: NormalizedSourceEvent,
     *,
@@ -56,6 +76,9 @@ def _candidate(
     }
     if event.correlation_id is not None:
         metadata["correlation_id"] = event.correlation_id
+    person_name = _subject_person_name(event)
+    if person_name is not None:
+        metadata["person_name"] = person_name
     return MemoryCandidate(
         content=content,
         user_id=event.user_id,

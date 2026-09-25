@@ -278,6 +278,30 @@ test("understand returns the deterministic fallback summary", async () => {
   assert.ok(result.confidence >= 0 && result.confidence <= 1);
 });
 
+test("a name-only subject is resolved by Core into a named person", async () => {
+  await client.call("ingest", {
+    event: {
+      ...event("evt_named_1", "usr_ali", "see you tomorrow"),
+      subject: { person_name: "Ali Ahmadov" },
+    },
+  });
+  const summary = await client.call("people_summary");
+  const ali = (summary.people ?? []).find((person) => person.name === "Ali Ahmadov");
+  assert.ok(ali !== undefined, "the resolved person should carry the connector's name");
+  assert.equal(ali.mention_count, 1);
+
+  await client.call("ingest", {
+    event: {
+      ...event("evt_named_2", "usr_ali", "call me back"),
+      subject: { person_name: "  ali   ahmadov " },
+    },
+  });
+  const after = await client.call("people_summary");
+  const sameAli = (after.people ?? []).filter((person) => person.name === "Ali Ahmadov");
+  assert.equal(sameAli.length, 1, "the same name must converge on one person");
+  assert.equal(sameAli[0]?.mention_count, 2);
+});
+
 test("HTTP client advertises that it has no event stream", () => {
   assert.equal(client.supportsEvents, false);
 });

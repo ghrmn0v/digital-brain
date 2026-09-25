@@ -103,12 +103,55 @@ historical, inspectable view. Both derive from the same Memory Engine records;
 neither owns a second database.
 
 
+## Naming people and resolving identity
+
+A person only becomes nameable when a name reaches a memory next to their
+`person_id`. Two rules cover the whole path:
+
+- **naming** — when a connector names the event subject
+  (`subject.person_name` next to a resolved `subject.person_id`), ingestion
+  records `metadata["person_name"]` on the memory. `people_summary` then shows
+  the name, `profile` labels the person, and `identify_people` can find them in
+  ordinary text. A name without a person id is never stored as one.
+- **resolution** — `PeopleIntelligence.resolve_person(user_id, name)` returns a
+  stable `PersonResolution`:
+
+  | situation | result |
+  |---|---|
+  | exact normalized name/alias match | existing `person_id`, `created=false` |
+  | name already used by two people | `person_id=None`, `ambiguous=true`, both ids in `candidates` |
+  | unknown name | deterministic `per_<slug>_<hash8>` id, one identity memory, `created=true` |
+
+Guarantees:
+
+- **no merging, ever** — an ambiguous name reports the candidates and writes
+  nothing; the caller decides. Token overlap is a *mention*
+  (`identify_people`), never an identity.
+- **deterministic** — the id is a digest of `(user_id, normalized name)`, so the
+  same name always converges on the same person, and ids are scoped per owner by
+  construction. `person.created` fires once, when the identity is first recorded.
+- **traceable** — the identity memory carries `kind="person_identity"`, a
+  `person_key` conflict key (so a re-record supersedes instead of duplicating),
+  `durability="durable"` and `source.provider="people"`. It never counts as a
+  mention.
+- `BrainService.ingest` calls it for you: a named subject without a
+  `person_id` is resolved before ingestion, so the produced memory is linked to
+  a real person. An ambiguous name leaves the event ingested but unattached.
+
+Bounds: name ≤ `max_person_name_length` (200), at most `max_person_aliases`
+(8) aliases per resolution; invalid input raises `PeopleValidationError`, and a
+read-only People Intelligence (no writer) refuses to resolve at all.
+
+Not implemented on purpose: fuzzy or phonetic matching, cross-name merging,
+transliteration, and updating the aliases of an already-resolved person (a new
+name for a known person is a separate decision, not a silent rewrite).
+
+
 ## MVP limitations
 
 - Identification is token-based and only works for names that reached Memory
-  (no fuzzy matching, no entity resolution). Identity resolution / merging of
-  the `Person` contract is intentionally a later concern; this timeline slice
-  never merges ambiguous people.
+  (no fuzzy matching, no entity resolution). Ambiguous names are reported, not
+  merged. This slice never merges ambiguous people.
 - Relationship/interaction facts are derived from typed memories only; free-form
   text is not guessed at.
 - No ML: preference updates are deterministic writes + conflict resolution.

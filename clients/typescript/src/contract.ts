@@ -113,6 +113,12 @@ export type PersonFactDurability = "durable" | "temporary" | "unspecified";
 
 export interface Subject {
   readonly person_id?: string | null;
+  /**
+   * The connector's own name for the person. When present without
+   * `person_id`, Core resolves the identity deterministically instead of
+   * asking the connector to invent an id.
+   */
+  readonly person_name?: string | null;
   readonly role?: string | null;
 }
 

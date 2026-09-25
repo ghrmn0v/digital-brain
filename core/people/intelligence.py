@@ -21,7 +21,12 @@ from core.memory.candidate import MemoryCandidate
 from core.memory.filters import MemoryQuery, MemoryStatusFilter
 
 from .exceptions import PeopleValidationError
-from .identification import collect_aliases, identify
+from .identification import (
+    collect_aliases,
+    identify,
+    mint_person_id,
+    resolve_exact,
+)
 from .models import (
     DeveloperPreferences,
     InteractionReference,
@@ -30,6 +35,7 @@ from .models import (
     PersonFact,
     PersonFactDurability,
     PersonProfile,
+    PersonResolution,
     PersonSourceTrace,
     PersonSummary,
     PersonTimeline,
@@ -39,6 +45,10 @@ from .models import (
     RelationshipFact,
 )
 from .ports import PeopleMemory, PeopleMemoryWriter
+_DEV_DOMAINS = tuple(domain for domain in PreferenceDomain)
+
+
+IDENTITY_KIND = "person_identity"
 
 _DEV_DOMAINS = tuple(domain for domain in PreferenceDomain)
 
@@ -404,13 +414,21 @@ class PeopleIntelligence:
         return self._interaction_refs(memories)
 
     def people_summary(self, user_id: UserId) -> PeopleSummary:
-        """Everyone known to the user, ranked by mention count."""
+        """Everyone known to the user, ranked by mention count.
+
+        The identity record written by :meth:`resolve_person` is not a mention,
+        so it never inflates a person's count.
+        """
         self._validate_ids(user_id)
         memories = self._scan(user_id)
         counts: dict[PersonId, int] = {}
         for memory in memories:
+            is_identity = memory.metadata.get("kind") == IDENTITY_KIND
             for person_id in memory.related_people:
-                counts[person_id] = counts.get(person_id, 0) + 1
+                if person_id not in counts:
+                    counts[person_id] = 0
+                if not is_identity:
+                    counts[person_id] += 1
         names = collect_aliases(memories)
         rows: list[PersonSummary] = []
         for person_id, count in sorted(
@@ -534,6 +552,117 @@ class PeopleIntelligence:
             value=value,
             confidence=created.confidence,
             importance=created.importance,
+        )
+
+    # -- identity resolution ----------------------------------------------------
+    def resolve_person(
+        self,
+        user_id: UserId,
+        name: str,
+        *,
+        aliases: Iterable[str] = (),
+        source: Source | None = None,
+    ) -> PersonResolution:
+        """Resolve one person name to a stable person id for this user.
+
+        Only an exact, normalized name/alias match reuses an existing person.
+        Two people already known under the same name are reported as ambiguous
+        and are **never** merged. An unknown name gets a deterministic id and
+        one traceable identity memory, so the same name always converges on the
+        same person instead of forking a new one.
+        """
+        if self._writer is None:
+            raise PeopleValidationError(
+                "resolve_person requires a PeopleMemoryWriter (provide MemoryService)"
+            )
+        self._validate_ids(user_id)
+        clean = name.strip() if isinstance(name, str) else ""
+        if not clean:
+            raise PeopleValidationError("person name must be non-empty")
+        if len(clean) > self._limits.max_person_name_length:
+            raise PeopleValidationError(
+                f"person name must be at most {self._limits.max_person_name_length} characters"
+            )
+        extra = self._clean_aliases(aliases)
+
+        matches = resolve_exact(clean, collect_aliases(self._scan(user_id)))
+        if len(matches) > 1:
+            return PersonResolution(
+                user_id=user_id,
+                name=clean,
+                person_id=None,
+                ambiguous=True,
+                candidates=matches[: self._limits.max_person_aliases],
+            )
+        if len(matches) == 1:
+            person_id = matches[0]
+            if person_id is None:  # pragma: no cover - sorted() never yields None
+                raise PeopleValidationError("resolved person id is invalid")
+            return PersonResolution(
+                user_id=user_id,
+                name=clean,
+                person_id=person_id,
+                aliases=extra,
+                created=False,
+            )
+
+        person_id = mint_person_id(user_id, clean)
+        created = self._writer.create_memory(
+            self._identity_candidate(
+                user_id=user_id,
+                person_id=person_id,
+                name=clean,
+                aliases=extra,
+                source=source,
+            )
+        )
+        return PersonResolution(
+            user_id=user_id,
+            name=clean,
+            person_id=person_id,
+            aliases=extra,
+            created=True,
+            memory_id=created.memory_id,
+        )
+
+    def _clean_aliases(self, aliases: Iterable[str]) -> list[str]:
+        cleaned: list[str] = []
+        for alias in aliases:
+            if not isinstance(alias, str):
+                continue
+            value = alias.strip()
+            if not value or len(value) > self._limits.max_person_name_length:
+                continue
+            if value not in cleaned:
+                cleaned.append(value)
+            if len(cleaned) >= self._limits.max_person_aliases:
+                break
+        return cleaned
+
+    def _identity_candidate(
+        self,
+        *,
+        user_id: UserId,
+        person_id: PersonId,
+        name: str,
+        aliases: list[str],
+        source: Source | None,
+    ) -> MemoryCandidate:
+        metadata: dict[str, Any] = {
+            "kind": IDENTITY_KIND,
+            "person_name": name,
+            "person_key": f"person:{person_id}:identity",
+            "durability": PersonFactDurability.DURABLE.value,
+        }
+        if aliases:
+            metadata["person_aliases"] = list(aliases)
+        return MemoryCandidate(
+            content=f"Person known as {name}",
+            user_id=user_id,
+            type=MemoryType.FACT,
+            source=source or Source(provider="people"),
+            related_people=[person_id],
+            metadata=metadata,
         )
 
     # -- internals --------------------------------------------------------------

@@ -10,7 +10,7 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 2 | Ingestion Pipeline (`core/ingestion/`) | ✅ COMPLETE |
 | 3 | LLM Gateway + Understanding (`core/understanding/`) | ✅ COMPLETE |
 | 4 | Context + Semantic Search (`core/context/`) | ✅ COMPLETE |
-| 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE (+ 5B: history timeline + provenance) |
+| 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE (+ 5B history timeline/provenance, + 5C person naming & identity resolution) |
 | 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`, `core/brain_events/`) | ✅ COMPLETE |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ✅ COMPLETE |
 | 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | 🟡 PARTIAL — Slices 1–6 done (event infra + BrainService + typed API + stdio/HTTP/WebSocket + delivery contract + canonical v1 schema + thin TypeScript client); Java client NOT STARTED |
@@ -793,3 +793,57 @@ the single request-processing entry point; this slice only adapts it + the
   erasable TypeScript so Node executes them directly.
 - Remaining Phase 8: a Java client, durable/broker delivery, and Product-owned
   mobile device/push work.
+
+### Phase 5C — Person Naming and Deterministic Identity Resolution
+
+- Fixes a real gap found while building the TypeScript client: nothing in the
+  ingestion path ever recorded a person name, so `people_summary` always
+  returned `name=null` and name-based identification could never fire for
+  ingested data.
+- Additive contract change: `Subject.person_name` (optional, ≤200 chars) in
+  `contracts/events/source_event.py`. Optional field ⇒ v1 stays v1;
+  `contracts/schemas/brain-api.v1.json` regenerated and the TypeScript client's
+  `Subject` type updated.
+- Naming: when an event names its subject next to a resolved `subject.person_id`,
+  `_candidate` records `metadata["person_name"]`. A name without a person id is
+  never stored as one.
+- `PeopleIntelligence.resolve_person(user_id, name, *, aliases, source)` →
+  `PersonResolution`:
+  - exact normalized name/alias match reuses the existing person
+    (`created=false`);
+  - a name already used by two people returns `person_id=None`,
+    `ambiguous=true` and both ids in `candidates` — **never merged**, nothing
+    written;
+  - an unknown name mints a deterministic `per_<slug>_<sha256(user+name)[:8]>`
+    id and writes one identity memory (`kind="person_identity"`,
+    `person_key` conflict key so re-recording supersedes, `durability="durable"`,
+    `source.provider="people"`), so the same name always converges instead of
+    forking a second person.
+- Token overlap stays a *mention* (`identify_people`), never an identity; the
+  only comparison used for resolution is the normalized exact name.
+- `BrainService.ingest` resolves a named-but-unidentified subject before
+  ingestion, so the memory is linked to a real person; a new identity emits
+  `person.created` (new `BrainEventDispatcher.person_created` /
+  `BrainEventEmitter.person_created` methods for the already-catalogued event
+  type). An explicit `subject.person_id` is never re-resolved.
+- `people_summary` keeps an identity-only person visible with `mention_count=0`
+  and never counts the identity record as a mention.
+- Bounds: `PeopleLimits.max_person_aliases=8`, `max_person_name_length=200`;
+  invalid input raises `PeopleValidationError`; a read-only People Intelligence
+  refuses to resolve.
+- `PersonResolution` invariants are enforced with a Pydantic
+  `model_validator(mode="after")` — `__post_init__` is not invoked by
+  Pydantic v2 and was silently dead.
+- Tests: `tests/test_people_identity.py` (19 new) — deterministic minting,
+  case/whitespace convergence, alias resolution, token-vs-identity distinction,
+  ambiguity without merging or writing, user scoping, identity-vs-mention
+  counts, alias/name bounds, invalid input, missing writer, model invariants, and
+  four ingest-level cases through `BrainApi` (name-only subject resolved and
+  linked, explicit id untouched, one person across events, ambiguous name
+  ingested but unattached).
+- Verification: focused 19 OK; full suite 547 OK (baseline 528 + 19); TypeScript
+  suite 53 OK including a new live end-to-end case where a name-only subject
+  becomes one named person with two mentions; compileall, schema `--check`,
+  `git diff --check` clean. No dependency install.
+- Still deliberately absent: fuzzy/phonetic matching, cross-name merging,
+  transliteration, and re-aliasing an already-resolved person.

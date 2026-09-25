@@ -62,6 +62,27 @@ class BrainEventDispatcher:
         self._sink.emit(event)
         return event
 
+    def person_created(
+        self,
+        user_id: str,
+        person_id: str,
+        name: str,
+        *,
+        memory_id: str | None = None,
+        correlation_id: str | None = None,
+        source: Source | None = None,
+    ) -> BrainEvent:
+        event = self._emitter.person_created(
+            user_id,
+            person_id,
+            name,
+            memory_id=memory_id,
+            correlation_id=correlation_id,
+            **_source_kwargs(source),
+        )
+        self._sink.emit(event)
+        return event
+
     def preference_updated(
         self,
         user_id: str,

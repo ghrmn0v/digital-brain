@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from contracts.common.ids import EventId, MemoryId, PersonId, UserId
 from contracts.common.types import Confidence, Importance, Source, UtcDateTime
@@ -147,6 +147,40 @@ class PersonTimeline(BaseModel):
     person_known: bool = False
 
 
+class PersonResolution(BaseModel):
+    """Outcome of resolving one person name for one user.
+
+    Invariants: ``person_id`` is absent exactly when the name is ambiguous, an
+    ambiguous result never merges candidates, and ``created`` means a new
+    identity memory was written for a freshly minted id.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    name: NonEmptyValue
+    person_id: PersonId | None = None
+    aliases: list[str] = Field(default_factory=list, max_length=8)
+    created: bool = False
+    ambiguous: bool = False
+    candidates: list[PersonId] = Field(default_factory=list, max_length=8)
+    memory_id: MemoryId | None = None
+
+    @model_validator(mode="after")
+    def _check_invariants(self) -> "PersonResolution":
+        if self.ambiguous and self.person_id is not None:
+            raise ValueError("an ambiguous resolution must not carry a person_id")
+        if self.person_id is None and not self.ambiguous:
+            raise ValueError("a resolution must carry a person_id or be ambiguous")
+        if self.ambiguous and len(self.candidates) < 2:
+            raise ValueError("an ambiguous resolution needs at least two candidates")
+        if self.created and (self.person_id is None or self.memory_id is None):
+            raise ValueError("a created resolution needs a person_id and a memory_id")
+        if not self.created and self.memory_id is not None:
+            raise ValueError("only a created resolution carries a memory_id")
+        return self
+
+
 class PersonFact(BaseModel):
     """A bounded factual statement aggregated about a person."""
 
@@ -205,6 +239,8 @@ class PeopleLimits:
     max_preferences_per_domain: int = 5
     scan_limit: int = 2000
     max_timeline_entries: int = 200
+    max_person_aliases: int = 8
+    max_person_name_length: int = 200
 
     def __post_init__(self) -> None:
         for name in (
@@ -215,9 +251,13 @@ class PeopleLimits:
             "max_preferences_per_domain",
             "scan_limit",
             "max_timeline_entries",
+            "max_person_aliases",
+            "max_person_name_length",
         ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 1:
                 raise ValueError(f"{name} must be a positive integer")
         if self.max_timeline_entries > 200:
             raise ValueError("max_timeline_entries must be at most 200")
+        if self.max_person_name_length > 200:
+            raise ValueError("max_person_name_length must be at most 200")

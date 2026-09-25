@@ -90,6 +90,21 @@ event:
 - `metadata`: `source_event_id`, `source_event_timestamp`, `occurred_at`,
   `provider`, `event_type`, and `correlation_id` when present.
 
+## Naming the person an event is about
+
+`subject.person_id` links the produced memory to a person, and when the
+connector also supplies `subject.person_name` (a WhatsApp contact name, a
+LinkedIn full name) the name is recorded as `metadata["person_name"]`. That is
+what makes the person nameable in `people_summary`/`profile` and findable in
+text by `identify_people`.
+
+A connector does **not** have to invent a person id. `BrainService.ingest`
+resolves `subject.person_name` through People Intelligence when `person_id` is
+absent (see `docs/people.md`): the name becomes a real, deterministic
+`person_id`, `person.created` is emitted once, and the memory is linked. An
+ambiguous name is never merged — the event is ingested but stays unattached,
+and a name without a resolved person id is not stored as `person_name`.
+
 ## Failure behavior (A–E)
 
 - **A invalid** → `REJECTED`, nothing stored, no receipt → a corrected retry works.

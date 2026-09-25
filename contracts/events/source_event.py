@@ -17,11 +17,19 @@ _SourceEventType = Annotated[str, Field(pattern=r"^source\.[a-z0-9_]+(\.[a-z0-9_
 
 
 class Subject(BaseModel):
-    """Who/what the event is about, when known at ingestion time."""
+    """Who/what the event is about, when known at ingestion time.
+
+    ``person_name`` is the connector's own claim about the person (a WhatsApp
+    contact name, a LinkedIn full name). It is optional and additive: when it is
+    present without ``person_id``, Core resolves the identity deterministically
+    instead of asking the connector to invent an id. An ambiguous name is never
+    merged — Core links nothing and keeps the event.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     person_id: PersonId | None = None
+    person_name: str | None = Field(default=None, max_length=200)
     role: str | None = Field(default=None, max_length=64)
 
 

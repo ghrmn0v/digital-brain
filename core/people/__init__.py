@@ -9,7 +9,14 @@ No second database, no LLM — deterministic and traceable.
 from __future__ import annotations
 
 from .exceptions import PeopleError, PeopleValidationError
-from .identification import collect_aliases, identify, tokenize
+from .identification import (
+    collect_aliases,
+    identify,
+    mint_person_id,
+    normalize_person_name,
+    resolve_exact,
+    tokenize,
+)
 from .intelligence import (
     PeopleIntelligence,
     classify_person_fact_durability,
@@ -25,6 +32,7 @@ from .models import (
     PersonProfile,
     PersonSourceTrace,
     PersonSummary,
+    PersonResolution,
     PersonTimeline,
     PersonTimelineEntry,
     Preference,
@@ -39,6 +47,9 @@ __all__ = [
     "classify_preference_domain",
     "collect_aliases",
     "identify",
+    "mint_person_id",
+    "normalize_person_name",
+    "resolve_exact",
     "tokenize",
     "DeveloperPreferences",
     "InteractionReference",
@@ -49,6 +60,7 @@ __all__ = [
     "PersonProfile",
     "PersonSourceTrace",
     "PersonSummary",
+    "PersonResolution",
     "PersonTimeline",
     "PersonTimelineEntry",
     "Preference",
