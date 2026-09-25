@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "name": "adult_drosophila_mushroom_body",
+    "source": "FlyWire adult brain connectome wiring motifs (Dorkenwald et al. 2024; Aso et al. 2014)",
+    "version": "0.1.0",
+    "neurons": 2414,
+    "description": "Connectome-informed wiring of the adult mushroom body: projection neurons -> Kenyon cells -> MBON compartments, with DAN reward/punishment modulation and mushroom body feedback neurons. Group-level mean-field model; expandable with real FlyWire exports through the same loader."
+  },
+  "nodes": [
+    {"id": "CTX", "population": 8, "type": "context"},
+    {"id": "PN", "population": 150, "type": "sensory"},
+    {"id": "KC", "population": 2200, "type": "kc"},
+    {"id": "MBON_alpha", "population": 2, "type": "mbon"},
+    {"id": "MBON_beta", "population": 6, "type": "mbon"},
+    {"id": "MBON_beta2", "population": 2, "type": "mbon"},
+    {"id": "MBON_gamma", "population": 10, "type": "mbon"},
+    {"id": "MBON_apostrophe", "population": 4, "type": "mbon"},
+    {"id": "MBON_bpost", "population": 4, "type": "mbon"},
+    {"id": "MBON_output", "population": 4, "type": "mbon"},
+    {"id": "DAN_PAM", "population": 12, "type": "dan"},
+    {"id": "DAN_PPL", "population": 8, "type": "dan"},
+    {"id": "MBF", "population": 4, "type": "feedback"}
+  ],
+  "edges": [
+    {"from": "CTX", "to": "KC", "synapses": 64000, "plastic": false, "physiology": "excitatory"},
+    {"from": "PN", "to": "KC", "synapses": 96000, "plastic": false, "physiology": "excitatory"},
+    {"from": "KC", "to": "MBON_alpha", "synapses": 29000, "plastic": true, "physiology": "excitatory", "weight": 0.6},
+    {"from": "KC", "to": "MBON_beta", "synapses": 41000, "plastic": true, "physiology": "excitatory"},
+    {"from": "KC", "to": "MBON_beta2", "synapses": 14000, "plastic": true, "physiology": "excitatory"},
+    {"from": "KC", "to": "MBON_gamma", "synapses": 56000, "plastic": true, "physiology": "excitatory", "weight": 1.4},
+    {"from": "KC", "to": "MBON_apostrophe", "synapses": 27000, "plastic": true, "physiology": "excitatory"},
+    {"from": "KC", "to": "MBON_bpost", "synapses": 18000, "plastic": true, "physiology": "excitatory"},
+    {"from": "KC", "to": "MBON_output", "synapses": 15000, "plastic": true, "physiology": "excitatory", "weight": 1.2},
+    {"from": "MBON_alpha", "to": "MBON_output", "synapses": 800, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBON_beta", "to": "MBON_output", "synapses": 1000, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBON_gamma", "to": "MBON_output", "synapses": 1500, "plastic": false, "physiology": "inhibitory"},
+    {"from": "MBON_apostrophe", "to": "MBON_bpost", "synapses": 900, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBON_bpost", "to": "MBF", "synapses": 600, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBON_gamma", "to": "MBF", "synapses": 1200, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBON_output", "to": "MBF", "synapses": 900, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBF", "to": "DAN_PAM", "synapses": 1500, "plastic": false, "physiology": "excitatory"},
+    {"from": "MBF", "to": "DAN_PPL", "synapses": 1000, "plastic": false, "physiology": "excitatory"},
+    {"from": "DAN_PAM", "to": "KC", "synapses": 12000, "plastic": false, "physiology": "modulatory"},
+    {"from": "DAN_PPL", "to": "KC", "synapses": 10000, "plastic": false, "physiology": "modulatory"},
+    {"from": "DAN_PAM", "to": "MBON_output", "synapses": 1300, "plastic": false, "physiology": "modulatory"},
+    {"from": "DAN_PPL", "to": "MBON_alpha", "synapses": 1500, "plastic": false, "physiology": "modulatory"}
+  ]
+}
