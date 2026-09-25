@@ -205,9 +205,10 @@ the Brain contract in both directions:
 
 Integration events and per-consumer deliveries are persisted in SQLite. Delivery retries are bounded; the local worker calls the retry endpoint periodically through `npm run worker`.
 
-## Developer Mode və Developer Information
+## Developer Mode and Developer Information
 
-Developer Mode bir PC capability-dir; Developer Information isə hər iki platformda oxuna bilən Core Brain məlumatıdır.
+Developer Mode is a PC-only capability; Developer Information is read-only Core
+Brain data surfaced on both platforms.
 
 | Method | Endpoint | Platform | Purpose |
 | --- | --- | --- | --- |
