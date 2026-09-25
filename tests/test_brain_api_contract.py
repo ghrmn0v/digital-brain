@@ -30,6 +30,7 @@ from contracts.api import (
 from contracts.api import params as P
 from contracts.api import results as R
 from contracts.brain_events.events import BrainEventType
+from contracts.common.types import Source
 from contracts.feedback.feedback import (
     Feedback,
     FeedbackKind,
@@ -193,6 +194,51 @@ class EntryPointTests(unittest.TestCase):
         self.assertFalse(response.ok)
         self.assertEqual(response.error.code, ApiErrorCode.VERSION_UNSUPPORTED)
 
+    def test_extremely_long_unknown_method_is_typed_and_bounded(self):
+        response = self.api.handle({"id": "1", "method": "x" * 5000})
+        self.assertFalse(response.ok)
+        self.assertEqual(response.error.code, ApiErrorCode.UNKNOWN_METHOD)
+        self.assertLessEqual(len(response.error.message), 2000)
+
+    def test_extremely_long_unsupported_version_is_typed_and_bounded(self):
+        response = self.api.handle(
+            {"id": "1", "method": "ping", "version": "v" * 5000}
+        )
+        self.assertFalse(response.ok)
+        self.assertEqual(response.error.code, ApiErrorCode.VERSION_UNSUPPORTED)
+        self.assertLessEqual(len(response.error.message), 2000)
+
+    def test_malformed_long_method_does_not_raise_at_api_boundary(self):
+        response = self.api.handle({"id": "1", "method": ["x"] * 2000})
+        self.assertFalse(response.ok)
+        self.assertEqual(response.error.code, ApiErrorCode.UNKNOWN_METHOD)
+        self.assertLessEqual(len(response.error.message), 2000)
+
+    def test_long_error_request_id_is_bounded(self):
+        response = self.api.handle(
+            {"id": "i" * 5000, "method": "x" * 5000}
+        )
+        self.assertFalse(response.ok)
+        self.assertLessEqual(len(response.id), 128)
+        self.assertTrue(response.id.endswith("..."))
+
+    def test_long_validation_location_is_bounded(self):
+        response = self.api.handle(
+            {
+                "id": "1",
+                "method": "ping",
+                "params": {"unexpected_" + "x" * 5000: True},
+            }
+        )
+        self.assertFalse(response.ok)
+        self.assertEqual(response.error.code, ApiErrorCode.VALIDATION_ERROR)
+        self.assertLessEqual(len(response.error.message), 2000)
+
+    def test_non_mapping_message_returns_bad_request(self):
+        response = self.api.handle(None)  # type: ignore[arg-type]
+        self.assertFalse(response.ok)
+        self.assertEqual(response.error.code, ApiErrorCode.BAD_REQUEST)
+
     def test_malformed_envelope_returns_bad_request(self):
         response = self.api.handle({"method": "ping"})
         self.assertFalse(response.ok)
@@ -246,6 +292,62 @@ class IngestAndWriteTests(unittest.TestCase):
         self.assertFalse(second.result.memory_ids)
         self.assertEqual(second.result.duplicate_of_event_id, "evt_api_2")
 
+    def test_ingest_outer_correlation_overrides_event_correlation(self):
+        event = make_event(
+            event_id="evt_api_corr",
+            event_type="source.todo.task_created",
+            payload={"description": "correlation precedence"},
+            correlation_id="nested",
+        )
+        response = self.api.handle(
+            {
+                "id": "ic",
+                "method": "ingest",
+                "params": {
+                    "event": event,
+                    "correlation_id": "outer",
+                },
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(response.result.correlation_id, "outer")
+        self.assertTrue(self.svc.emitted)
+        self.assertTrue(
+            all(e.payload.get("correlation_id") == "outer" for e in self.svc.emitted)
+        )
+
+    def test_feedback_outer_correlation_updates_signal_and_event(self):
+        response = self.api.handle(
+            {
+                "id": "fc",
+                "method": "record_feedback",
+                "params": {
+                    "feedback": _feedback().model_dump(mode="json"),
+                    "correlation_id": "outer",
+                },
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(response.result.signal.correlation_id, "outer")
+        self.assertTrue(self.svc.emitted)
+        self.assertTrue(
+            all(e.payload.get("correlation_id") == "outer" for e in self.svc.emitted)
+        )
+
+    def test_nested_correlation_remains_the_fallback(self):
+        event = make_event(
+            event_id="evt_api_corr_fallback",
+            event_type="source.todo.task_created",
+            payload={"description": "fallback correlation"},
+            correlation_id="nested",
+        )
+        response = self.api.handle(
+            {"id": "icf", "method": "ingest", "params": {"event": event}}
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(response.result.correlation_id, "nested")
+        self.assertEqual(self.svc.emitted[-1].payload["correlation_id"], "nested")
+
     def test_invalid_ingest_params_validated(self):
         event = make_event(
             event_id="evt_api_3",
@@ -295,6 +397,79 @@ class IngestAndWriteTests(unittest.TestCase):
         self.assertEqual(response.result.name, "logging_detail")
         types = {event.type for event in self.svc.emitted}
         self.assertIn(BrainEventType.PREFERENCE_UPDATED, types)
+
+
+class RequestSourceTests(unittest.TestCase):
+    def setUp(self):
+        self.svc = build_brain_service(":memory:")
+        self.addCleanup(self.svc.close)
+        self.api = BrainApi(self.svc)
+        self.source = Source(
+            provider="pc", component="client", version="1"
+        )
+
+    def test_ingest_request_source_is_used_for_event_envelope(self):
+        event = make_event(
+            event_id="evt_source_ingest",
+            event_type="source.todo.task_created",
+            payload={"description": "source propagation"},
+        )
+        response = self.api.handle(
+            {
+                "id": "si",
+                "method": "ingest",
+                "source": self.source.model_dump(mode="json"),
+                "params": {"event": event},
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(self.svc.emitted[0].source, self.source)
+
+    def test_feedback_request_source_does_not_replace_feedback_source(self):
+        response = self.api.handle(
+            {
+                "id": "sf",
+                "method": "record_feedback",
+                "source": self.source.model_dump(mode="json"),
+                "params": {"feedback": _feedback().model_dump(mode="json")},
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(response.result.signal.source, "product")
+        self.assertEqual(self.svc.emitted[0].source, self.source)
+
+    def test_preference_request_source_is_used_for_event_envelope(self):
+        response = self.api.handle(
+            {
+                "id": "sp",
+                "method": "record_preference",
+                "source": self.source.model_dump(mode="json"),
+                "params": {
+                    "user_id": "usr_a",
+                    "name": "logging_style",
+                    "value": "concise",
+                    "domain": "coding_style",
+                    "source": {"provider": "user", "component": "settings"},
+                },
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(self.svc.emitted[0].source, self.source)
+
+    def test_developer_result_events_preserve_request_source(self):
+        response = self.api.handle(
+            {
+                "id": "sd",
+                "method": "analyze_developer",
+                "source": self.source.model_dump(mode="json"),
+                "params": {"context": _dev_wire().model_dump(mode="json")},
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertTrue(response.result.events)
+        self.assertTrue(
+            all(event.source == self.source for event in response.result.events)
+        )
 
 
 class DeveloperModeTests(unittest.TestCase):
@@ -362,6 +537,52 @@ class DeveloperModeTests(unittest.TestCase):
         # Nothing executes: proposals are pure data.
         for action in result.plan.proposed_actions:
             self.assertFalse(hasattr(action, "execute"))
+
+    def test_analyze_developer_result_events_match_single_sink_delivery(self):
+        response = self.api.handle(
+            {
+                "id": "a-events",
+                "method": "analyze_developer",
+                "params": {
+                    "context": _dev_wire(include_tests=True).model_dump(mode="json")
+                },
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        result_events = response.result.events
+        sink_events = self.svc.emitted
+        self.assertEqual(result_events, sink_events)
+        expected_tail = [BrainEventType.DECISION_CREATED] + [
+            BrainEventType.ACTION_PROPOSED
+        ] * len(response.result.plan.proposed_actions)
+        self.assertEqual(
+            [event.type for event in result_events[-len(expected_tail) :]],
+            expected_tail,
+        )
+        self.assertEqual(
+            len({event.id for event in result_events}), len(result_events)
+        )
+
+    def test_analyze_developer_preserves_explicit_empty_correlation(self):
+        response = self.api.handle(
+            {
+                "id": "a-empty-correlation",
+                "method": "analyze_developer",
+                "params": {
+                    "context": _dev_wire().model_dump(mode="json"),
+                    "correlation_id": "",
+                },
+            }
+        )
+        self.assertTrue(response.ok, response.error)
+        self.assertEqual(response.result.correlation_id, "")
+        self.assertTrue(response.result.events)
+        self.assertTrue(
+            all(
+                event.payload["correlation_id"] == ""
+                for event in response.result.events
+            )
+        )
 
     def test_analyze_developer_events_owned_by_requested_user(self):
         wire = _dev_wire(user="usr_b").model_dump(mode="json")

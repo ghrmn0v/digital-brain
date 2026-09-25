@@ -12,9 +12,11 @@ core/people/
   exceptions.py       PeopleError / PeopleValidationError
   ports.py            PeopleMemory (read) + PeopleMemoryWriter (write) protocols
   identification.py   token-based name/alias matching
-  models.py           PersonProfile, RelationshipFact, InteractionReference,
-                      Preference, PreferenceDomain, DeveloperPreferences,
-                      PeopleSummary, PeopleLimits
+  models.py           PersonProfile, PersonTimeline, PersonTimelineEntry,
+                      PersonSourceTrace, PersonFactDurability,
+                      RelationshipFact, InteractionReference, Preference,
+                      PreferenceDomain, DeveloperPreferences, PeopleSummary,
+                      PeopleLimits
   intelligence.py     PeopleIntelligence (aggregation + record_preference)
 ```
 
@@ -25,7 +27,8 @@ core/people/
 | People identification | `identify_people(text, *, user_id)` | name/alias tokens recorded next to a person's `related_people` memories |
 | Relationship facts | `relationships(user_id, *, person_id=None)` | `RELATIONSHIP` memories |
 | Interaction history refs | `interactions(user_id, *, person_id=None)` | `INTERACTION` memories (occurred_at, source_event_id) |
-| Person profile | `profile(user_id, person_id)` | facts + relationships + interactions about a person |
+| Person profile | `profile(user_id, person_id)` | current active facts + relationships + interactions about a person |
+| Person timeline | `timeline(user_id, person_id, *, limit=None)` | chronological active + historical memories, source evidence, durability |
 | Known people | `people_summary(user_id)` | everyone referenced across the user's memories, ranked by mentions |
 | User preferences | `preferences(user_id)` | all `PREFERENCE` memories |
 | Developer preferences | `developer_preferences(user_id)` | `PREFERENCE` memories bucketed by `PreferenceDomain` |
@@ -69,11 +72,43 @@ are directly usable by Phase 6 Reasoning.
   preferences), and
 - traceable back to the `memory_id`s that produced the answer.
 
+## Timeline and provenance
+
+`timeline()` reads `MemoryStatusFilter.ANY`, so superseded, archived and expired
+person memories remain inspectable. Results are oldest-first and bounded by
+`PeopleLimits.max_timeline_entries` (default/maximum `200`); `total_entries` is
+the number of memory rows examined, `truncated` means the requested output cap
+was applied, and `scan_truncated` means the internal scan cap may hide older
+rows. `person_known` distinguishes a person with no history from a person id
+that has never appeared in this user's memory.
+
+Each `PersonTimelineEntry` carries:
+
+- `memory_id`, `memory_type`, lifecycle `status`, statement and validity dates;
+- `confidence` and `importance` copied from the memory;
+- `durability`: `durable`, `temporary` or `unspecified`;
+- `provenance.source`, source event id, correlation id, related event ids and
+  bounded evidence metadata. If an oversized source id, correlation id or
+  statement is shortened, the corresponding `*_truncated` flag is true and the
+  bounded original remains in evidence where possible.
+
+Durability is deliberately deterministic and conservative. Explicit
+`metadata["durability"]`, `temporary` or `durable` wins; interactions/observations
+are temporary; relationships and explicitly structured employment/location/role
+topics are durable; insufficient evidence remains `unspecified`. Core never
+turns an unsupported natural-language inference into a permanent fact.
+
+The existing profile remains the current/active view. The timeline is the
+historical, inspectable view. Both derive from the same Memory Engine records;
+neither owns a second database.
+
+
 ## MVP limitations
 
 - Identification is token-based and only works for names that reached Memory
   (no fuzzy matching, no entity resolution). Identity resolution / merging of
-  the `Person` contract is intentionally a later concern.
+  the `Person` contract is intentionally a later concern; this timeline slice
+  never merges ambiguous people.
 - Relationship/interaction facts are derived from typed memories only; free-form
   text is not guessed at.
 - No ML: preference updates are deterministic writes + conflict resolution.

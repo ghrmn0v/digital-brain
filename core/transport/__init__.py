@@ -1,11 +1,11 @@
-"""Transport adapters for the Brain API (Phase 8, Slice 3 Part B / Slice 4A).
+"""Transport adapters for the Brain API (Phase 8, Slices 3B and 4).
 
 The transports are transport-only: they never change the API contract, never
 alter :class:`BrainApi`, and only adapt the single request-processing entry
-point (``BrainApi.handle``) plus the :class:`EventSink` port. Future transports
-(WebSocket, IPC, mobile push) are additional request/EventSink adapters built
-the same way, with no impact on core modules. See ``docs/stdio-protocol.md``
-for the stdio wire protocol and ``docs/http-transport.md`` for the HTTP one.
+point (``BrainApi.handle``) plus the :class:`EventSink` port. IPC and mobile push
+can use the same boundary later. See ``docs/stdio-protocol.md``,
+``docs/http-transport.md`` and ``docs/websocket-transport.md`` for wire
+protocols.
 """
 
 from __future__ import annotations
@@ -28,6 +28,14 @@ from .stdio import (
     event_frame,
     response_frame,
 )
+from .websocket import (
+    MAX_MESSAGE_BYTES,
+    WebSocketBrainServer,
+    WebSocketBrainTransport,
+    WebSocketEventRouter,
+    WebSocketEventSink,
+    WebSocketTransportError,
+)
 
 __all__ = [
     "API_VERSION",
@@ -38,8 +46,14 @@ __all__ = [
     "HttpBrainTransport",
     "JsonLinesEventSink",
     "MAX_BODY_BYTES",
+    "MAX_MESSAGE_BYTES",
     "ResponseEnvelope",
     "StdioDaemon",
+    "WebSocketBrainServer",
+    "WebSocketBrainTransport",
+    "WebSocketEventRouter",
+    "WebSocketEventSink",
+    "WebSocketTransportError",
     "default_json_line",
     "event_frame",
     "http_status_for",

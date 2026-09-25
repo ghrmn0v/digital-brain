@@ -40,11 +40,12 @@ invented, re-ordered semantically or stripped.
 One `ApiRequest` per line, verbatim JSON (JSON Lines):
 
 ```json
-{"id": "req_1", "method": "ingest", "params": {"event": {...}}, "correlation_id"?...}
+{"id":"req_1","method":"ingest","params":{"event":{...},"correlation_id":"corr_1"}}
 ```
 
 - `id`, `method`, `version`, `params` follow the Part A contract exactly; the
-  daemon does not inspect them — `BrainApi.handle` validates.
+  daemon does not inspect them — `BrainApi.handle` validates. Correlation belongs
+  inside the method's `params` model, not at the request top level.
 - Blank / whitespace-only lines are ignored (no response is written for them).
 - Everything else — including a non-object JSON (`[1,2,3]`) — is a malformed
   request and gets a structured error response (see below), never a raise.
@@ -125,9 +126,9 @@ The daemon touches only stdlib text streams (`sys.stdin` / `sys.stdout` /
 `sys.stderr`) and the injected streams — no sockets, no HTTP/WebSocket, no
 terminal/OS/device-specific calls, no subprocesses. It is therefore usable
 from any wrapper (classic shell pipes, `subprocess.Popen`, systemd, a
-custom CLI) on any OS. HTTP/WebSocket/mobile transports are NOT implemented
-here — they will be additional `EventSink`/request adapters over the same
-`BrainApi.handle` surface, without touching core modules.
+custom CLI) on any OS. HTTP and WebSocket are separate completed transports over
+the same `BrainApi.handle` surface; mobile clients consume those protocols or
+the published schema without adding device code to Core.
 
 ## Testability (no subprocess needed)
 

@@ -269,25 +269,28 @@ class OrderingTests(unittest.TestCase):
         )
 
         emitted = sink.emitted
-        # 1) developer.* events are delivered exactly in the order the
-        #    pipeline produced them (same objects, same order).
-        self.assertEqual(emitted[: len(outcome.events)], outcome.events)
+        self.assertEqual(emitted, outcome.events)
 
-        # 2) the produced plan is emitted AFTER all developer events:
-        #    decision.created first, then one action.proposed per proposal.
-        tail = emitted[len(outcome.events):]
-        decision_types = [e.type for e in tail]
-        self.assertEqual(
-            decision_types[:1], [BrainEventType.DECISION_CREATED]
+        developer_count = len(outcome.events) - 1 - len(
+            outcome.plan.proposed_actions
         )
+        self.assertTrue(developer_count > 0)
+        self.assertTrue(
+            all(
+                event.type.value.startswith("developer.")
+                for event in emitted[:developer_count]
+            )
+        )
+
+        decision_types = [e.type for e in emitted[developer_count:]]
         self.assertEqual(
-            decision_types[1:],
-            [
+            decision_types,
+            [BrainEventType.DECISION_CREATED]
+            + [
                 BrainEventType.ACTION_PROPOSED
                 for _ in outcome.plan.proposed_actions
             ],
         )
-        self.assertEqual(len(tail), 1 + len(outcome.plan.proposed_actions))
 
         # 3) every event preserves correlation + ownership.
         for event in emitted:
@@ -450,6 +453,34 @@ class DeliverySemanticsTests(unittest.TestCase):
             )
         # the failure propagated and NOTHING was retried or spooled.
         self.assertEqual(failing.attempts, 1)
+
+    def test_sink_delivery_is_inline_without_background_queue(self):
+        class InlineSink:
+            def __init__(self):
+                self.calls = 0
+                self.in_emit = False
+                self.events = []
+
+            def emit(self, event):
+                self.calls += 1
+                self.in_emit = True
+                self.events.append(event)
+                self.in_emit = False
+
+        sink = InlineSink()
+        service = build_brain_service(":memory:", sink=sink)
+        self.addCleanup(service.close)
+        service.ingest(
+            make_source_event(
+                event_id="evt_inline",
+                event_type="source.linkedin.profile_updated",
+                user_id="usr_a",
+                payload={"full_name": "Inline"},
+            )
+        )
+        self.assertEqual(sink.calls, 1)
+        self.assertFalse(sink.in_emit)
+        self.assertEqual(len(sink.events), 1)
 
     def test_idempotent_operation_emits_no_duplicate_events(self):
         sink = CollectingEventSink()

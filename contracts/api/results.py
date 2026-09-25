@@ -153,6 +153,59 @@ class PeopleSummaryResult(BaseModel):
     people: list[PersonRowWire] = Field(default_factory=list)
 
 
+class PersonTimelineSourceWire(BaseModel):
+    """Provenance for one person timeline entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    provider: str
+    component: str | None = None
+    version: str | None = None
+    source_event_id: str | None = None
+    correlation_id: str | None = Field(default=None, max_length=256)
+    source_event_id_truncated: bool = False
+    correlation_id_truncated: bool = False
+    related_event_ids: list[str] = Field(default_factory=list, max_length=32)
+    evidence: dict[str, Any] = Field(default_factory=dict, max_length=16)
+
+
+class PersonTimelineEntryWire(BaseModel):
+    """One dated person memory with explicit durability and provenance."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    person_id: str
+    memory_id: str
+    memory_type: str
+    status: str
+    statement: str = Field(min_length=1, max_length=2000)
+    statement_truncated: bool = False
+    occurred_at: UtcDateTime
+    created_at: UtcDateTime
+    valid_until: UtcDateTime | None = None
+    durability: str
+    confidence: Confidence
+    importance: Importance
+    provenance: PersonTimelineSourceWire
+
+
+class PeopleTimelineResult(BaseModel):
+    """Bounded historical timeline for one user-owned person."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: UserId
+    person_id: str
+    entries: list[PersonTimelineEntryWire] = Field(
+        default_factory=list,
+        max_length=200,
+    )
+    total_entries: int = Field(ge=0)
+    truncated: bool = False
+    scan_truncated: bool = False
+    person_known: bool = False
+
+
 # -- understanding / context --------------------------------------------------------
 
 

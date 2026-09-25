@@ -46,19 +46,30 @@ class BrainEventEmitter:
     def _event_id() -> str:
         return f"evt_{uuid4().hex[:16]}"
 
-    def _event(self, etype, user_id, payload, related_ids) -> BrainEvent:
+    def _event(
+        self,
+        etype,
+        user_id,
+        payload,
+        related_ids,
+        source: Source | None = None,
+    ) -> BrainEvent:
         return BrainEvent(
             id=self._event_id(),
             type=etype,
             timestamp=self._now(),
             user_id=user_id,
-            source=self._source,
+            source=source if source is not None else self._source,
             related_ids=list(related_ids),
             payload=payload,
         )
 
     def bug_detected(
-        self, finding: BugFinding, *, correlation_id: str
+        self,
+        finding: BugFinding,
+        *,
+        correlation_id: str,
+        source: Source | None = None,
     ) -> BrainEvent:
         return self._event(
             BrainEventType.DEVELOPER_BUG_DETECTED,
@@ -77,10 +88,15 @@ class BrainEventEmitter:
                 "finding_id": finding.finding_id,
             },
             [finding.finding_id],
+            source=source,
         )
 
     def fix_proposed(
-        self, action: ProposedAction, *, correlation_id: str
+        self,
+        action: ProposedAction,
+        *,
+        correlation_id: str,
+        source: Source | None = None,
     ) -> BrainEvent:
         params = action.parameters or {}
         return self._event(
@@ -97,10 +113,15 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [action.action_id],
+            source=source,
         )
 
     def test_result(
-        self, interpretation: TestResultInterpretation, *, correlation_id: str
+        self,
+        interpretation: TestResultInterpretation,
+        *,
+        correlation_id: str,
+        source: Source | None = None,
     ) -> BrainEvent:
         return self._event(
             BrainEventType.DEVELOPER_TEST_RESULT,
@@ -116,10 +137,15 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [],
+            source=source,
         )
 
     def review_finding(
-        self, finding: ReviewFinding, *, correlation_id: str
+        self,
+        finding: ReviewFinding,
+        *,
+        correlation_id: str,
+        source: Source | None = None,
     ) -> BrainEvent:
         return self._event(
             BrainEventType.DEVELOPER_REVIEW_FINDING,
@@ -135,10 +161,15 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [finding.finding_id],
+            source=source,
         )
 
     def deploy_proposed(
-        self, action: ProposedAction, *, correlation_id: str
+        self,
+        action: ProposedAction,
+        *,
+        correlation_id: str,
+        source: Source | None = None,
     ) -> BrainEvent:
         params = action.parameters or {}
         tests_green = bool(action.action_type == ActionType.DEPLOY)
@@ -156,11 +187,16 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [action.action_id],
+            source=source,
         )
 
     # -- Brain-owned events (Phase 8 Slice 1) --------------------------------
     def memory_created(
-        self, memory: Memory, *, correlation_id: str | None = None
+        self,
+        memory: Memory,
+        *,
+        correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         """A memory was durably created by the Brain."""
         return self._event(
@@ -175,6 +211,7 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [memory.memory_id],
+            source=source,
         )
 
     def preference_updated(
@@ -183,6 +220,7 @@ class BrainEventEmitter:
         preference: Preference,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         """A developer/user preference was written (or superseded)."""
         return self._event(
@@ -201,6 +239,7 @@ class BrainEventEmitter:
                 "correlation_id": correlation_id,
             },
             [preference.memory_id],
+            source=source,
         )
 
     def learning_signal_detected(
@@ -208,9 +247,12 @@ class BrainEventEmitter:
         signal: LearningSignal,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         """A feedback record produced a learning signal (state transition)."""
-        resolved = correlation_id or signal.correlation_id
+        resolved = (
+            correlation_id if correlation_id is not None else signal.correlation_id
+        )
         return self._event(
             BrainEventType.LEARNING_SIGNAL_DETECTED,
             signal.user_id,
@@ -223,6 +265,7 @@ class BrainEventEmitter:
                 "correlation_id": resolved,
             },
             [],
+            source=source,
         )
 
     def decision_created(
@@ -230,9 +273,12 @@ class BrainEventEmitter:
         decision: BrainDecision,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         """A BrainDecision was produced (Brain proposes — nothing executed)."""
-        resolved = correlation_id or decision.correlation_id
+        resolved = (
+            correlation_id if correlation_id is not None else decision.correlation_id
+        )
         return self._event(
             BrainEventType.DECISION_CREATED,
             decision.user_id,
@@ -244,6 +290,7 @@ class BrainEventEmitter:
                 "correlation_id": resolved,
             },
             [decision.decision_id],
+            source=source,
         )
 
     def action_proposed(
@@ -251,9 +298,12 @@ class BrainEventEmitter:
         action: ProposedAction,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         """A proposed (never executed) action was added to a decision."""
-        resolved = correlation_id or action.correlation_id
+        resolved = (
+            correlation_id if correlation_id is not None else action.correlation_id
+        )
         return self._event(
             BrainEventType.ACTION_PROPOSED,
             action.user_id,
@@ -265,4 +315,5 @@ class BrainEventEmitter:
                 "correlation_id": resolved,
             },
             [action.action_id],
+            source=source,
         )

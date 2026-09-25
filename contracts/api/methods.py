@@ -13,7 +13,8 @@ Grouped by the BrainService surface they mirror:
 - understanding:       understand
 - context:             build_context
 - reasoning:           analyze_developer, reason
-- people reads:        preferences, developer_preferences, people_summary
+- people reads:        preferences, developer_preferences, people_summary,
+                        people_timeline
 - learning reads:      learning_status, feedback_history, personalization_profile
 
 Only contracts here — no implementation logic.
@@ -48,6 +49,7 @@ class ApiMethod(str, Enum):
     PREFERENCES = "preferences"
     DEVELOPER_PREFERENCES = "developer_preferences"
     PEOPLE_SUMMARY = "people_summary"
+    PEOPLE_TIMELINE = "people_timeline"
 
     # -- learning reads --------------------------------------------------------
     LEARNING_STATUS = "learning_status"

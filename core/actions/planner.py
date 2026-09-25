@@ -65,7 +65,9 @@ class ActionPlanner:
                 "reasoning and context belong to different users (isolation)"
             )
 
-        correlation_id = correlation_id or _correlation_id()
+        correlation_id = (
+            correlation_id if correlation_id is not None else _correlation_id()
+        )
         proposals: list[ProposedAction] = []
 
         fixes = [

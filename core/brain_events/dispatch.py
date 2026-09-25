@@ -13,6 +13,7 @@ from __future__ import annotations
 from contracts.brain_events.events import BrainEvent
 from contracts.decisions.decisions import BrainDecision, ProposedAction
 from contracts.memory.memory import Memory
+from contracts.common.types import Source
 
 from core.learning.models import LearningSignal
 from core.people.models import Preference
@@ -20,6 +21,10 @@ from core.people.models import Preference
 from ..actions.models import ActionPlan
 from .emitter import BrainEventEmitter
 from .sink import EventSink, NullEventSink
+
+
+def _source_kwargs(source: Source | None) -> dict[str, Source]:
+    return {"source": source} if source is not None else {}
 
 
 class BrainEventDispatcher:
@@ -31,7 +36,7 @@ class BrainEventDispatcher:
         sink: EventSink | None = None,
     ) -> None:
         self._emitter = emitter or BrainEventEmitter()
-        self._sink = sink or NullEventSink()
+        self._sink = sink if sink is not None else NullEventSink()
         if not hasattr(self._sink, "emit") or not callable(self._sink.emit):
             raise TypeError("sink must implement EventSink.emit(event)")
 
@@ -45,10 +50,14 @@ class BrainEventDispatcher:
 
     # -- Brain-owned events ---------------------------------------------------
     def memory_created(
-        self, memory: Memory, *, correlation_id: str | None = None
+        self,
+        memory: Memory,
+        *,
+        correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         event = self._emitter.memory_created(
-            memory, correlation_id=correlation_id
+            memory, correlation_id=correlation_id, **_source_kwargs(source)
         )
         self._sink.emit(event)
         return event
@@ -59,9 +68,13 @@ class BrainEventDispatcher:
         preference: Preference,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         event = self._emitter.preference_updated(
-            user_id, preference, correlation_id=correlation_id
+            user_id,
+            preference,
+            correlation_id=correlation_id,
+            **_source_kwargs(source),
         )
         self._sink.emit(event)
         return event
@@ -71,9 +84,10 @@ class BrainEventDispatcher:
         signal: LearningSignal,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         event = self._emitter.learning_signal_detected(
-            signal, correlation_id=correlation_id
+            signal, correlation_id=correlation_id, **_source_kwargs(source)
         )
         self._sink.emit(event)
         return event
@@ -83,9 +97,10 @@ class BrainEventDispatcher:
         decision: BrainDecision,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         event = self._emitter.decision_created(
-            decision, correlation_id=correlation_id
+            decision, correlation_id=correlation_id, **_source_kwargs(source)
         )
         self._sink.emit(event)
         return event
@@ -95,15 +110,18 @@ class BrainEventDispatcher:
         action: ProposedAction,
         *,
         correlation_id: str | None = None,
+        source: Source | None = None,
     ) -> BrainEvent:
         event = self._emitter.action_proposed(
-            action, correlation_id=correlation_id
+            action, correlation_id=correlation_id, **_source_kwargs(source)
         )
         self._sink.emit(event)
         return event
 
     # -- plan-level ------------------------------------------------------------
-    def emit_plan(self, plan: ActionPlan) -> tuple[BrainEvent, list[BrainEvent]]:
+    def emit_plan(
+        self, plan: ActionPlan, *, source: Source | None = None
+    ) -> tuple[BrainEvent, list[BrainEvent]]:
         """Emit decision.created + one action.proposed per proposal.
 
         A produced plan is a real Brain transition (decision created with its
@@ -111,10 +129,16 @@ class BrainEventDispatcher:
         ``(decision_event, [action_event, ...])``.
         """
         decision_event = self.decision_created(
-            plan.decision, correlation_id=plan.correlation_id
+            plan.decision,
+            correlation_id=plan.correlation_id,
+            **_source_kwargs(source),
         )
         action_events = [
-            self.action_proposed(action, correlation_id=plan.correlation_id)
+            self.action_proposed(
+                action,
+                correlation_id=plan.correlation_id,
+                **_source_kwargs(source),
+            )
             for action in plan.proposed_actions
         ]
         return decision_event, action_events

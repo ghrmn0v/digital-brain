@@ -30,6 +30,8 @@ contracts/            Phase 0 — shared, versioned data contracts (Pydantic v2)
   decisions/          BrainDecision / ProposedAction (Brain proposes)
   feedback/           Feedback (source × kind, not all reward)
   brain_events/       typed Brain events
+  api/                v1 envelope, public method registry, frames, schema export
+  schemas/            packaged deterministic brain-api.v1.json artifact
 core/                 Phases 1–8 — Core Brain implementation
   memory/             Memory Engine (deterministic lifecycle, SQLite storage)
   ingestion/          Ingestion pipeline (validation, dedup, receipts, mapping)
@@ -46,8 +48,8 @@ core/                 Phases 1–8 — Core Brain implementation
   learning/           Feedback → deterministic learning → personalization
   service/            Phase 8 BrainService boundary (platform-independent,
                       typed entry point above every module; no UI/transport)
-  transport/          Phase 8 stdio JSON-lines daemon + minimal HTTP transport
-                      (BrainApi + EventSink adapters; transport-only, stdlib)
+  transport/          Phase 8 stdio JSON-lines, HTTP and WebSocket adapters
+                      (BrainApi + EventSink boundaries; transport-only)
 docs/memory_engine.md Memory Engine design
 docs/ingestion.md     Ingestion pipeline design
 docs/understanding.md Understanding / LLM gateway design
@@ -61,13 +63,17 @@ docs/event-delivery.md consumer-side event delivery contract (identity, ordering
 docs/brain-api.md     typed client-facing Brain API contract (contracts/api + BrainApi)
 docs/stdio-protocol.md stdio JSON-lines daemon wire protocol (request/response/event frames)
 docs/http-transport.md  minimal HTTP transport docs (endpoints, status mapping, events, auth note)
+docs/websocket-transport.md bounded user-bound WebSocket protocol and lifecycle
+docs/schema-distribution.md canonical v1 JSON Schema distribution for TS/Java
+docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSocket)
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
-PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–3)
-                      in progress → Slices 4A–4B complete)
+clients/typescript/  zero-dependency TypeScript client for both Product clients
+PHASES.md             phase tracker (0–7 complete; Phase 8 Slices 1–5A
+                      implemented; TS/Java clients remain)
 tests/                contract + engine + ingestion + understanding + context
                       + people + reasoning + learning + service tests
-pyproject.toml        package metadata (one dependency: pydantic)
+pyproject.toml        package metadata (Pydantic + WebSocket server dependency)
 CONTRACTS.md          ownership boundaries + versioning + execution rule
 ```
 
@@ -76,10 +82,12 @@ CONTRACTS.md          ownership boundaries + versioning + execution rule
 Phase 8 — **Platform-independent Brain API/event exposure**. Slice 1 (event
 infrastructure + BrainService boundary), Slice 2 (Context + Learning →
 Reasoning feedback loop), Slice 3 Part A (the typed client-facing API
-contract), Slice 3 Part B (the stdio JSON-lines daemon) and Slice 4A (the
-minimal HTTP transport) are implemented and verified; WebSocket/mobile
-transport adapters and SDK packaging are NOT started. The Core Brain MVP
-(Phases 0–7) is feature-complete and Phases 0–7 (plus 8.1–8.4A) are fully
+contract), Slice 3 Part B (the stdio JSON-lines daemon), Slice 4A (the
+minimal HTTP transport), Slice 4B (consumer-side event-delivery guarantees),
+Slice 4C (the bounded, user-bound WebSocket transport) and Slice 5A (canonical
+v1 schema distribution) are implemented and verified; framework-free TypeScript
+and Java clients are NOT started. The Core Brain MVP (Phases 0–7) is
+feature-complete and Phases 0–7 plus the completed Phase 8 slices are fully
 connected. Built so far:
 
 - Memory Engine (deterministic lifecycle, SQLite, user isolation).
@@ -98,8 +106,10 @@ connected. Built so far:
   relationship facts, interaction-history references, per-person profiles,
   mention-ranked people lists) + preferences (user and developer preferences,
   deterministic domain classification, `record_preference` through the Memory
-  Engine with conflict-based supersession, per-domain bounds), powerful user
-  isolation, all traceable to memory ids — no second database.
+  Engine with conflict-based supersession, per-domain bounds), plus a bounded
+  `people_timeline` view that preserves superseded history, durability labels and
+  source/correlation evidence. All views are powerful-user-isolated and
+  traceable to memory ids — no second database.
 - Reasoning + intent + action planning: deterministic `ReasoningEngine`
   (keyword intent classification with word-boundary matching, source scans for
   null derefs / division-by-zero / secrets / bare `except:`, project review
@@ -180,13 +190,51 @@ connected. Built so far:
   invented at this prototype layer (documented; loopback default). Run:
   `python -m core.transport.http [--host 127.0.0.1] [--port 8765] [--db PATH]`.
   See `docs/http-transport.md`.
+- Bounded WebSocket transport (Phase 8 Slice 4C):
+  `core/transport/websocket.py` — one `/v1/brain?user_id=...` connection is bound
+  to one user, every ownership-bearing request is checked against that identity,
+  and a service-owned `WebSocketEventRouter` fans events out only to matching
+  sockets. Requests still pass through `BrainApi.handle()`; synchronous Core work
+  runs off the event loop and is serialized across the shared SQLite service.
+  Responses and events reuse the stdio `kind=response|event` envelope. Per-user
+  event buffers default to 128 frames with deterministic drop-newest overflow;
+  one response remains outstanding and responses are never silently evicted.
+  Incoming messages are bounded to 1 MB, browser origins are rejected by default,
+  non-loopback binds require an explicit unsafe opt-in, and cancellation waits
+  for an already-running worker before releasing the service lock. The identity
+  is routing/isolation metadata, **not authentication**; no retry, replay,
+  acknowledgement, durable queue or broker is introduced. Run:
+  `python -m core.transport.websocket [--host 127.0.0.1] [--port 8766] [--db PATH]`.
+  See `docs/websocket-transport.md`.
+- Canonical v1 schema distribution (Phase 8 Slice 5A):
+  `contracts/api/registry.py` is the public immutable method/model registry used
+  by both `BrainApi.describe()` and the offline exporter. `contracts/api/frames.py`
+  owns the canonical response/event envelopes, while stdio/WebSocket reuse them.
+  `contracts/schemas/brain-api.v1.json` is a deterministic, data-free JSON
+  Schema bundle
+  with request/response/error/event/frame contracts and ordered refs for all 16
+  methods. Generate with `python -m contracts.api.schema`; verify drift with
+  `python -m contracts.api.schema --check`. This is the shared generation input
+  for framework-free TS/Java clients, not a UI or mobile framework. See
+  `docs/schema-distribution.md`.
 
-Not built yet: embeddings/vector store, connectors, frontend, and the remaining
-Phase 8 work — WebSocket/mobile transport adapters (as EventSink/BrainApi
-adapters) and SDK packaging (TS/Java from the exported JSON Schemas). The
-consumer-side event delivery contract (Slice 4B) is defined and tested;
-durable/broker delivery (Redis/Kafka/persistent queue, retry workers) is
-explicitly NOT part of it.
+- Thin framework-free TypeScript client (Phase 8 Slice 6):
+  `clients/typescript/` speaks the same contract over HTTP and WebSocket with
+  zero runtime dependencies and no Node-only APIs, so one source serves the PC
+  browser, the mobile client and Node 22+. It mints request ids, injects the
+  caller's identity into ownership params, serializes WebSocket requests (the
+  Core allows one outstanding response per connection) and applies the consumer
+  event rules: dedupe by `BrainEvent.id`, per-user filtering, correlation-id
+  grouping, no replay. Its method table and error codes are verified against the
+  canonical schema artifact, and its HTTP tests run live against the real Core
+  transport. Run `cd clients/typescript && node --test test/` (no install
+  needed). See `docs/typescript-client.md`.
+
+Not built yet: embeddings/vector store, connectors, frontend, and a Java client
+package. Mobile Product code remains responsible for
+microphone/transcription UX, auth, notifications, push providers and action
+execution. Durable/broker delivery (Redis/Kafka/persistent queue, retry workers)
+is explicitly NOT part of Phase 8.
 
 ## Developer Mode (hackathon)
 
@@ -203,15 +251,18 @@ See `docs/developer-mode.md` and `docs/developer-mode/SPEC.md`.
 ## How contracts are used
 
 - Python teams import the `contracts` package directly.
-- TS (Product UI / Fly Electron) and Java (Spring Boot) teams consume the
-  exported JSON Schema (`Model.model_json_schema()`).
+- TS (Product UI / Fly Electron) and Java (Spring Boot) generators consume
+  `contracts/schemas/brain-api.v1.json`; regenerate it with
+  `python -m contracts.api.schema` after contract changes.
 - Any team-boundary change ships through this repo first. See `CONTRACTS.md`
-  for the compatibility rules.
+  and `docs/schema-distribution.md` for compatibility and generation rules.
 
 ## Validation
 
 ```
+python -m contracts.api.schema --check
 python -m unittest discover -s tests -t .
 ```
 
-Requires Python ≥ 3.11 and `pydantic>=2.8` (installed in `.venv`).
+Requires Python ≥ 3.11, `pydantic>=2.8` and `websockets>=12` (the WebSocket
+package is imported lazily by the transport server).

@@ -54,7 +54,7 @@ def _candidate(
         "provider": event.source.provider,
         "event_type": event.type,
     }
-    if event.correlation_id:
+    if event.correlation_id is not None:
         metadata["correlation_id"] = event.correlation_id
     return MemoryCandidate(
         content=content,

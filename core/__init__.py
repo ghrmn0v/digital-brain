@@ -1,17 +1,11 @@
 """Core Brain implementation.
 
-Phase 1 provides the deterministic Memory Engine, Phase 2 the ingestion
-pipeline, Phase 3 the LLM Gateway + Understanding, Phase 4 the Context Engine +
-semantic search abstraction, Phase 5 People Intelligence, Phase 6 Reasoning +
-Intent + Action Planning + Developer Brain Events, Phase 7 Feedback + Learning
-+ Personalization. Phase 8 (in progress) adds the transport-independent EventSink /
-BrainEventDispatcher event infrastructure and the BrainService application
-boundary (Slice 1), closes the Context + Learning → Reasoning feedback loop
-(Slice 2: distilled ReasoningContext + read-only LearningProfilePort), and
-adds the typed client-facing Brain API (Slice 3: ``contracts.api`` +
-``BrainApi``, Part A) and the stdio JSON-lines daemon transport (Part B:
-``core.transport``). No
-embeddings yet; lexical search is the deterministic MVP.
+Phases 1–7 provide the platform-independent Core Brain. Phase 8 adds the
+BrainService boundary, typed Brain API, event-delivery contract, stdio/HTTP/
+WebSocket transports and the public v1 method registry used by runtime describe
+and external schema generation. The canonical offline bundle lives at
+``contracts/schemas/brain-api.v1.json``. No embeddings yet; lexical search is the
+deterministic MVP.
 """
 
 from .actions import (
@@ -93,9 +87,14 @@ from .memory import (
 from .people import (
     DeveloperPreferences,
     PeopleIntelligence,
+    classify_person_fact_durability,
     PeopleLimits,
     PeopleSummary,
+    PersonFactDurability,
     PersonProfile,
+    PersonSourceTrace,
+    PersonTimeline,
+    PersonTimelineEntry,
     Preference,
     PreferenceDomain,
 )
@@ -144,8 +143,14 @@ from .transport import (
     HttpBrainTransport,
     JsonLinesEventSink,
     MAX_BODY_BYTES,
+    MAX_MESSAGE_BYTES,
     ResponseEnvelope,
     StdioDaemon,
+    WebSocketBrainServer,
+    WebSocketBrainTransport,
+    WebSocketEventRouter,
+    WebSocketEventSink,
+    WebSocketTransportError,
     default_json_line,
     event_frame,
     http_status_for,
@@ -229,6 +234,7 @@ __all__ = [
     "LearnedAffinity",
     "MappingRule",
     "MAX_BODY_BYTES",
+    "MAX_MESSAGE_BYTES",
     "MemoryCandidate",
     "MemoryClassifier",
     "MemoryEngineError",
@@ -243,7 +249,11 @@ __all__ = [
     "PeopleLimits",
     "PeopleSummary",
     "PersonalizationEngine",
+    "PersonFactDurability",
     "PersonProfile",
+    "PersonSourceTrace",
+    "PersonTimeline",
+    "PersonTimelineEntry",
     "Preference",
     "PreferenceDomain",
     "PreferenceEvidence",
@@ -281,6 +291,7 @@ __all__ = [
     "build_brain_service",
     "build_learning_influence",
     "build_reasoning_context",
+    "classify_person_fact_durability",
     "context_keywords",
     "DevModePipeline",
     "DevOutcome",
@@ -293,6 +304,11 @@ __all__ = [
     "ResponseEnvelope",
     "StdioDaemon",
     "StoredFeedback",
+    "WebSocketBrainServer",
+    "WebSocketBrainTransport",
+    "WebSocketEventRouter",
+    "WebSocketEventSink",
+    "WebSocketTransportError",
     "default_json_line",
     "event_frame",
     "http_status_for",

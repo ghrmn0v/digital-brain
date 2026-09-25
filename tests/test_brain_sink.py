@@ -28,6 +28,7 @@ from core import (
     CollectingEventSink,
     DevModePipeline,
     NullEventSink,
+    build_brain_service,
 )
 from core.learning import LearningSignal, SignalKind
 from core.memory import MemoryCandidate
@@ -162,6 +163,17 @@ class CollectingSinkTests(unittest.TestCase):
         self.assertEqual(sink.emitted, [])
 
 
+class FalseySink:
+    def __init__(self):
+        self.events = []
+
+    def __bool__(self):
+        return False
+
+    def emit(self, event):
+        self.events.append(event)
+
+
 class MissingEmitterTests(unittest.TestCase):
     def setUp(self):
         self.emitter = BrainEventEmitter()
@@ -252,6 +264,12 @@ class DispatcherTests(unittest.TestCase):
         event = self.dispatcher.memory_created(memory)
         self.assertEqual(self.sink.emitted, [event])
 
+    def test_falsey_sink_is_preserved_by_dispatcher(self):
+        sink = FalseySink()
+        dispatcher = BrainEventDispatcher(BrainEventEmitter(), sink)
+        dispatcher.decision_created(_decision())
+        self.assertEqual(len(sink.events), 1)
+
     def test_emit_plan_dispatches_decision_and_actions(self):
         plan = _plan()
         decision_event, action_events = self.dispatcher.emit_plan(plan)
@@ -273,6 +291,15 @@ class DispatcherTests(unittest.TestCase):
     def test_dispatcher_rejects_non_sink(self):
         with self.assertRaises(TypeError):
             BrainEventDispatcher(BrainEventEmitter(), sink=object())
+
+
+class FalseySinkFactoryTests(unittest.TestCase):
+    def test_factory_preserves_falsey_sink(self):
+        sink = FalseySink()
+        service = build_brain_service(":memory:", sink=sink)
+        self.addCleanup(service.close)
+        service.record_preference("usr_a", name="style", value="dark")
+        self.assertEqual(len(sink.events), 1)
 
 
 class PipelineSinkTests(unittest.TestCase):

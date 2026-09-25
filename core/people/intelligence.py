@@ -28,8 +28,12 @@ from .models import (
     PeopleLimits,
     PeopleSummary,
     PersonFact,
+    PersonFactDurability,
     PersonProfile,
+    PersonSourceTrace,
     PersonSummary,
+    PersonTimeline,
+    PersonTimelineEntry,
     Preference,
     PreferenceDomain,
     RelationshipFact,
@@ -69,6 +73,145 @@ _DOMAIN_KEYWORDS: dict[PreferenceDomain, frozenset[str]] = {
         {"deploy", "deployment", "ci", "cd", "release", "rollout"}
     ),
 }
+
+_DURABLE_TOPICS = frozenset(
+    {
+        "employment",
+        "employer",
+        "job",
+        "company",
+        "career",
+        "work",
+        "relationship",
+        "role",
+        "responsibility",
+        "organization",
+        "location",
+        "current_location",
+        "residence",
+        "city",
+        "address",
+    }
+)
+
+_EVIDENCE_KEYS = (
+    "topic",
+    "event_type",
+    "provider",
+    "source_event_timestamp",
+    "occurred_at",
+    "explicit",
+    "inferred",
+    "temporary",
+    "durable",
+    "durability",
+    "conflict_key",
+    "person_name",
+    "person_aliases",
+    "source_event_id",
+    "correlation_id",
+)
+
+_DURABILITY_VALUES = {
+    value.value for value in PersonFactDurability
+}
+
+
+def classify_person_fact_durability(
+    memory: Memory,
+) -> PersonFactDurability:
+    """Classify durability from explicit metadata, type, and topic only.
+
+    Natural-language inference is deliberately not attempted. A memory remains
+    ``unspecified`` when the available structured evidence is insufficient.
+    """
+    metadata = memory.metadata or {}
+    explicit = metadata.get("durability")
+    if isinstance(explicit, str) and explicit in _DURABILITY_VALUES:
+        return PersonFactDurability(explicit)
+    if metadata.get("temporary") is True:
+        return PersonFactDurability.TEMPORARY
+    if metadata.get("durable") is True:
+        return PersonFactDurability.DURABLE
+    topic = metadata.get("topic")
+    if isinstance(topic, str) and topic.lower() in _DURABLE_TOPICS:
+        return PersonFactDurability.DURABLE
+    if memory.type in (MemoryType.INTERACTION, MemoryType.OBSERVATION):
+        return PersonFactDurability.TEMPORARY
+    if memory.type == MemoryType.RELATIONSHIP:
+        return PersonFactDurability.DURABLE
+    if metadata.get("explicit") is True and memory.type in (
+        MemoryType.FACT,
+        MemoryType.EVENT,
+    ):
+        return PersonFactDurability.DURABLE
+    return PersonFactDurability.UNSPECIFIED
+
+
+def _bounded_evidence(metadata: dict[str, Any]) -> dict[str, Any]:
+    evidence: dict[str, Any] = {}
+    for key in _EVIDENCE_KEYS:
+        if key not in metadata:
+            continue
+        value = metadata[key]
+        if isinstance(value, str):
+            evidence[key] = value[:512]
+        elif isinstance(value, (bool, int, float)) or value is None:
+            evidence[key] = value
+        elif isinstance(value, (list, tuple)):
+            evidence[key] = [
+                item[:120] if isinstance(item, str) else item
+                for item in value[:20]
+                if isinstance(item, (str, bool, int, float))
+            ]
+    return evidence
+
+
+def _source_trace(memory: Memory) -> PersonSourceTrace:
+    metadata = memory.metadata or {}
+    raw_source_event_id = metadata.get("source_event_id")
+    source_event_id = None
+    source_event_id_truncated = False
+    if isinstance(raw_source_event_id, str) and raw_source_event_id.strip():
+        source_event_id = raw_source_event_id[:512]
+        source_event_id_truncated = len(raw_source_event_id) > 512
+    raw_correlation_id = metadata.get("correlation_id")
+    correlation_id = None
+    correlation_id_truncated = False
+    if isinstance(raw_correlation_id, str) and raw_correlation_id.strip():
+        correlation_id = raw_correlation_id[:256]
+        correlation_id_truncated = len(raw_correlation_id) > 256
+    return PersonSourceTrace(
+        source=memory.source,
+        source_event_id=source_event_id,
+        correlation_id=correlation_id,
+        source_event_id_truncated=source_event_id_truncated,
+        correlation_id_truncated=correlation_id_truncated,
+        related_event_ids=list(memory.related_events[:32]),
+        evidence=_bounded_evidence(metadata),
+    )
+
+
+def _timeline_entry(
+    memory: Memory,
+    person_id: PersonId,
+) -> PersonTimelineEntry:
+    statement = memory.content.strip()
+    return PersonTimelineEntry(
+        person_id=person_id,
+        memory_id=memory.memory_id,
+        memory_type=memory.type,
+        status=memory.status,
+        statement=statement[:2000],
+        statement_truncated=len(statement) > 2000,
+        occurred_at=memory.valid_from,
+        created_at=memory.created_at,
+        valid_until=memory.valid_until,
+        durability=classify_person_fact_durability(memory),
+        confidence=memory.confidence,
+        importance=memory.importance,
+        provenance=_source_trace(memory),
+    )
 
 
 def classify_preference_domain(
@@ -170,6 +313,56 @@ class PeopleIntelligence:
             mention_count=len(memories),
             last_seen=last_seen,
             memory_ids=sorted({m.memory_id for m in memories}),
+        )
+
+    def timeline(
+        self,
+        user_id: UserId,
+        person_id: PersonId,
+        *,
+        limit: int | None = None,
+    ) -> PersonTimeline:
+        """Return the bounded, chronological, source-traceable person timeline.
+
+        Both active and historical memories are read so supersessions and
+        expired facts remain inspectable. No memory is deleted or rewritten.
+        """
+        self._validate_ids(user_id, person_id)
+        if limit is not None and (
+            isinstance(limit, bool) or not isinstance(limit, int) or limit < 1
+        ):
+            raise PeopleValidationError("limit must be a positive integer")
+        maximum = min(
+            limit or self._limits.max_timeline_entries,
+            self._limits.max_timeline_entries,
+        )
+        memories = self._memory.list_memories(
+            MemoryQuery(
+                user_id=user_id,
+                person_id=person_id,
+                status=MemoryStatusFilter.ANY,
+                limit=self._limits.scan_limit,
+            )
+        )
+        memories.sort(
+            key=lambda memory: (
+                memory.valid_from,
+                memory.created_at,
+                memory.memory_id,
+            )
+        )
+        entries = [
+            _timeline_entry(memory, person_id)
+            for memory in memories[:maximum]
+        ]
+        return PersonTimeline(
+            user_id=user_id,
+            person_id=person_id,
+            entries=entries,
+            total_entries=len(memories),
+            truncated=len(memories) > len(entries),
+            scan_truncated=len(memories) >= self._limits.scan_limit,
+            person_known=bool(memories),
         )
 
     def relationships(
@@ -437,7 +630,15 @@ class PeopleIntelligence:
 
     @staticmethod
     def _validate_ids(user_id: UserId, person_id: PersonId | None = None) -> None:
-        if not user_id or not str(user_id).strip():
-            raise PeopleValidationError("user_id must be a non-empty string")
-        if person_id is not None and not str(person_id).strip():
-            raise PeopleValidationError("person_id must be a non-empty string")
+        if (
+            not user_id
+            or not str(user_id).strip()
+            or len(str(user_id)) > 512
+        ):
+            raise PeopleValidationError("user_id must be a bounded non-empty string")
+        if person_id is not None and (
+            not str(person_id).strip() or len(str(person_id)) > 512
+        ):
+            raise PeopleValidationError(
+                "person_id must be a bounded non-empty string"
+            )

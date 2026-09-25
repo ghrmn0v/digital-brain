@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from contracts.brain_events.events import BrainEvent
 from contracts.common.ids import UserId
 from contracts.decisions.decisions import ActionType
+from contracts.common.types import Source
 from core.understanding.developer import DeveloperContext
 
 from ..actions.models import ActionPlan
@@ -32,6 +33,10 @@ from ..reasoning.ports import LearningProfilePort
 from ..reasoning.reasoning import ReasoningEngine
 from .emitter import BrainEventEmitter
 from .sink import EventSink
+
+
+def _source_kwargs(source: Source | None) -> dict[str, Source]:
+    return {"source": source} if source is not None else {}
 
 
 class DevOutcome(BaseModel):
@@ -97,6 +102,7 @@ class DevModePipeline:
         ask_deploy: bool = False,
         correlation_id: str | None = None,
         reasoning_context: ReasoningContext | None = None,
+        source: Source | None = None,
     ) -> DevOutcome:
         if not isinstance(context, DeveloperContext):
             from ..reasoning.exceptions import ReasoningValidationError
@@ -118,27 +124,37 @@ class DevModePipeline:
         events: list[BrainEvent] = []
         for finding in reasoning.bugs:
             events.append(
-                self._emitter.bug_detected(finding, correlation_id=correlation)
+                self._emitter.bug_detected(
+                    finding, correlation_id=correlation, **_source_kwargs(source)
+                )
             )
         for action in plan.proposed_actions:
             if action.action_type == ActionType.CODE_FIX:
                 events.append(
-                    self._emitter.fix_proposed(action, correlation_id=correlation)
+                    self._emitter.fix_proposed(
+                        action, correlation_id=correlation, **_source_kwargs(source)
+                    )
                 )
         if reasoning.tests.provided:
             events.append(
                 self._emitter.test_result(
-                    reasoning.tests, correlation_id=correlation
+                    reasoning.tests,
+                    correlation_id=correlation,
+                    **_source_kwargs(source),
                 )
             )
         for finding in reasoning.review_findings:
             events.append(
-                self._emitter.review_finding(finding, correlation_id=correlation)
+                self._emitter.review_finding(
+                    finding, correlation_id=correlation, **_source_kwargs(source)
+                )
             )
         for action in plan.proposed_actions:
             if action.action_type == ActionType.DEPLOY:
                 events.append(
-                    self._emitter.deploy_proposed(action, correlation_id=correlation)
+                    self._emitter.deploy_proposed(
+                        action, correlation_id=correlation, **_source_kwargs(source)
+                    )
                 )
 
         self._dispatch(events)

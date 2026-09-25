@@ -49,13 +49,25 @@ BrainService(
 | `understand(corpus, *, user_id=None, corpus_id=None)` | structured understanding | — |
 | `build_context(developer_context, *, task=None)` | bounded Context | — |
 | `preferences / developer_preferences / people_summary(user_id)` | people reads | — |
+| `people_timeline(user_id, person_id, *, limit=None)` | chronological active + historical person view with provenance | — |
 | `learning_status / feedback_history / personalization_profile(user_id)` | learning reads | — |
 | `close()` | release the wiring | — |
+
+API-originated calls may pass `event_source` to preserve the request `Source`
+on emitted event envelopes. This does not replace the source of an incoming
+`NormalizedSourceEvent` or `Feedback` record.
 
 Every operation keeps `user_id` (validated), `correlation_id` (propagated) and
 `source` provenance. Missing capability → `BrainServiceConfigurationError`;
 invalid input → `BrainServiceValidationError` (raised before any side effect).
 Nothing ever executes external actions.
+
+`people_timeline` is a read-only view over the existing Memory Engine history.
+It does not mutate, merge or delete person records; superseded memories remain
+inspectable with their memory id, lifecycle status, validity dates, durability
+classification and source/correlation evidence. Durability stays
+`unspecified` when structured evidence is insufficient. Product renders the
+returned data; Core owns no timeline UI.
 
 ## Platform independence
 

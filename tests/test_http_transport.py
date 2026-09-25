@@ -163,6 +163,27 @@ class HttpTransportUnitTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertEqual(payload["error"]["code"], "version_unsupported")
 
+    def test_extremely_long_unknown_method_is_canonical_http_error(self):
+        transport = _make_transport()
+        body = json.dumps(
+            {"id": "r" * 5000, "method": "x" * 5000}
+        ).encode("utf-8")
+        payload, status = transport.handle_body(body)
+        self.assertEqual(status, 404)
+        self.assertEqual(payload["error"]["code"], "unknown_method")
+        self.assertLessEqual(len(payload["id"]), 128)
+        self.assertLessEqual(len(payload["error"]["message"]), 2000)
+
+    def test_extremely_long_unsupported_version_is_canonical_http_error(self):
+        transport = _make_transport()
+        body = json.dumps(
+            {"id": "r", "method": "ping", "version": "v" * 5000}
+        ).encode("utf-8")
+        payload, status = transport.handle_body(body)
+        self.assertEqual(status, 400)
+        self.assertEqual(payload["error"]["code"], "version_unsupported")
+        self.assertLessEqual(len(payload["error"]["message"]), 2000)
+
     def test_canonical_error_response_shape(self):
         transport = _make_transport()
         body = json.dumps({"id": "r", "method": "teleport"}).encode("utf-8")

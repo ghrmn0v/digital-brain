@@ -32,6 +32,13 @@ from contracts.api.envelope import (
 )
 from contracts.api.errors import ApiError, ApiErrorCode
 from contracts.api.methods import ApiMethod
+from contracts.api.registry import (
+    API_CONTRACT_VERSION,
+    API_METHOD_REGISTRY,
+    API_METHOD_SPECS,
+    describe_api_methods,
+)
+from contracts.common.types import Source
 from core.understanding.developer import (
     DeveloperContext,
     DeveloperFile,
@@ -45,19 +52,58 @@ from .exceptions import (
     BrainServiceValidationError,
 )
 
-_SUPPORTED_VERSION = "v1"
-
-
 class ApiRequestValidationError(Exception):
     """Raised by the adapter when method params fail their typed model."""
+
+
+def _bounded_text(value: str, max_length: int = 1900) -> str:
+    if len(value) <= max_length:
+        return value
+    return value[: max_length - 3] + "..."
+
+
+def _bounded_request_id(value: Any) -> str:
+    if value is None:
+        return ""
+    try:
+        text = str(value).strip()
+    except Exception:
+        return ""
+    return _bounded_text(text, 128)
 
 
 def _validation_message(exc: ValidationError) -> str:
     parts = []
     for error in exc.errors()[:3]:
-        location = ".".join(str(part) for part in error.get("loc", ()))
-        parts.append(f"{location}: {error.get('msg', 'invalid')}")
-    return "; ".join(parts) or "invalid request"
+        location = _bounded_text(
+            ".".join(str(part) for part in error.get("loc", ())), 512
+        )
+        message = _bounded_text(str(error.get("msg", "invalid")), 512)
+        parts.append(f"{location}: {message}")
+    return _bounded_text("; ".join(parts) or "invalid request")
+
+
+def _bounded_repr(value: Any, max_length: int = 512) -> str:
+    try:
+        if isinstance(value, str):
+            rendered = repr(
+                value if len(value) <= max_length else value[:max_length] + "..."
+            )
+        elif isinstance(value, (bytes, bytearray)):
+            rendered = (
+                repr(value)
+                if len(value) <= max_length
+                else f"<{type(value).__name__} len={len(value)}>"
+            )
+        elif isinstance(value, (list, tuple, set, dict)):
+            rendered = f"<{type(value).__name__} len={len(value)}>"
+        elif value is None or isinstance(value, (bool, int, float)):
+            rendered = repr(value)
+        else:
+            rendered = f"<{type(value).__name__}>"
+    except Exception:
+        rendered = f"<{type(value).__name__}>"
+    return _bounded_text(rendered, max_length)
 
 
 # -- wire mapping helpers (copy, never invent) --------------------------------
@@ -191,6 +237,10 @@ def _wire_evidence(evidence: Any) -> R.PreferenceEvidenceWire:
     )
 
 
+def _event_source_kwargs(source: Source | None) -> dict[str, Any]:
+    return {"event_source": source} if source is not None else {}
+
+
 def _wire_profile(profile: Any) -> R.AssistanceProfileResult:
     return R.AssistanceProfileResult(
         user_id=profile.user_id,
@@ -220,26 +270,36 @@ def _wire_profile(profile: Any) -> R.AssistanceProfileResult:
 # -- per-method handlers --------------------------------------------------------
 
 
-def _handle_ping(service: BrainService, params: P.PingParams) -> R.PingResult:
+def _handle_ping(
+    service: BrainService,
+    params: P.PingParams,
+    source: Source | None = None,
+) -> R.PingResult:
     return R.PingResult()
 
 
-def _handle_describe(service: BrainService, params: P.DescribeParams) -> R.DescribeResult:
-    schemas: dict[str, dict[str, Any]] = {}
-    for method, (params_cls, result_cls, _) in _SPECS.items():
-        schemas[method.value] = {
-            "params": params_cls.model_json_schema(),
-            "result": result_cls.model_json_schema(),
-        }
+def _handle_describe(
+    service: BrainService,
+    params: P.DescribeParams,
+    source: Source | None = None,
+) -> R.DescribeResult:
     return R.DescribeResult(
-        version="v1",
-        methods=[method.value for method in _SPECS],
-        schemas=schemas,
+        version=API_CONTRACT_VERSION,
+        methods=[spec.method.value for spec in API_METHOD_SPECS],
+        schemas=describe_api_methods(),
     )
 
 
-def _handle_ingest(service: BrainService, params: P.IngestParams) -> R.IngestionResultWire:
-    result = service.ingest(params.event.model_dump(), correlation_id=params.correlation_id)
+def _handle_ingest(
+    service: BrainService,
+    params: P.IngestParams,
+    source: Source | None = None,
+) -> R.IngestionResultWire:
+    result = service.ingest(
+        params.event.model_dump(),
+        correlation_id=params.correlation_id,
+        **_event_source_kwargs(source),
+    )
     return R.IngestionResultWire(
         outcome=result.outcome.value,
         event_id=result.event_id,
@@ -253,10 +313,14 @@ def _handle_ingest(service: BrainService, params: P.IngestParams) -> R.Ingestion
 
 
 def _handle_record_feedback(
-    service: BrainService, params: P.RecordFeedbackParams
+    service: BrainService,
+    params: P.RecordFeedbackParams,
+    source: Source | None = None,
 ) -> R.FeedbackResultWire:
     stored = service.record_feedback(
-        params.feedback, correlation_id=params.correlation_id
+        params.feedback,
+        correlation_id=params.correlation_id,
+        **_event_source_kwargs(source),
     )
     signal = stored.signal
     return R.FeedbackResultWire(
@@ -278,7 +342,9 @@ def _handle_record_feedback(
 
 
 def _handle_record_preference(
-    service: BrainService, params: P.RecordPreferenceParams
+    service: BrainService,
+    params: P.RecordPreferenceParams,
+    source: Source | None = None,
 ) -> R.PreferenceWire:
     preference = service.record_preference(
         params.user_id,
@@ -290,12 +356,15 @@ def _handle_record_preference(
         source=params.source,
         metadata=params.metadata,
         correlation_id=params.correlation_id,
+        **_event_source_kwargs(source),
     )
     return _wire_preference(preference)
 
 
 def _handle_understand(
-    service: BrainService, params: P.UnderstandParams
+    service: BrainService,
+    params: P.UnderstandParams,
+    source: Source | None = None,
 ) -> R.UnderstandResultWire:
     result = service.understand(
         params.corpus, user_id=params.user_id, corpus_id=params.corpus_id
@@ -317,7 +386,9 @@ def _handle_understand(
 
 
 def _handle_build_context(
-    service: BrainService, params: P.BuildContextParams
+    service: BrainService,
+    params: P.BuildContextParams,
+    source: Source | None = None,
 ) -> R.ContextResultWire:
     context = service.build_context(
         _developer_from_wire(params.context), task=params.task
@@ -339,13 +410,16 @@ def _handle_build_context(
 
 
 def _handle_analyze_developer(
-    service: BrainService, params: P.AnalyzeDeveloperParams
+    service: BrainService,
+    params: P.AnalyzeDeveloperParams,
+    source: Source | None = None,
 ) -> R.AnalyzeDeveloperResult:
     outcome = service.analyze_developer(
         _developer_from_wire(params.context),
         task=params.task,
         ask_deploy=params.ask_deploy,
         correlation_id=params.correlation_id,
+        **_event_source_kwargs(source),
     )
     return R.AnalyzeDeveloperResult(
         user_id=outcome.user_id,
@@ -356,12 +430,20 @@ def _handle_analyze_developer(
     )
 
 
-def _handle_reason(service: BrainService, params: P.ReasonParams) -> R.ReasoningWire:
+def _handle_reason(
+    service: BrainService,
+    params: P.ReasonParams,
+    source: Source | None = None,
+) -> R.ReasoningWire:
     result = service.reason(_developer_from_wire(params.context), task=params.task)
     return _wire_reasoning(result)
 
 
-def _handle_preferences(service: BrainService, params: P.UserParams) -> R.PreferencesResult:
+def _handle_preferences(
+    service: BrainService,
+    params: P.UserParams,
+    source: Source | None = None,
+) -> R.PreferencesResult:
     preferences = service.preferences(params.user_id)
     ordered = sorted(preferences, key=lambda preference: (preference_name(preference), preference.memory_id))
     return R.PreferencesResult(
@@ -378,7 +460,9 @@ def preference_name(preference: Any) -> str:
 
 
 def _handle_developer_preferences(
-    service: BrainService, params: P.UserParams
+    service: BrainService,
+    params: P.UserParams,
+    source: Source | None = None,
 ) -> R.DeveloperPreferencesResult:
     developer = service.developer_preferences(params.user_id)
     return R.DeveloperPreferencesResult(
@@ -393,7 +477,9 @@ def _handle_developer_preferences(
 
 
 def _handle_people_summary(
-    service: BrainService, params: P.UserParams
+    service: BrainService,
+    params: P.UserParams,
+    source: Source | None = None,
 ) -> R.PeopleSummaryResult:
     summary = service.people_summary(params.user_id)
     return R.PeopleSummaryResult(
@@ -409,8 +495,58 @@ def _handle_people_summary(
     )
 
 
+def _handle_people_timeline(
+    service: BrainService,
+    params: P.PeopleTimelineParams,
+    source: Source | None = None,
+) -> R.PeopleTimelineResult:
+    timeline = service.people_timeline(
+        params.user_id,
+        params.person_id,
+        limit=params.limit,
+    )
+    return R.PeopleTimelineResult(
+        user_id=timeline.user_id,
+        person_id=timeline.person_id,
+        entries=[
+            R.PersonTimelineEntryWire(
+                person_id=entry.person_id,
+                memory_id=entry.memory_id,
+                memory_type=entry.memory_type.value,
+                status=entry.status.value,
+                statement=entry.statement,
+                statement_truncated=entry.statement_truncated,
+                occurred_at=entry.occurred_at,
+                created_at=entry.created_at,
+                valid_until=entry.valid_until,
+                durability=entry.durability.value,
+                confidence=entry.confidence,
+                importance=entry.importance,
+                provenance=R.PersonTimelineSourceWire(
+                    provider=entry.provenance.source.provider,
+                    component=entry.provenance.source.component,
+                    version=entry.provenance.source.version,
+                    source_event_id=entry.provenance.source_event_id,
+                    correlation_id=entry.provenance.correlation_id,
+                    source_event_id_truncated=entry.provenance.source_event_id_truncated,
+                    correlation_id_truncated=entry.provenance.correlation_id_truncated,
+                    related_event_ids=list(entry.provenance.related_event_ids),
+                    evidence=dict(entry.provenance.evidence),
+                ),
+            )
+            for entry in timeline.entries
+        ],
+        total_entries=timeline.total_entries,
+        truncated=timeline.truncated,
+        scan_truncated=timeline.scan_truncated,
+        person_known=timeline.person_known,
+    )
+
+
 def _handle_learning_status(
-    service: BrainService, params: P.UserParams
+    service: BrainService,
+    params: P.UserParams,
+    source: Source | None = None,
 ) -> R.LearningStatusResult:
     status = service.learning_status(params.user_id)
     return R.LearningStatusResult(
@@ -424,7 +560,9 @@ def _handle_learning_status(
 
 
 def _handle_feedback_history(
-    service: BrainService, params: P.FeedbackHistoryParams
+    service: BrainService,
+    params: P.FeedbackHistoryParams,
+    source: Source | None = None,
 ) -> R.FeedbackHistoryResult:
     items = service.feedback_history(params.user_id, limit=params.limit)
     return R.FeedbackHistoryResult(
@@ -446,78 +584,38 @@ def _handle_feedback_history(
 
 
 def _handle_personalization_profile(
-    service: BrainService, params: P.UserParams
+    service: BrainService,
+    params: P.UserParams,
+    source: Source | None = None,
 ) -> R.AssistanceProfileResult:
     return _wire_profile(service.personalization_profile(params.user_id))
 
 
-# -- registry (method -> (params model, result model, handler)) ------------------
+_BrainApiHandler = Callable[
+    [BrainService, BaseModel, Source | None],
+    BaseModel,
+]
 
-_SPECS: dict[
-    ApiMethod, tuple[type[BaseModel], type[BaseModel], Callable[[BrainService, BaseModel], BaseModel]]
-] = {
-    ApiMethod.PING: (P.PingParams, R.PingResult, _handle_ping),
-    ApiMethod.DESCRIBE: (P.DescribeParams, R.DescribeResult, _handle_describe),
-    ApiMethod.INGEST: (P.IngestParams, R.IngestionResultWire, _handle_ingest),
-    ApiMethod.RECORD_FEEDBACK: (
-        P.RecordFeedbackParams,
-        R.FeedbackResultWire,
-        _handle_record_feedback,
-    ),
-    ApiMethod.RECORD_PREFERENCE: (
-        P.RecordPreferenceParams,
-        R.PreferenceWire,
-        _handle_record_preference,
-    ),
-    ApiMethod.UNDERSTAND: (
-        P.UnderstandParams,
-        R.UnderstandResultWire,
-        _handle_understand,
-    ),
-    ApiMethod.BUILD_CONTEXT: (
-        P.BuildContextParams,
-        R.ContextResultWire,
-        _handle_build_context,
-    ),
-    ApiMethod.ANALYZE_DEVELOPER: (
-        P.AnalyzeDeveloperParams,
-        R.AnalyzeDeveloperResult,
-        _handle_analyze_developer,
-    ),
-    ApiMethod.REASON: (P.ReasonParams, R.ReasoningWire, _handle_reason),
-    ApiMethod.PREFERENCES: (
-        P.UserParams,
-        R.PreferencesResult,
-        _handle_preferences,
-    ),
-    ApiMethod.DEVELOPER_PREFERENCES: (
-        P.UserParams,
-        R.DeveloperPreferencesResult,
-        _handle_developer_preferences,
-    ),
-    ApiMethod.PEOPLE_SUMMARY: (
-        P.UserParams,
-        R.PeopleSummaryResult,
-        _handle_people_summary,
-    ),
-    ApiMethod.LEARNING_STATUS: (
-        P.UserParams,
-        R.LearningStatusResult,
-        _handle_learning_status,
-    ),
-    ApiMethod.FEEDBACK_HISTORY: (
-        P.FeedbackHistoryParams,
-        R.FeedbackHistoryResult,
-        _handle_feedback_history,
-    ),
-    ApiMethod.PERSONALIZATION_PROFILE: (
-        P.UserParams,
-        R.AssistanceProfileResult,
-        _handle_personalization_profile,
-    ),
+_HANDLERS: dict[ApiMethod, _BrainApiHandler] = {
+    ApiMethod.PING: _handle_ping,
+    ApiMethod.DESCRIBE: _handle_describe,
+    ApiMethod.INGEST: _handle_ingest,
+    ApiMethod.RECORD_FEEDBACK: _handle_record_feedback,
+    ApiMethod.RECORD_PREFERENCE: _handle_record_preference,
+    ApiMethod.UNDERSTAND: _handle_understand,
+    ApiMethod.BUILD_CONTEXT: _handle_build_context,
+    ApiMethod.ANALYZE_DEVELOPER: _handle_analyze_developer,
+    ApiMethod.REASON: _handle_reason,
+    ApiMethod.PREFERENCES: _handle_preferences,
+    ApiMethod.DEVELOPER_PREFERENCES: _handle_developer_preferences,
+    ApiMethod.PEOPLE_SUMMARY: _handle_people_summary,
+    ApiMethod.PEOPLE_TIMELINE: _handle_people_timeline,
+    ApiMethod.LEARNING_STATUS: _handle_learning_status,
+    ApiMethod.FEEDBACK_HISTORY: _handle_feedback_history,
+    ApiMethod.PERSONALIZATION_PROFILE: _handle_personalization_profile,
 }
 
-_METHOD_VALUES = frozenset(method.value for method in ApiMethod)
+_METHOD_VALUES = frozenset(method.value for method in API_METHOD_REGISTRY)
 
 
 class BrainApi:
@@ -534,16 +632,26 @@ class BrainApi:
 
     @property
     def methods(self) -> list[str]:
-        return [method.value for method in _SPECS]
+        return [spec.method.value for spec in API_METHOD_SPECS]
 
     def describe(self) -> R.DescribeResult:
         return _handle_describe(self._service, P.DescribeParams())
 
     def handle(self, message: Mapping[str, Any]) -> ApiResponse[Any]:
         """Single entry point for any transport: mapping -> validated response."""
+        if not isinstance(message, Mapping):
+            return error_response(
+                "",
+                None,
+                ApiError(
+                    code=ApiErrorCode.BAD_REQUEST,
+                    message="request must be a mapping",
+                    source="BrainApi",
+                ),
+            )
         raw_method = message.get("method")
-        raw_version = message.get("version", _SUPPORTED_VERSION)
-        request_id = str(message.get("id") or "").strip()
+        raw_version = message.get("version", API_CONTRACT_VERSION)
+        request_id = _bounded_request_id(message.get("id"))
 
         if not isinstance(raw_method, str) or raw_method not in _METHOD_VALUES:
             return error_response(
@@ -551,18 +659,21 @@ class BrainApi:
                 None,
                 ApiError(
                     code=ApiErrorCode.UNKNOWN_METHOD,
-                    message=f"unknown method: {raw_method!r}",
+                    message=f"unknown method: {_bounded_repr(raw_method)}",
                     source="BrainApi",
                 ),
             )
         method = ApiMethod(raw_method)
-        if raw_version != _SUPPORTED_VERSION:
+        if raw_version != API_CONTRACT_VERSION:
             return error_response(
                 request_id,
                 method,
                 ApiError(
                     code=ApiErrorCode.VERSION_UNSUPPORTED,
-                    message=f"unsupported contract version: {raw_version!r}",
+                    message=(
+                        "unsupported contract version: "
+                        f"{_bounded_repr(raw_version)}"
+                    ),
                     source="BrainApi",
                 ),
             )
@@ -582,8 +693,9 @@ class BrainApi:
 
     def respond(self, request: ApiRequest) -> ApiResponse[Any]:
         """Dispatch one typed request; every exit path is a typed response."""
-        spec = _SPECS.get(request.method)
-        if spec is None:
+        method_spec = API_METHOD_REGISTRY.get(request.method)
+        handler = _HANDLERS.get(request.method)
+        if method_spec is None or handler is None:
             return error_response(
                 request.id,
                 request.method,
@@ -593,7 +705,7 @@ class BrainApi:
                     source="BrainApi",
                 ),
             )
-        params_cls, _, handler = spec
+        params_cls = method_spec.params_model
         try:
             params = params_cls.model_validate(request.params)
         except ValidationError as exc:
@@ -608,14 +720,14 @@ class BrainApi:
             )
 
         try:
-            result = handler(self._service, params)
+            result = handler(self._service, params, request.source)
         except ApiRequestValidationError as exc:
             return error_response(
                 request.id,
                 request.method,
                 ApiError(
                     code=ApiErrorCode.VALIDATION_ERROR,
-                    message=str(exc),
+                    message=_bounded_text(str(exc)),
                     source="BrainApi",
                 ),
             )
@@ -625,7 +737,7 @@ class BrainApi:
                 request.method,
                 ApiError(
                     code=ApiErrorCode.VALIDATION_ERROR,
-                    message=str(exc),
+                    message=_bounded_text(str(exc)),
                     source="BrainService",
                 ),
             )
@@ -635,7 +747,7 @@ class BrainApi:
                 request.method,
                 ApiError(
                     code=ApiErrorCode.NOT_CONFIGURED,
-                    message=str(exc),
+                    message=_bounded_text(str(exc)),
                     source="BrainService",
                 ),
             )

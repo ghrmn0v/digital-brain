@@ -79,9 +79,9 @@ The full, testable semantics of delivering events to consumers is specified in
 - **User ownership** — consumers must filter by envelope `user_id`; tested at
   every layer.
 
-`EventSink` is the consumer port itself; a future WebSocket/mobile/bus
-transport is just another `EventSink` implementation and needs no changes
-inside Core Brain.
+`EventSink` is the consumer port itself. The completed WebSocket adapter is one
+bounded `EventSink` implementation; future mobile clients or buses use the same
+port without changing Core Brain.
 
 ## Using a sink
 
@@ -96,5 +96,5 @@ for event in sink.emitted:
     print(event.type.value, event.payload.get("correlation_id"))
 ```
 
-A REST/Kafka/WebSocket adapter is just another `EventSink` implementation and
-needs no changes inside Core Brain (remaining Phase 8 work).
+A REST/Kafka/mobile adapter is another `EventSink` implementation and needs no
+changes inside Core Brain. Durable/broker delivery remains outside Phase 8.

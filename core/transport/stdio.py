@@ -38,11 +38,18 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Any, Callable, Literal, Mapping, Sequence, TextIO
+from typing import Any, Callable, Mapping, Sequence, TextIO
 
-from pydantic import BaseModel, ConfigDict
-
-from contracts.api import ApiError, ApiErrorCode, ApiResponse, error_response
+from contracts.api import (
+    ApiError,
+    ApiErrorCode,
+    ApiResponse,
+    EventEnvelope,
+    ResponseEnvelope,
+    error_response,
+    event_frame,
+    response_frame,
+)
 from contracts.brain_events.events import BrainEvent
 
 from core.brain_events.sink import EventSink, NullEventSink
@@ -66,34 +73,6 @@ def default_json_line(payload: Mapping[str, Any]) -> str:
         )
         + "\n"
     )
-
-
-class ResponseEnvelope(BaseModel):
-    """Outbound wire frame wrapping one typed :class:`ApiResponse`."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    kind: Literal["response"] = "response"
-    payload: ApiResponse[Any]
-
-
-class EventEnvelope(BaseModel):
-    """Outbound wire frame wrapping one :class:`BrainEvent`."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    kind: Literal["event"] = "event"
-    payload: BrainEvent
-
-
-def response_frame(response: ApiResponse[Any]) -> dict[str, Any]:
-    """Build the JSON-safe ``kind=response`` wire frame for one response."""
-    return ResponseEnvelope(payload=response).model_dump(mode="json")
-
-
-def event_frame(event: BrainEvent) -> dict[str, Any]:
-    """Build the JSON-safe ``kind=event`` wire frame for one Brain event."""
-    return EventEnvelope(payload=event).model_dump(mode="json")
 
 
 class JsonLinesEventSink:

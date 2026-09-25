@@ -10,16 +10,17 @@ Canonical progress file for the Core Brain implementation. Hackathon deadline:
 | 2 | Ingestion Pipeline (`core/ingestion/`) | ✅ COMPLETE |
 | 3 | LLM Gateway + Understanding (`core/understanding/`) | ✅ COMPLETE |
 | 4 | Context + Semantic Search (`core/context/`) | ✅ COMPLETE |
-| 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE |
+| 5 | People + Relationships + Preferences (`core/people/`) | ✅ COMPLETE (+ 5B: history timeline + provenance) |
 | 6 | Reasoning + Intent + Action Planning (`core/reasoning/`, `core/actions/`, `core/brain_events/`) | ✅ COMPLETE |
 | 7 | Feedback + Learning + Personalization (`core/learning/`) | ✅ COMPLETE |
-| 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | 🟡 PARTIAL — Slices 1–3 done (event infra + BrainService + Context/Learning→Reasoning feedback loop + typed client API contract + stdio JSON-lines daemon); HTTP/WebSocket/mobile transport adapters NOT STARTED |
+| 8 | Platform-independent Brain API/event exposure (PC + Mobile clients; no UI) | 🟡 PARTIAL — Slices 1–6 done (event infra + BrainService + typed API + stdio/HTTP/WebSocket + delivery contract + canonical v1 schema + thin TypeScript client); Java client NOT STARTED |
 
 Guiding rules (from SPEC.md, enforced every phase):
 
 - Work incrementally; never destroy Phase 0–2.
-- Follow existing architecture/naming; smallest working MVP; no new deps beyond
-  Python + Pydantic (SQLite allowed).
+- Follow existing architecture/naming; smallest working MVP. Core modules stay
+  stdlib/Pydantic-only; concrete transports may declare a narrowly scoped runtime
+  package (WebSocket Slice 4C uses `websockets>=12`, imported lazily).
 - Core Brain PROPOSES, Product EXECUTES after permission. Never auto-execute.
 - Core Brain stays PLATFORM-INDEPENDENT (see "Final Multi-Platform
   Architecture" below): no PC/mobile UI, no Electron/React Native specifics.
@@ -607,3 +608,188 @@ the single request-processing entry point; this slice only adapts it + the
 - Remaining Phase 8 (NOT STARTED): WebSocket/mobile transport adapters as
   EventSink/BrainApi adapters; SDK packaging (TS/Java from exported JSON
   Schemas). Durable/broker delivery is explicitly out of scope.
+
+### Phase 8 (Slice 4C) — Bounded User-Bound WebSocket Transport Adapter
+
+- Added `core/transport/websocket.py`: transport-only `/v1/brain?user_id=...`
+  adapter over the same `BrainApi.handle()` entry point. Text/binary UTF-8
+  requests, strict JSON admission, 1 MB message bound and stdio
+  `kind=response|event` frames; malformed input remains a typed response.
+- Added service-owned `WebSocketEventRouter` + per-connection
+  `WebSocketEventSink`: exact `event.user_id` fan-out, no payload-based routing,
+  default 128-event bounded FIFO, drop-newest event overflow, one non-evictable
+  outstanding response and deterministic ASCII-safe frame serialization. Still
+  at-most-once/best-effort: no retry, replay, ack, persistence or broker.
+- Connection identity is checked against every current v1 ownership-bearing
+  wire shape before Core dispatch. This is routing/isolation metadata, not
+  authentication. Browser origins are rejected by default; non-loopback binds
+  require an explicit unsafe opt-in; invalid path/identity closes with 1008 and
+  writer failure with 1011.
+- Shared synchronous Brain/SQLite calls run through `asyncio.to_thread` under
+  one server-wide lock. Cancellation waits for the already-running worker before
+  releasing the lock. The deliberate single-worker limitation is explicit: an
+  operation that never returns can block clients/shutdown; the transport does
+  not pretend it can cancel a running thread.
+- `pyproject.toml` declares `websockets>=12`; the module imports it lazily, so
+  core imports and stdio/HTTP do not require it. Local `.venv` did not have the
+  package and package installation is forbidden, so no live handshake/server
+  smoke was run; adapter/server lifecycle is covered with fake connections and
+  the websockets 12+ public API was statically compatibility-checked.
+- Exports added through `core.transport` and top-level `core`. Docs:
+  `docs/websocket-transport.md` (new), `docs/event-delivery.md`, README.
+- Tests: `tests/test_websocket_transport.py` (30 new) covering admission,
+  identity isolation, strict decoding/limits, existing API errors, redaction,
+  event routing/frames/overflow, one-response backpressure, writer failure,
+  cancellation safety, service serialization, loopback enforcement, lifecycle
+  options, lazy import and architecture guards.
+- Verification: WebSocket targeted 30 OK; full suite 496 OK (baseline 466 + 30
+  new); compileall and `git diff --check` clean. Existing SQLite fixture
+  ResourceWarnings remain. No commit/push.
+- Remaining Phase 8: mobile transport adapters and SDK packaging (TS/Java from
+  exported JSON Schemas). Durable/broker delivery remains explicitly out of
+  scope.
+
+### Phase 8 (Slice 5A) — Canonical v1 Schema Distribution
+
+- Added contract-only public registry `contracts/api/registry.py`: immutable
+  `API_METHOD_REGISTRY`, stable ordered `API_METHOD_SPECS`, `ApiMethodSpec`,
+  method-name and describe helpers. All 15 v1 methods bind exactly one typed
+  params model + result model; `BrainApi.describe()`, method validation and the
+  Core handler map are checked against the same registry/version constant.
+- Added canonical wire models/helpers in `contracts/api/frames.py`.
+  `ResponseEnvelope`, `EventEnvelope`, `response_frame()` and `event_frame()`
+  now live at the contract boundary; stdio and WebSocket import them directly,
+  preserving the existing `kind=response|event` wire shape.
+- Added `contracts/api/schema.py` + packaged
+  `contracts/schemas/brain-api.v1.json`: deterministic draft-2020-12 catalog
+  with request/response/error/method/event/frame contracts, ordered method refs,
+  64 shared definitions, recursive local-ref validation and a root schema for
+  the catalog document itself. No user data/state/timestamps are embedded.
+- `pyproject.toml` exposes the `digital-brain-export-schema` command and includes
+  the JSON as `contracts.schemas` package data. Generate/check with
+  `python -m contracts.api.schema [--check]`; generation outside a source
+  checkout requires explicit `--output` instead of writing into site-packages.
+- Docs: `docs/schema-distribution.md` (new), CONTRACTS.md, brain-api,
+  brain-events, stdio protocol, core package status and README updated. The next
+  client slice is a thin framework-free TypeScript client over existing
+  HTTP/WebSocket, then Java; mobile UI/microphone/auth/push remain Product.
+- Tests: `tests/test_api_schema_export.py` (17 new) — registry/handler/version
+  parity, deterministic bytes, all refs resolve, method-model schema parity,
+  self-validating catalog shape, frames, exporter drift, package-data config,
+  architecture boundaries and data-free content.
+- Verification: focused 17 OK; full suite 513 OK (baseline 496 + 17);
+  compileall, schema `--check`, catalog self-validation, `git diff --check`
+  clean. System `python -m build --no-isolation` succeeded; both wheel and sdist
+  contain `contracts/schemas/brain-api.v1.json`. Existing SQLite fixture
+  ResourceWarnings remain. No dependency install, commit or push.
+- Remaining Phase 8: actual TypeScript/Java client packages. Durable/broker
+  delivery and Product-owned mobile device/push work remain out of Core scope.
+
+### Phase 5B — People History Timeline + Provenance
+
+- Added source-traceable person history over the existing Memory Engine; still no
+  second people store, so every entry resolves back to a `memory_id` and its
+  `person_id`/user scope.
+- `core/people/models.py`:
+  - `PersonFactDurability` (`durable` / `temporary` / `unspecified`).
+  - `PersonSourceTrace` — `source_memory_id`, `source_correlation_id`,
+    `source_event_id`, `source_type`, `source_field`, plus explicit
+    `source_id_truncated` / `source_correlation_truncated` flags.
+  - `PersonTimelineEntry` — `person_id`, `memory_id`, `statement`, `category`,
+    `durability`, `occurred_at`, `recorded_at`, `status`, `provenance`.
+  - `PersonTimeline` — chronological `entries`, `total_entries` (rows examined),
+    `person_known`, `scan_truncated`.
+  - `PeopleLimits.max_timeline_entries` (default and hard max 200, positive,
+    capped, and honored by the API layer).
+- `core/people/intelligence.py`:
+  - `classify_person_fact_durability` — explicit metadata (`durability`,
+    `temporary`/`durable`) first, then topic table (allergy, diet, address,
+    job, relationship_status, …) before generic memory `type`, then explicit
+    person fact; anything else stays `unspecified` (no fabrication).
+  - `PeopleIntelligence.timeline(user_id, person_id, limit)` reads
+    `MemoryStatusFilter.ANY` (ACTIVE + SUPERSEDED + EXPIRED), sorts
+    `occurred_at → recorded_at → memory_id` for determinism, bounds both the
+    scan and returned entries, and validates the person id.
+- `core/service/brain_service.py` + `core/service/api.py`:
+  `BrainService.people_timeline()` and the additive `people_timeline` client
+  method (params `user_id`, `person_id`, `limit`; returns `PeopleTimelineResult`).
+  Core only proposes data; no execution, UI, device or notification surface.
+- `contracts/api/`: new `ApiMethod.PEOPLE_TIMELINE` (v1 now 16 methods),
+  `PeopleTimelineParams`, `PeopleTimelineResult`, `PersonTimelineEntryWire`,
+  `PersonSourceTraceWire`, `PersonFactDurability` wire enum, registry entry, and
+  regenerated `contracts/schemas/brain-api.v1.json` (`python -m contracts.api.schema`).
+- Public exports: `core/people/__init__.py` and `core/__init__.py` now export the
+  timeline models and `classify_person_fact_durability`.
+- Truncation transparency: `scan_truncated` (scan limit reached), long
+  statements expose `statement_truncated`, and oversized provenance ids are
+  bounded with `*_truncated` flags — no silent data loss.
+- Tests: `tests/test_people_timeline.py` (15 new) — chronological order, status
+  history incl. superseded/expired, durability classification and precedence,
+  per-user isolation, determinism, unknown person (`person_known=false`),
+  oversized provenance/statement flags, scan truncation, 200-entry cap, invalid
+  limits and API user isolation, plus a Core↔API assertion.
+- Verification: focused 15 OK; full suite 528 OK (baseline 513 + 15);
+  compileall, schema `--check`, `git diff --check` clean. No dependency install,
+  commit or push. Identity resolution / entity merging remains a separate
+  later concern; this slice never merges ambiguous people.
+
+### Phase 8 (Slice 6) — Thin Framework-Free TypeScript Client
+
+- Added `clients/typescript/` — a zero-dependency TypeScript client for API v1,
+  usable unchanged by both Product clients (PC browser + mobile/React Native)
+  and in Node 22+.
+- `src/contract.ts` mirrors `contracts/schemas/brain-api.v1.json`: all 16
+  methods with typed params/results, the `ApiErrorCode` enum, `ApiRequest`/
+  `ApiResponse`, `BrainEvent` and the `kind`-tagged response/event frames.
+  Payloads the Core contract deliberately keeps open (`BrainEvent.payload`, the
+  `understand`/`reason` analyses) are typed as `unknown`/open records instead of
+  being guessed into closed shapes.
+- `src/common.ts` holds the transport-agnostic rules: monotonic request ids,
+  response-envelope invariants (a non-Brain body is a transport error, never a
+  silent `ok=false`), identity injection into ownership params, and an
+  `EventDispatcher` implementing the consumer contract — dedupe by
+  `BrainEvent.id` in a bounded window, per-user filtering, FIFO order,
+  correlation-id grouping, malformed frames ignored and counted.
+- `src/http.ts` `HttpBrainClient`: `POST /v1/brain` + `GET /health`, injectable
+  `fetch`, per-request timeout, `request()` (ok=false as data) and `call()`
+  (typed result, throws `BrainApiError`). No event stream — the Core HTTP CLI
+  wires `NullEventSink` — and `supportsEvents` says so.
+- `src/websocket.ts` `WebSocketBrainClient`: identity admission mirroring the
+  server's own rules (rejected locally, never as a wasted round trip),
+  request **serialization** because the adapter allows one outstanding response
+  per connection, response correlation by request id, `onEvent` with
+  `correlationIdOf`, connect/request timeouts, and clean close semantics.
+- `src/errors.ts` error taxonomy: `BrainApiError` (canonical `ApiError`
+  preserved), `BrainTransportError` (no valid response), `BrainContractError`
+  (local precondition, `contract` vs `identity` vs `closed`).
+- Architecture boundary: `src/` imports only its own relative `.ts` modules and
+  uses platform globals only — no Node builtins, no `require`, no dynamic
+  import, no `process`, no `Buffer`, no third-party package. Enforced by a test.
+- Tests (52, `node --test`, zero installs — Node runs the `.ts` sources
+  directly):
+  - `test/contract.test.ts` (6) — method order, params/result `$defs` names and
+    error codes compared against the checked-in schema artifact, plus the
+    `src/` architecture boundary.
+  - `test/http.test.ts` (18) — **live** end-to-end against the real Core HTTP
+    transport (`python -m core.transport.http`, in-memory DB): health, ping,
+    describe, ingest, preferences, `people_timeline` with provenance and
+    durability, per-user isolation across two clients, canonical error codes,
+    timeouts, refused connections, non-Brain endpoints.
+  - `test/websocket.test.ts` (19) — protocol logic against an in-memory socket
+    double: identity admission, serialization, correlation, event
+    ordering/dedupe/foreign-user filtering, binary frames, malformed frames,
+    timeouts, close and send-failure handling.
+  - `test/websocket-live.test.ts` (9) — the real platform `WebSocket` over a
+    real TCP socket using a minimal RFC 6455 fixture in `test/support/`.
+- Verification: `node --test test/` → 52 OK. Python suite re-verified at 528 OK;
+  `compileall`, schema `--check` and `git diff --check` clean. No dependency
+  install, commit or push.
+- Known limits: the Core WebSocket adapter cannot be started in this
+  environment (no `websockets` package), so the live WS test uses a test-only
+  RFC 6455 fixture; the adapter's own semantics remain covered by
+  `tests/test_websocket_transport.py`. `tsc` type checking is declared
+  (`npm run typecheck`, devDependency `typescript`) but could not be run here
+  because installing packages is out of scope; the sources are written in
+  erasable TypeScript so Node executes them directly.
+- Remaining Phase 8: a Java client, durable/broker delivery, and Product-owned
+  mobile device/push work.

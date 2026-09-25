@@ -51,7 +51,7 @@ from core.learning import (
     StoredFeedback,
 )
 from core.memory import MemoryService, SqliteMemoryRepository
-from core.people import PeopleIntelligence, PeopleSummary, Preference
+from core.people import PeopleIntelligence, PeopleSummary, PersonTimeline, Preference
 from core.people.models import DeveloperPreferences, PreferenceDomain
 from core.reasoning import ReasoningResult
 from core.reasoning.context import ContextDistillationLimits, build_reasoning_context
@@ -71,6 +71,10 @@ from .exceptions import (
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _event_source_kwargs(source: Source | None) -> dict[str, Source]:
+    return {"source": source} if source is not None else {}
 
 
 class BrainService:
@@ -110,7 +114,7 @@ class BrainService:
         self._learning = learning
         self._now = now or _utcnow
 
-        self._sink = sink or NullEventSink()
+        self._sink = sink if sink is not None else NullEventSink()
         if not hasattr(self._sink, "emit") or not callable(self._sink.emit):
             raise TypeError("sink must implement EventSink.emit(event)")
         self._emitter = emitter or BrainEventEmitter()
@@ -145,6 +149,7 @@ class BrainService:
         data: Mapping[str, Any],
         *,
         correlation_id: str | None = None,
+        event_source: Source | None = None,
     ) -> IngestionResult:
         """Ingest a source event; emit memory.created per new memory.
 
@@ -157,7 +162,7 @@ class BrainService:
             raise BrainServiceValidationError("ingest expects a source-event mapping")
         if correlation_id is not None:
             data = dict(data)
-            data.setdefault("correlation_id", correlation_id)
+            data["correlation_id"] = correlation_id
 
         result = self._ingestion.ingest(data)
         if result.outcome == IngestionOutcome.ACCEPTED and self._memory is not None:
@@ -167,6 +172,7 @@ class BrainService:
                     self._dispatcher.memory_created(
                         memory,
                         correlation_id=result.correlation_id,
+                        **_event_source_kwargs(event_source),
                     )
         return result
 
@@ -184,6 +190,7 @@ class BrainService:
         feedback: Feedback,
         *,
         correlation_id: str | None = None,
+        event_source: Source | None = None,
     ) -> StoredFeedback:
         """Record feedback; emit learning.signal.detected (+ preference.updated
         for any preference the learning rules newly wrote or changed)."""
@@ -192,12 +199,22 @@ class BrainService:
         if not isinstance(feedback, Feedback):
             raise BrainServiceValidationError("feedback must be a Feedback contract")
 
-        before = self._preference_signatures(feedback.user_id)
-        stored = self._learning.record_feedback(feedback)
+        correlation = (
+            correlation_id if correlation_id is not None else feedback.correlation_id
+        )
+        learning_feedback = feedback
+        if feedback.correlation_id != correlation:
+            learning_feedback = feedback.model_copy(
+                update={"correlation_id": correlation}
+            )
 
-        correlation = correlation_id or feedback.correlation_id
+        before = self._preference_signatures(learning_feedback.user_id)
+        stored = self._learning.record_feedback(learning_feedback)
+
         self._dispatcher.learning_signal_detected(
-            stored.signal, correlation_id=correlation
+            stored.signal,
+            correlation_id=correlation,
+            **_event_source_kwargs(event_source),
         )
 
         after = self._preference_signatures(feedback.user_id)
@@ -209,6 +226,7 @@ class BrainService:
                         feedback.user_id,
                         preference,
                         correlation_id=correlation,
+                        **_event_source_kwargs(event_source),
                     )
         return stored
 
@@ -239,6 +257,7 @@ class BrainService:
         source: Source | None = None,
         metadata: dict[str, Any] | None = None,
         correlation_id: str | None = None,
+        event_source: Source | None = None,
     ) -> Preference:
         """Record a preference; emit preference.updated for the write."""
         if self._people is None:
@@ -261,7 +280,10 @@ class BrainService:
             metadata=metadata,
         )
         self._dispatcher.preference_updated(
-            user_id, preference, correlation_id=correlation_id
+            user_id,
+            preference,
+            correlation_id=correlation_id,
+            **_event_source_kwargs(event_source),
         )
         return preference
 
@@ -273,6 +295,7 @@ class BrainService:
         task: str | None = None,
         ask_deploy: bool = False,
         correlation_id: str | None = None,
+        event_source: Source | None = None,
     ) -> DevOutcome:
         """Run the Developer Mode pipeline and emit ALL events it implies.
 
@@ -294,8 +317,12 @@ class BrainService:
             ask_deploy=ask_deploy,
             correlation_id=correlation_id,
             reasoning_context=reasoning_context,
+            **_event_source_kwargs(event_source),
         )
-        self._dispatcher.emit_plan(outcome.plan)
+        decision_event, action_events = self._dispatcher.emit_plan(
+            outcome.plan, **_event_source_kwargs(event_source)
+        )
+        outcome.events.extend([decision_event, *action_events])
         return outcome
 
     def reason(
@@ -378,6 +405,17 @@ class BrainService:
             raise BrainServiceConfigurationError("people not configured")
         return self._people.people_summary(user_id)
 
+    def people_timeline(
+        self,
+        user_id: UserId,
+        person_id: str,
+        *,
+        limit: int | None = None,
+    ) -> PersonTimeline:
+        if self._people is None:
+            raise BrainServiceConfigurationError("people not configured")
+        return self._people.timeline(user_id, person_id, limit=limit)
+
     def learning_status(self, user_id: UserId) -> LearningStatus:
         if self._learning is None:
             raise BrainServiceConfigurationError("learning not configured")
@@ -453,5 +491,5 @@ def build_brain_service(
         people=people,
         learning=learning,
         emitter=BrainEventEmitter(),
-        sink=sink or CollectingEventSink(),
+        sink=sink if sink is not None else CollectingEventSink(),
     )

@@ -2,9 +2,9 @@
 
 Transport-independent semantics for delivering Brain events to consumers. This
 is a **stability contract, not new machinery**: it makes the existing
-`EventSink` pipeline explicit and testable so that real-time transports
-(WebSocket, mobile push, message bus) can be added later without silently
-changing behavior.
+`EventSink` pipeline explicit and testable so real-time transports
+(WebSocket, mobile push, message bus) can evolve without silently changing
+Core behavior.
 
 **This is NOT a durable message queue.** There is no Redis, Kafka, persistent
 event store, retry worker, ack protocol or delivery ledger. Delivery is
@@ -34,8 +34,9 @@ import them (architecture guard test).
         │ emit(event) ─► EventSink (consumer)  ─►  Product / Fly / Mobile / …
 ```
 
-Future transports (WebSocket/mobile/bus) are implemented as `EventSink`
-implementations over the same `emit` call; Core Brain needs no changes.
+Concrete transports (the Slice 4C WebSocket adapter and future mobile/bus
+adapters) implement `EventSink` over the same `emit` call; Core Brain needs no
+changes.
 
 ## 2. Event identity
 
@@ -86,6 +87,14 @@ The current system is **at-most-once, best-effort, in-process**.
   `emit()` raises, the failure propagates toward the caller
   (surfaced at a transport boundary as a typed error) and the event is not
   redelivered.
+- `emit()` is an inline synchronous call: Core does not provide a background
+  queue, buffering, backpressure policy, or client-specific delivery window.
+  The WebSocket/mobile adapter must provide bounded buffering outside Core
+  Brain. Slice 4C does this per connection with a default 128-event buffer,
+  drop-newest overflow and one reserved outstanding response.
+- `CollectingEventSink` is an unbounded in-memory inspection sink, not a client
+  delivery queue. `build_brain_service()` currently selects it when no sink is
+  supplied for local inspection.
 - Logical-operation idempotency is separate from delivery: re-ingesting an
   already-receipted source event produces **no new transition** and therefore
   **no duplicate events** — but that is the Brain's idempotency, not a
@@ -130,8 +139,8 @@ at-most-once delivery.
   for exactly this.)
 - User isolation is tested continuously: events of one user must never be
   attributable to another, from emitter, sink, service and transport
-  (stdio/HTTP) layers. No authorization framework is added here — ownership is
-  made explicit and testable, not enforced by a platform.
+  (stdio/HTTP/WebSocket) layers. No authorization framework is added here —
+  ownership is made explicit and testable, not authenticated by a platform.
 
 ## 8. What is NOT guaranteed
 
@@ -143,7 +152,7 @@ at-most-once delivery.
   (no buffering, no replay of past events).
 - Authentication/authorization of consumers (no auth infrastructure).
 
-## 9. Guidance for future WebSocket/mobile consumers
+## 9. Guidance for WebSocket/mobile consumers
 
 1. Implement `EventSink.emit(event)` and the request-side adapter
    (`BrainApi.handle`) only; never touch core modules.
@@ -153,6 +162,9 @@ at-most-once delivery.
 4. Filter every event by `event.user_id` before acting.
 5. Group/stream events by `payload["correlation_id"]`.
 6. Prefer per-operation ordering on a single connection; never claim global
-   ordering.
+   ordering. The WebSocket adapter preserves event-before-response order within
+   one request and allows one response at a time per socket.
 7. Keep `id`, `type`, `version`, `timestamp`, `user_id` and
    `payload["correlation_id"]` untouched on the wire.
+8. Treat connection identity as routing/isolation metadata, not authentication;
+   add real authentication before exposing the service to untrusted clients.

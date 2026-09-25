@@ -71,6 +71,7 @@ PRODUCT executes (after permission)  ·  FLY reacts
 | `BrainDecision` / `ProposedAction` | `contracts/decisions/` | Brain proposes; Product executes |
 | `Feedback` | `contracts/feedback/` | Labeled signals: source (user/product/fly/system) × kind (explicit/implicit/outcome/reward) |
 | `BrainEvent` / `BrainEventType` | `contracts/brain_events/` | Typed events the Brain emits to consumers |
+| API registry / schema bundle | `contracts/api/registry.py`, `contracts/schemas/brain-api.v1.json` | Canonical v1 method/model mapping and offline TS/Java generator input |
 
 Every model is `extra="forbid"` (typos rejected), serializable via
 `model_dump_json()`, and round-trips through
@@ -123,7 +124,21 @@ Fixed, predictable event names (`contracts/brain_events/`):
 Payload shapes are documented on `BrainEventType`; adding a new member is an
 additive (backward-compatible) change.
 
-## 11. Versioning rules
+## 11. API schema distribution
+
+`contracts/api/registry.py` is the public method-to-model source of truth.
+`BrainApi.describe()` and the deterministic offline bundle
+`contracts/schemas/brain-api.v1.json` are generated from that same registry.
+The packaged artifact contains request/response/error/event/stream-frame
+contracts, ordered method entries and local JSON Schema references for external
+TypeScript/Java clients. The additive `people_timeline` method returns
+`PeopleTimelineResult` with bounded historical entries, durability and
+provenance. The artifact is data-free and must be regenerated with
+`python -m contracts.api.schema` whenever the v1 API contract changes. A build
+should run `python -m contracts.api.schema --check` to reject stale artifacts.
+See `docs/schema-distribution.md`.
+
+## 12. Versioning rules
 
 Every externally exchanged contract carries `version: "v1"`.
 
@@ -135,7 +150,7 @@ Every externally exchanged contract carries `version: "v1"`.
 - Consumers must pass through the `version` field unchanged and fail loudly on
   versions they do not understand.
 
-## 12. Validation
+## 13. Validation
 
 Tests live in `tests/test_contracts.py` (stdlib `unittest`, no infra):
 

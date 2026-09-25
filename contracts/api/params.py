@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from contracts.common.ids import UserId
+from contracts.common.ids import PersonId, UserId
 from contracts.common.types import ContractVersion, Source
 from contracts.events.source_event import NormalizedSourceEvent
 from contracts.feedback.feedback import Feedback
@@ -168,6 +168,15 @@ class UserParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     user_id: UserId
+
+
+class PeopleTimelineParams(UserParams):
+    """Historical, source-traceable timeline for one known person."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    person_id: PersonId
+    limit: int | None = Field(default=None, ge=1, le=200)
 
 
 class FeedbackHistoryParams(UserParams):
