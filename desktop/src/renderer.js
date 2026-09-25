@@ -589,12 +589,12 @@ function wireControls() {
         const n = result.synapse_delta ? Object.keys(result.synapse_delta).length : 0;
         const sign = result.reward_value > 0 ? "+" : result.reward_value < 0 ? "" : "±";
         showToast(
-          `Feedback <span class="t-k">${feedback}</span> · reward <span class="t-r">${sign}${result.reward_value}</span> · ${n} sinaps yeniləndi`,
+          `Feedback <span class="t-k">${feedback}</span> · reward <span class="t-r">${sign}${result.reward_value}</span> · ${n} synapses updated`,
         );
       } else if (result) {
-        showToast(`Feedback <span class="t-k">${feedback}</span> · qəbul edildi`);
+        showToast(`Feedback <span class="t-k">${feedback}</span> · accepted`);
       } else {
-        showToast(`Feedback <span class="t-k">${feedback}</span> · offline — beynə çatmadı`);
+        showToast(`Feedback <span class="t-k">${feedback}</span> · offline — could not reach the brain`);
       }
     });
   }
@@ -630,7 +630,7 @@ function wireControls() {
     if (result && "flight" in result) {
       showToast(
         `Flight mode <span class="t-k">${result.flight ? "ON" : "OFF"}</span> — fly ${
-          result.flight ? "uça bilər (free flight)" : "oturur, sadəcə eventə reaksiya"
+          result.flight ? "can take off (free flight)" : "perches, only reacts to events"
         }`,
       );
     }

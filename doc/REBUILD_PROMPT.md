@@ -1027,10 +1027,10 @@ Element IDs (exact): `speech-bubble` (with `::after` caret, `transform: translat
 `.t-k`/`.t-r`); `hud` with `.row` → `ws-dot` + `state`, plus `hud-tag`; `panel` (right, width
 `300px`) containing `event-picker` (select), `priority` (range 0..1 step 0.05 value 0.5),
 `priority-value`, `topic` (text, value `job`), `msg` (text, placeholder
-`məs. İş təklifi gəldi: Senior Engineer`), `send` (button), `demo-cycle` (button), 6
+`e.g. A job offer arrived: Senior Engineer`), `send` (button), `demo-cycle` (button), 6
 `[data-feedback]` buttons (`looked, marked_useful, dismissed, marked_unnecessary, interacted,
 ignored`), `dev-mode` (checkbox, label "Receive Core Brain developer events"), **`flight-mode`**
-(checkbox, label `Fly uça bilər (off: oturur + eventə reaksiya)`).
+(checkbox, label `Fly can take off (off: perches and reacts to events)`).
 
 `src/main.js`: `BrowserWindow({width:960,height:680,title:"Fly / Connectome",backgroundColor:"#0b0f14",
 webPreferences:{preload,contextIsolation:true,nodeIntegration:false}})`, `loadFile(index.html)`;
@@ -1264,7 +1264,7 @@ every **2600 ms**, then IDLE. Feedback buttons post `/feedback` with
 `#dev-mode`: `syncDevMode()` GETs `/developer/mode`; change → POST `/developer/mode {enabled}`.
 **`#flight-mode`**: `syncFlight()` GETs `/mode/flight` → `checked = !!data.flight` (on failure
 `setOffline(true)`); change → POST `/mode/flight {flight: checked}`; toast
-`Flight mode <b>ON|OFF</b> — fly uça bilər (free flight) | oturur, sadəcə eventə reaksiya`.
+`Flight mode <b>ON|OFF</b> — can take off (free flight) | perches, only reacts to events`.
 
 Bootstrap order (bottom of file, exact): `wireControls(); connect(); setOffline(false); tickLoop();`
 
