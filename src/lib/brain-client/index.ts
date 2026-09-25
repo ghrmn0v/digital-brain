@@ -55,6 +55,7 @@ export type {
   PeopleTimelineResult,
   PersonTimelineSourceWire,
   PersonFactDurability,
+  PersonResolutionResult,
   PersonRowWire,
   PingParams,
   PingResult,
@@ -66,6 +67,7 @@ export type {
   ReasoningWire,
   RecordFeedbackParams,
   RecordPreferenceParams,
+  ResolvePersonParams,
   ResponseEnvelope,
   ReviewFindingWire,
   SignalWire,
@@ -94,6 +96,7 @@ export {
 export {
   BrainApiError,
   BrainClientError,
+  BrainClosedError,
   BrainContractError,
   BrainTransportError,
   isApiErrorCode,

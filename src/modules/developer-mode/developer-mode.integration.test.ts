@@ -29,6 +29,66 @@ function bugEvent(id = `developer-bug-${crypto.randomUUID()}`) {
   });
 }
 
+/**
+ * The exact payload Core Brain puts on a `developer.bug_detected` event.
+ *
+ * This is a contract fixture, not a convenience: Core requires the identity,
+ * confidence and correlation keys, so a schema that omits them rejects every
+ * real Brain finding.
+ */
+const brainBugDetectedPayload = () => ({
+  event_id: `bf_${crypto.randomUUID()}`,
+  finding_id: `bf_${crypto.randomUUID()}`,
+  repository: "digital-brain",
+  file: "src/auth/login.ts",
+  line: 42,
+  column: 10,
+  title: "Possible null reference",
+  message: "user may be undefined before use",
+  severity: "high",
+  confidence: 0.72,
+  correlation_id: `corr_${crypto.randomUUID()}`,
+  check: "null-safety",
+  suggested_fix: "guard the lookup",
+});
+
+describe("Core Brain developer event contract", () => {
+  it("accepts the payload Core actually emits", () => {
+    expect(() =>
+      developerBugDetectedPayloadSchema.parse(brainBugDetectedPayload()),
+    ).not.toThrow();
+  });
+
+  it("accepts every severity on the Core ladder", () => {
+    for (const severity of ["info", "warning", "high", "critical"] as const) {
+      const parsed = developerBugDetectedPayloadSchema.parse({
+        ...brainBugDetectedPayload(),
+        severity,
+      });
+      expect(parsed.severity).toBe(severity);
+    }
+  });
+
+  it("still rejects a payload that drifted away from the contract", () => {
+    expect(() =>
+      developerBugDetectedPayloadSchema.parse({
+        ...brainBugDetectedPayload(),
+        not_a_brain_field: true,
+      }),
+    ).toThrow();
+  });
+
+  it("still requires the fields Product projects on", () => {
+    const payload = brainBugDetectedPayload();
+    expect(() =>
+      developerBugDetectedPayloadSchema.parse({
+        event_id: payload.event_id,
+        finding_id: payload.finding_id,
+      }),
+    ).toThrow();
+  });
+});
+
 beforeEach(async () => {
   await prisma.automationRun.deleteMany();
   await prisma.actionExecution.deleteMany();

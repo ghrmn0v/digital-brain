@@ -82,11 +82,27 @@ export class BrainTransportError extends BrainClientError {
 export class BrainContractError extends BrainClientError {
   constructor(
     message: string,
-    kind: "contract" | "identity" | "closed" = "contract",
+    kind: "contract" | "identity" = "contract",
     details: Readonly<Record<string, unknown>> = {},
   ) {
     super(kind, message, null, details);
     this.name = "BrainContractError";
+  }
+}
+
+/**
+ * The client (or the connection) was closed, so a request can no longer be
+ * completed. This is a lifecycle condition, not a contract violation and not a
+ * transport failure, which is why it has its own class while still carrying the
+ * documented `BrainClientErrorKind` of `"closed"`.
+ */
+export class BrainClosedError extends BrainClientError {
+  constructor(
+    message: string,
+    details: Readonly<Record<string, unknown>> = {},
+  ) {
+    super("closed", message, null, details);
+    this.name = "BrainClosedError";
   }
 }
 

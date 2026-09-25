@@ -167,11 +167,11 @@ Event conditions use a restricted JSON DSL with explicit paths and operators. Au
 | `POST` | `/api/internal/connectors/:id/health` | Record worker health |
 | `POST` | `/api/connectors/events/ingest` | Persist a normalized generic connector event |
 | `POST` | `/api/connectors/linkedin/jobs/ingest` | Validate, upsert and publish LinkedIn jobs |
-| `POST` | `/api/brain-events` | Persist a normalized event received from Core Brain |
+| `POST` | `/api/brain-events` | Persist a Core Brain `BrainEvent` (legacy Product event shape still accepted) |
 | `GET` | `/api/fly-events` | Fly/Connectome SSE stream with durable backlog replay |
 | `POST` | `/api/internal/event-deliveries` | Retry pending external deliveries |
 
-Normalized event:
+Normalized event (Product's internal storage shape):
 
 ```json
 {
@@ -188,6 +188,20 @@ Normalized event:
   }
 }
 ```
+
+This shape is **not** the Core Brain wire contract. On the wire Product speaks
+the Brain contract in both directions:
+
+- **Product -> Brain** (`CORE_BRAIN_URL`, default `http://127.0.0.1:8765/v1/brain`):
+  one `ApiRequest` envelope, `method: "ingest"`, with a Brain
+  `NormalizedSourceEvent` in `params.event` — canonical `source.<provider>.<action>`
+  type, `occurred_at`, a `source` object and `CORE_BRAIN_USER_ID` as `user_id`.
+  Product's `metadata.correlationId` is sent as the Brain's `correlation_id`;
+  Product's `metadata` is not forwarded, because the Brain rejects unknown fields.
+- **Brain -> Product** (`POST /api/brain-events`): a canonical Core Brain
+  `BrainEvent` (`id`, `type`, `timestamp`, `user_id`, `source`, `payload`,
+  `version`, `related_ids`). Product maps it into its internal shape; the legacy
+  Product shape is still accepted for compatibility.
 
 Integration events and per-consumer deliveries are persisted in SQLite. Delivery retries are bounded; the local worker calls the retry endpoint periodically through `npm run worker`.
 
@@ -211,14 +225,18 @@ X-Product-Client-Platform: desktop
 
 This header separates product presentation; it is not an intelligence or authorization boundary.
 
-The accepted future event namespace is:
+The accepted event namespace mirrors the Core Brain catalogue exactly:
 
 - `developer.bug_detected`
-- `developer.explanation`
 - `developer.fix_proposed`
 - `developer.test_result`
 - `developer.review_finding`
-- `developer.deploy_status`
+- `developer.deploy_proposed`
+
+`developer.explanation` is intentionally absent: Core keeps an explanation inside
+the payload of the event it belongs to instead of emitting a second event. The
+deployment event is `developer.deploy_proposed`, because Core proposes the
+deployment and Product decides whether to run it.
 
 Only `developer.bug_detected` has a detailed Product projection in the current foundation. Its payload is:
 

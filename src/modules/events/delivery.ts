@@ -2,6 +2,10 @@ import "server-only";
 
 import type { EventDelivery } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  brainUserId,
+  toBrainIngestRequest,
+} from "@/lib/brain-client/bridge";
 import type { IntegrationConsumer } from "@/modules/events/contracts";
 import {
   integrationEventRepository,
@@ -43,6 +47,36 @@ async function sendDelivery(
   const token = integrationToken(delivery.consumer as IntegrationConsumer);
   const timeout = Number(process.env.INTEGRATION_REQUEST_TIMEOUT_MS ?? "5000");
 
+  let body: string;
+  if ((delivery.consumer as IntegrationConsumer) === "core_brain") {
+    try {
+      // Core Brain speaks its own canonical contract: one ApiRequest whose
+      // method is `ingest` and whose params carry a Brain
+      // NormalizedSourceEvent. Other consumers (Fly) keep Product's own
+      // normalized event, which is the interface they already consume.
+      body = JSON.stringify(
+        toBrainIngestRequest(
+          toNormalizedEvent(eventRecord),
+          brainUserId(),
+          eventRecord.eventId,
+        ),
+      );
+    } catch (error) {
+      await integrationEventRepository.releaseDelivery(
+        delivery.id,
+        (
+          error instanceof Error
+            ? error.message
+            : "Brain contract mapping failed"
+        ).slice(0, 500),
+        false,
+      );
+      return;
+    }
+  } else {
+    body = JSON.stringify(toNormalizedEvent(eventRecord));
+  }
+
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -51,7 +85,7 @@ async function sendDelivery(
         "idempotency-key": eventRecord.eventId,
         ...(token ? { authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify(toNormalizedEvent(eventRecord)),
+      body,
       signal: AbortSignal.timeout(Number.isFinite(timeout) ? timeout : 5_000),
       cache: "no-store",
     });

@@ -1,7 +1,8 @@
 import { after, NextRequest } from "next/server";
 import { authorizeRequest } from "@/lib/api/auth";
-import { parseJsonBody } from "@/lib/api/request";
+import { readJsonBody } from "@/lib/api/request";
 import { apiCreated, withApiErrors } from "@/lib/api/response";
+import { toProductEvent } from "@/lib/brain-client/bridge";
 import {
   normalizedEventSchema,
   type NormalizedEvent,
@@ -22,11 +23,14 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   return withApiErrors(request, async (requestId) => {
     authorizeRequest(request);
-    const event = (await parseJsonBody(
-      request,
-      normalizedEventSchema,
-      2_000_000,
-    )) as NormalizedEvent;
+    // A canonical Core Brain BrainEvent is the primary contract. The legacy
+    // Product normalized-event shape is still accepted so existing callers keep
+    // working; both are validated before anything is stored.
+    const raw = await readJsonBody(request, 2_000_000);
+    const event: NormalizedEvent =
+      typeof raw === "object" && raw !== null && "user_id" in raw
+        ? toProductEvent(raw)
+        : (normalizedEventSchema.parse(raw) as NormalizedEvent);
 
     if (
       event.source === "core_brain" &&
