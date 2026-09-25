@@ -83,6 +83,7 @@ def load_wiring(path=None) -> WiringGraph:
             synapses=float(edge["synapses"]),
             plastic=bool(edge.get("plastic", False)),
             physiology=edge.get("physiology", "excitatory"),
+            weight=float(edge.get("weight", 1.0)),
         )
         graph.edges[e.key] = e
     graph.validate()

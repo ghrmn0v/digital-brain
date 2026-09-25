@@ -1,4 +1,5 @@
 import math
+import random
 from typing import Dict, Optional
 
 from connectome.loader import Edge, NodeGroup, WiringGraph
@@ -12,6 +13,8 @@ DEFAULT_CONFIG = {
     "weight_min": 0.05,
     "decay": 0.0005,
     "noise": 0.0005,
+    "trace_decay": 0.85,
+    "seed": None,
 }
 
 
@@ -39,12 +42,19 @@ class Brain:
         self.weights: Dict[tuple, float] = {
             edge.key: edge.weight for edge in graph.edges.values()
         }
+        self.initial_weights: Dict[tuple, float] = dict(self.weights)
+        self.eligibility: Dict[tuple, float] = {
+            edge.key: 0.0 for edge in graph.edges.values() if edge.plastic
+        }
         self.dan_gate = 0.0
         self.dan_sign = 0
+        seed = self.config.get("seed")
+        self._rng = random.Random(seed)
 
     def reset(self) -> None:
         self.activity = {gid: 0.0 for gid in self.graph.nodes}
         self.inputs = {gid: 0.0 for gid in self.graph.nodes}
+        self.eligibility = {key: 0.0 for key in self.eligibility}
         self.dan_gate = 0.0
         self.dan_sign = 0
 
@@ -58,10 +68,12 @@ class Brain:
         total = 0.0
         for edge in self.graph.incoming(gid):
             weight = self.weights[edge.key]
-            total += edge.synapses * weight * self.activity[edge.source]
+            sign = -1.0 if edge.physiology == "inhibitory" else 1.0
+            total += sign * edge.synapses * weight * self.activity[edge.source]
         scale = self.graph.total_incoming_synapses(gid) or 1.0
         drive = self.inputs[gid] + total / scale
-        return max(0.0, min(1.0, drive + self.config["noise"]))
+        drive += self._rng.gauss(0.0, self.config["noise"])
+        return max(0.0, min(1.0, drive))
 
     def step(self) -> None:
         dt = self.config["dt"]
@@ -70,7 +82,24 @@ class Brain:
         for gid, target in targets.items():
             current = self.activity[gid]
             self.activity[gid] = current + (dt / tau) * (target - current)
+        self._update_traces()
         self._update_plasticity()
+
+    def _update_traces(self) -> None:
+        """Eligibility trace: KC activation persists for a few steps after the stimulus.
+
+        Real associative memory in Drosophila needs the conditioned stimulus to still be
+        available when dopamine arrives, so plasticity reads this decayed trace instead of
+        the instantaneous KC activity.
+        """
+        decay = self.config["trace_decay"]
+        keep = 1.0 - decay
+        for edge in self.graph.plasticity_edges():
+            key = edge.key
+            self.eligibility[key] = (
+                decay * self.eligibility.get(key, 0.0)
+                + keep * self.activity.get(edge.source, 0.0)
+            )
 
     def _update_plasticity(self) -> None:
         cfg = self.config
@@ -78,16 +107,17 @@ class Brain:
         if gate <= 1e-9:
             return
         for edge in self.graph.plasticity_edges():
-            kc_act = self.activity.get(edge.source, 0.0)
-            mbon_act = self.activity.get(edge.target, 0.0)
             key = edge.key
-            delta = cfg["eta"] * gate * kc_act
+            kc = self.eligibility.get(key, 0.0)
+            mbon_act = self.activity.get(edge.target, 0.0)
+            delta = cfg["eta"] * gate * kc
             if self.dan_sign >= 0:
                 delta *= (1.0 - mbon_act)
             else:
-                delta = -cfg["eta"] * gate * kc_act
+                delta = -cfg["eta"] * gate * kc
             updated = self.weights[key] + delta
-            updated -= cfg["decay"] * (self.weights[key] - 1.0)
+            prior = self.initial_weights.get(key, 1.0)
+            updated -= cfg["decay"] * (self.weights[key] - prior)
             self.weights[key] = max(cfg["weight_min"], min(cfg["weight_max"], updated))
         self.dan_gate = 0.0
         self.dan_sign = 0

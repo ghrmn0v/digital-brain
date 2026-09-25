@@ -28,15 +28,15 @@ from connectome.training.rl.rl_brain import BEHAVIORS  # noqa: F401  (documents 
 # type -> (event name in the internal contract, event priority, feedback prior)
 # ---------------------------------------------------------------------------
 SCENARIOS: Dict[str, Dict[str, Any]] = {
-    "text":    {"event": "user_message", "priority": 0.40,
+    "text":    {"event": "user_message", "priority": 0.40, "media_type": None,
                "prior": {"reacted_positive": 0.30, "looked": 0.25, "ignored": 0.35, "dismissed": 0.10}},
-    "image":   {"event": "notification", "priority": 0.75,
+    "image":   {"event": "notification", "priority": 0.75, "media_type": "image",
                "prior": {"reacted_positive": 0.45, "looked": 0.30, "ignored": 0.15, "dismissed": 0.10}},
-    "audio":   {"event": "notification", "priority": 0.85,
+    "audio":   {"event": "notification", "priority": 0.85, "media_type": "audio",
                "prior": {"marked_useful": 0.40, "reacted_positive": 0.25, "looked": 0.20, "ignored": 0.10, "dismissed": 0.05}},
-    "sticker": {"event": "notification", "priority": 0.60,
+    "sticker": {"event": "notification", "priority": 0.60, "media_type": "sticker",
                "prior": {"reacted_positive": 0.35, "looked": 0.30, "ignored": 0.25, "dismissed": 0.10}},
-    "video":   {"event": "notification", "priority": 0.75,
+    "video":   {"event": "notification", "priority": 0.75, "media_type": "video",
                "prior": {"reacted_positive": 0.45, "looked": 0.30, "ignored": 0.15, "dismissed": 0.10}},
 }
 
@@ -102,13 +102,19 @@ def baseline_reactions(events: Sequence[str] | None = None) -> Dict[str, str]:
 def __event(name: str, spec: Dict[str, Any]):
     from connectome.event_processor import Event
 
+    context: Dict[str, Any] = {
+        "urgency": "high" if spec["priority"] >= 0.7 else "medium"
+    }
+    media = spec.get("media_type")
+    if media:
+        context["media_type"] = media
     return Event(
         id=f"eval_{name}",
         name=spec["event"],
         source="whatsapp",
         priority=spec["priority"],
         person=None,
-        context={"urgency": "high" if spec["priority"] >= 0.7 else "medium"},
+        context=context,
         timestamp=0.0,
     )
 

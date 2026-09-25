@@ -25,11 +25,19 @@ class TestLearning(unittest.TestCase):
         brains = [self._rewarded_brain({"event": "important_message", "priority": 0.9}, "marked_useful") for _ in range(5)]
         weights = [b.synapse_weight("KC", "MBON_gamma") for b in brains]
         for w in weights:
-            self.assertGreater(w, 1.0)
+            self.assertGreater(w, brains[0].initial_weights[("KC", "MBON_gamma")])
 
     def test_negative_feedback_depresses_kc_mbon_synapses(self):
         brain = self._rewarded_brain({"event": "important_message", "priority": 0.9}, "marked_unnecessary")
-        self.assertLess(brain.synapse_weight("KC", "MBON_gamma"), 1.0)
+        self.assertLess(brain.synapse_weight("KC", "MBON_gamma"), brain.initial_weights[("KC", "MBON_gamma")])
+
+    def test_weight_decay_pulls_synapses_back_toward_wiring_prior(self):
+        brain = self._rewarded_brain({"event": "important_message", "priority": 0.9}, "marked_useful")
+        key = ("KC", "MBON_gamma")
+        self.assertGreater(brain.synapse_weight(*key), brain.initial_weights[key])
+        for _ in range(4000):
+            brain.step()
+        self.assertAlmostEqual(brain.synapse_weight(*key), brain.initial_weights[key], places=1)
 
     def test_end_to_end_simulation_returns_fly_state(self):
         result = run_simulation(

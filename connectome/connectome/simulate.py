@@ -26,8 +26,14 @@ def inject_event(brain: Brain, event: Event) -> None:
     brain.clear_inputs()
     brain.set_input("PN", event.priority)
     ctx = event.context or {}
+    person_id = (event.person or {}).get("id", "")
     covered = _context_channels(
-        event.name, event.source, ctx.get("topic", ""), ctx.get("urgency", "")
+        event.name,
+        event.source,
+        ctx.get("topic", ""),
+        ctx.get("urgency", ""),
+        ctx.get("media_type", ""),
+        person_id,
     )
     context_drive = 0.15 + 0.6 * (covered / CTX_CHANNELS)
     brain.set_input("CTX", min(1.0, context_drive))
