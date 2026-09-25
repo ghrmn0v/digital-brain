@@ -49,6 +49,72 @@ class EventNormalizationServiceTest {
         assertThat(normalized.context().get("urgency")).isEqualTo("unknown");
     }
 
+    /** The exact body Product's delivery adapter sends for a normalized event. */
+    private static EventRequest platformEvent(String type, Map<String, Object> payload) {
+        return new EventRequest(
+                "integ_1", null, null, "linkedin", null, null, "2026-09-24T13:00:00.000Z", type, payload);
+    }
+
+    @Test
+    void platformEventIsAcceptedAndKeepsItsId() {
+        EventRequest.Normalized normalized = service.normalize(
+                platformEvent("job.discovered", Map.of("jobId", "job_1")));
+
+        assertThat(normalized.id()).isEqualTo("integ_1");
+        assertThat(normalized.source()).isEqualTo("linkedin");
+    }
+
+    @Test
+    void platformEventWithoutPriorityGetsTheNeutralDefault() {
+        assertThat(service.normalize(platformEvent("job.discovered", null)).priority())
+                .isEqualTo(EventRequest.NEUTRAL_PRIORITY);
+    }
+
+    @Test
+    void platformPayloadSurvivesAsContext() {
+        EventRequest.Normalized normalized = service.normalize(
+                platformEvent("job.discovered", Map.of("jobId", "job_1")));
+
+        assertThat(normalized.context()).containsKey("payload");
+        assertThat(normalized.context().get("payload")).isEqualTo(Map.of("jobId", "job_1"));
+    }
+
+    @Test
+    void unknownPlatformTypeNormalizesToUnknownRatherThanGuessing() {
+        assertThat(service.normalize(platformEvent("job.discovered", null)).name()).isEqualTo("unknown");
+        assertThat(service.normalize(platformEvent("source.linkedin.job_discovered", null)).name())
+                .isEqualTo("unknown");
+    }
+
+    @Test
+    void flysOwnEventNameWinsOverThePlatformType() {
+        EventRequest both = new EventRequest(
+                "id_2", 0.9, "important_message", "whatsapp", null, null, null,
+                "job.discovered", null);
+
+        assertThat(service.normalize(both).name()).isEqualTo("important_message");
+        assertThat(service.normalize(both).priority()).isEqualTo(0.9);
+    }
+
+    @Test
+    void eventIdentifiedRuleAcceptsEitherField() {
+        assertThat(new EventRequest("i", null, "notification", "app", null, null, null).isEventIdentified())
+                .isTrue();
+        assertThat(new EventRequest("i", null, null, "app", null, null, null, "job.discovered", null)
+                .isEventIdentified()).isTrue();
+        assertThat(new EventRequest("i", null, null, "app", null, null, null, null, null).isEventIdentified())
+                .isFalse();
+    }
+
+    @Test
+    void missingEventAndTypeFallsBackToUnknownInsteadOfFailing() {
+        EventRequest.Normalized normalized = service.normalize(
+                new EventRequest("id_3", null, null, "app", null, null, null, null, null));
+
+        assertThat(normalized.name()).isEqualTo("unknown");
+        assertThat(normalized.priority()).isEqualTo(EventRequest.NEUTRAL_PRIORITY);
+    }
+
     @Test
     void missingIdIsGenerated() {
         EventRequest withoutId = new EventRequest(null, 0.4, "notification", "app", null, null, null);

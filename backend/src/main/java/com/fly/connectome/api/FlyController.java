@@ -83,13 +83,36 @@ public class FlyController {
     public ResponseEntity<Map<String, Object>> contract() {
         return ResponseEntity.ok(Map.of(
                 "direction", "core_brain/connectors -> connectome -> behavior engine",
-                "example", Map.ofEntries(
-                        Map.entry("event", "important_message"),
-                        Map.entry("source", "whatsapp"),
-                        Map.entry("priority", 0.85),
-                        Map.entry("person", Map.of("id", "person_123")),
-                        Map.entry("context", Map.of("topic", "job", "urgency", "high")),
-                        Map.entry("timestamp", "2026-09-24T13:00:00Z")),
+                "shapes", List.of(
+                        Map.of(
+                                "name", "fly",
+                                "description", "Fly's own event, naming a behaviour directly",
+                                "required", List.of("source", "event or type"),
+                                "example", Map.ofEntries(
+                                        Map.entry("event", "important_message"),
+                                        Map.entry("source", "whatsapp"),
+                                        Map.entry("priority", 0.85),
+                                        Map.entry("person", Map.of("id", "person_123")),
+                                        Map.entry("context", Map.of("topic", "job", "urgency", "high")),
+                                        Map.entry("timestamp", "2026-09-24T13:00:00Z"))),
+                        Map.of(
+                                "name", "platform_normalized",
+                                "description", "Normalized event as sent by Product's delivery adapter. "
+                                        + "It carries no priority, so a neutral "
+                                        + EventRequest.NEUTRAL_PRIORITY + " is used, and its payload is "
+                                        + "preserved as context.payload.",
+                                "required", List.of("source", "event or type"),
+                                "example", Map.ofEntries(
+                                        Map.entry("id", "integ_1"),
+                                        Map.entry("type", "job.discovered"),
+                                        Map.entry("source", "linkedin"),
+                                        Map.entry("timestamp", "2026-09-24T13:00:00.000Z"),
+                                        Map.entry("payload", Map.of("jobId", "job_1")),
+                                        Map.entry("metadata", Map.of("schemaVersion", "1.0"))))),
+                "notes", List.of(
+                        "event or type identifies the event; Fly's own event field wins when both are sent.",
+                        "A type naming no known behaviour normalizes to unknown; Fly never guesses a behaviour.",
+                        "Unknown sources normalize to unknown."),
                 "version", "v1"));
     }
 }
