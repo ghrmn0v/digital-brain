@@ -8,5 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record PythonProperties(
         String baseUrl,
         Duration connectTimeout,
-        Duration readTimeout) {
+        Duration readTimeout,
+        int maxAttempts) {
 }

@@ -39,6 +39,18 @@ class TestServer(unittest.TestCase):
         result = self.service.reset()
         self.assertEqual(result["status"], "reset")
 
+    def test_flight_mode_defaults_on(self):
+        self.assertTrue(self.service.flight)
+        self.assertEqual(self.service.health()["flight_mode"], "on")
+
+    def test_flight_off_excludes_flight_states(self):
+        self.service.set_flight({"flight": False})
+        result = self.service.behavior(
+            {"event": "process_completed", "source": "app", "priority": 0.92}
+        )
+        self.assertNotIn(result["fetch"], ("TAKEOFF", "FLYING", "LANDING"))
+        self.assertEqual(self.service.health()["flight_mode"], "off")
+
 
 if __name__ == "__main__":
     unittest.main()

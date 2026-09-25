@@ -41,7 +41,8 @@ public class FlyController {
         broadcaster.broadcast(Map.of(
                 "type", "fly_behavior",
                 "behavior_id", decision.behaviorId(),
-                "decision", decision));
+                "decision", decision,
+                "context", event.context()));
         return ResponseEntity.ok(decision);
     }
 
@@ -65,6 +66,17 @@ public class FlyController {
     @GetMapping("/states")
     public ResponseEntity<Map<String, Object>> states() {
         return ResponseEntity.ok(gateway.states());
+    }
+
+    @GetMapping("/mode/flight")
+    public ResponseEntity<Map<String, Object>> flightMode() {
+        return ResponseEntity.ok(gateway.flightMode());
+    }
+
+    @PostMapping("/mode/flight")
+    public ResponseEntity<Map<String, Object>> setFlight(@RequestBody Map<String, Object> body) {
+        boolean enabled = Boolean.TRUE.equals(body.get("flight"));
+        return ResponseEntity.ok(gateway.setFlight(enabled));
     }
 
     @GetMapping("/events/contract")

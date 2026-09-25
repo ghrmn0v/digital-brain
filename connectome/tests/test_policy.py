@@ -11,12 +11,12 @@ class TestPolicy(unittest.TestCase):
     def setUp(self):
         self.brain = Brain(load_wiring())
 
-    def _decision(self, name="important_message", priority=0.85):
+    def _decision(self, name="important_message", priority=0.85, **kwargs):
         event = normalize_event({"event": name, "source": "whatsapp", "priority": priority})
         inject_event(self.brain, event)
         for _ in range(40):
             self.brain.step()
-        return decide(self.brain, event)
+        return decide(self.brain, event, **kwargs)
 
     def test_important_message_maps_to_important(self):
         decision = self._decision("important_message", 0.99)
@@ -24,7 +24,7 @@ class TestPolicy(unittest.TestCase):
         self.assertEqual(decision["priority"], PRIORITY_LEVEL["IMPORTANT"])
 
     def test_natural_state_boost_selects_fitting_state(self):
-        decision = self._decision("process_completed", 0.8)
+        decision = self._decision("process_completed", 0.8, flight=False)
         self.assertEqual(decision["state"], "SUCCESS")
 
     def test_low_priority_unknown_event_falls_back_to_idle(self):
@@ -55,6 +55,47 @@ class TestPolicy(unittest.TestCase):
                 self.brain.step()
         trained = self._decision("process_completed", 0.92)["scores"]["FLYING"]
         self.assertGreater(trained, untrained)
+
+    def test_flight_disabled_never_picks_flight_states(self):
+        from connectome.policy import FLIGHT_STATES, decide
+        event = normalize_event({"event": "notification", "source": "demo", "priority": 0.9})
+        inject_event(self.brain, event)
+        for _ in range(40):
+            self.brain.step()
+        decision = decide(self.brain, event, flight=False)
+        self.assertNotIn(decision["state"], FLIGHT_STATES)
+        self.assertIn("FLYING", decision["scores"])
+
+    def test_fresh_celebration_event_flies_when_flight_on(self):
+        from connectome.policy import decide
+        event = normalize_event({"event": "process_completed", "source": "app", "priority": 0.9})
+        inject_event(self.brain, event)
+        for _ in range(40):
+            self.brain.step()
+        on = decide(self.brain, event, flight=True)
+        self.assertEqual(on["state"], "FLYING")
+        off = decide(self.brain, event, flight=False)
+        self.assertEqual(off["state"], "SUCCESS")
+
+    def test_calm_low_priority_celebration_stays_grounded(self):
+        from connectome.policy import FLIGHT_MIN_PRIORITY, decide
+        event = normalize_event(
+            {"event": "app_open", "source": "app", "priority": FLIGHT_MIN_PRIORITY - 0.1}
+        )
+        inject_event(self.brain, event)
+        for _ in range(40):
+            self.brain.step()
+        decision = decide(self.brain, event, flight=True)
+        self.assertNotEqual(decision["state"], "FLYING")
+
+    def test_serious_event_never_flies(self):
+        from connectome.policy import decide
+        event = normalize_event({"event": "important_message", "source": "app", "priority": 0.95})
+        inject_event(self.brain, event)
+        for _ in range(40):
+            self.brain.step()
+        decision = decide(self.brain, event, flight=True)
+        self.assertEqual(decision["state"], "IMPORTANT")
 
 
 class TestBrainInjection(unittest.TestCase):

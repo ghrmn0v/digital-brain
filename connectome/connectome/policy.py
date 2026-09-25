@@ -61,6 +61,15 @@ PRIORITY_LEVEL = {
 BOOST = 0.35
 THRESHOLD = 0.25
 
+FLIGHT_STATES = ("TAKEOFF", "FLYING", "LANDING")
+
+# Celebration flight: with flight mode ON, joyful natural outcomes (SUCCESS /
+# CURIOUS / LEARNING) fly instead of just reacting. Which events are joyful is
+# still decided by the brain (natural state learned from feedback), so serious
+# events (IMPORTANT/ERROR/WARNING) never produce a flight.
+FLIGHT_CELEBRATION = {"SUCCESS", "CURIOUS", "LEARNING"}
+FLIGHT_MIN_PRIORITY = 0.3
+
 
 def score_states(brain: Brain) -> Dict[str, float]:
     mbon = brain.mbon_vector()
@@ -73,7 +82,7 @@ def score_states(brain: Brain) -> Dict[str, float]:
     return scores
 
 
-def decide(brain: Brain, event: Event, force_natural: bool = False) -> Dict:
+def decide(brain: Brain, event: Event, force_natural: bool = False, flight: bool = True) -> Dict:
     natural = NATURAL_STATE.get(event.name, "IDLE")
     scores = score_states(brain)
 
@@ -83,6 +92,8 @@ def decide(brain: Brain, event: Event, force_natural: bool = False) -> Dict:
     else:
         candidates = []
         for state, score in scores.items():
+            if not flight and state in FLIGHT_STATES:
+                continue
             candidate = score
             if state == natural:
                 candidate += BOOST
@@ -95,6 +106,13 @@ def decide(brain: Brain, event: Event, force_natural: bool = False) -> Dict:
             top_state = natural
         state = top_state
         confidence = top_score
+
+    if (
+        flight
+        and event.priority >= FLIGHT_MIN_PRIORITY
+        and natural in FLIGHT_CELEBRATION
+    ):
+        state = "FLYING"
 
     return {
         "state": state,

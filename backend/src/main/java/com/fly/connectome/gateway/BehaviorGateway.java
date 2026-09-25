@@ -27,6 +27,7 @@ public class BehaviorGateway {
     private final RestClient client;
     private final ObjectMapper mapper;
     private final FallbackPolicy fallback;
+    private final PythonProperties properties;
     private final URI behaviorUri;
     private final URI feedbackUri;
     private final URI healthUri;
@@ -34,6 +35,7 @@ public class BehaviorGateway {
     public BehaviorGateway(PythonProperties properties, ObjectMapper mapper, FallbackPolicy fallback) {
         this.mapper = mapper;
         this.fallback = fallback;
+        this.properties = properties;
         String base = properties.baseUrl();
         this.behaviorUri = URI.create(base + "/behavior");
         this.feedbackUri = URI.create(base + "/feedback");
@@ -62,12 +64,14 @@ public class BehaviorGateway {
         body.put("person", event.person());
         try {
             String payload = mapper.writeValueAsString(body);
-            JsonNode node = client.post()
-                    .uri("/behavior")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(payload)
-                    .retrieve()
-                    .body(JsonNode.class);
+            JsonNode node = Retryer.attempt(
+                    () -> client.post()
+                            .uri("/behavior")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(payload)
+                            .retrieve()
+                            .body(JsonNode.class),
+                    properties.maxAttempts());
             if (node == null || node.hasNonNull("error")) {
                 throw new IllegalStateException("python returned an error for " + event.name());
             }
@@ -93,12 +97,14 @@ public class BehaviorGateway {
         body.put("feedback", request.feedback());
         try {
             String payload = mapper.writeValueAsString(body);
-            JsonNode node = client.post()
-                    .uri("/feedback")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(payload)
-                    .retrieve()
-                    .body(JsonNode.class);
+            JsonNode node = Retryer.attempt(
+                    () -> client.post()
+                            .uri("/feedback")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(payload)
+                            .retrieve()
+                            .body(JsonNode.class),
+                    properties.maxAttempts());
             if (node == null) {
                 throw new IllegalStateException("empty python response");
             }
@@ -151,5 +157,40 @@ public class BehaviorGateway {
 
     private static String text(JsonNode node, String field) {
         return node.path(field).asText("unknown");
+    }
+
+    public Map<String, Object> flightMode() {
+        try {
+            JsonNode node = client.get()
+                    .uri("/mode")
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (node == null) {
+                throw new IllegalStateException("empty flight mode response");
+            }
+            return mapper.convertValue(node, Map.class);
+        } catch (Exception exc) {
+            log.info("python flight mode probe failed: {}", exc.getMessage());
+            return Map.of("flight", true, "reachable", false);
+        }
+    }
+
+    public Map<String, Object> setFlight(boolean enabled) {
+        try {
+            String payload = mapper.writeValueAsString(Map.of("flight", enabled));
+            JsonNode node = client.post()
+                    .uri("/mode")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(payload)
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (node == null) {
+                throw new IllegalStateException("empty flight mode response");
+            }
+            return mapper.convertValue(node, Map.class);
+        } catch (Exception exc) {
+            log.warn("flight mode toggle failed: {}", exc.getMessage());
+            return Map.of("flight", null, "error", "python_unavailable", "detail", exc.getClass().getSimpleName());
+        }
     }
 }

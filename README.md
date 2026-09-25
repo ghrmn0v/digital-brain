@@ -37,7 +37,58 @@ so "take off / land" is a learned behavior rather than a scripted animation.
 
 Rule-based baseline (Faza 1) → structured data collection (2) → reward signals (3) →
 offline experiments (4) → offline RL experiment (5) → **evaluate vs baseline (6, here)** →
-gradual production influence (7). Production inference never uses an untested model.
+gradual production influence (7, here). Production inference never uses an untested model.
+
+## Phase 7 — gradual production influence
+
+The offline RL policy (Faza 5 snapshot) can influence the production **state** decision
+through a safety-gated bridge (`connectome/connectome/influence.py`). The deterministic
+rule-based baseline (policy.decide) stays in charge by default and is always the fallback.
+
+Modes (`FLY_LEARNED_INFLUENCE` env or `--influence`):
+
+- `off` — (default) learned policy never influences production.
+- `auto` — influence only when the Faza 6 evaluation report verdict is
+  `CANDIDATE_FOR_PRODUCTION` (learned policy matches/beats baseline on every case).
+- `on` — operator-forced influence (still falls back to baseline on any artifact error).
+
+The `auto` verdict gate holds with the shipped `COLLECT_MORE_DATA` report, so a fresh
+install behaves exactly like the baseline until the evaluation actually clears the policy:
+
+```
+cd connectome
+FLY_LEARNED_INFLUENCE=auto python3 -m connectome.server --port 8601   # or --influence auto
+curl 127.0.0.1:8601/health        # learned_influence.verdict / permitted
+```
+
+Each `/behavior` response now carries `influence: {mode, verdict, applied, from_state, to_state}`;
+`applied=true` means the learned policy moved the state (e.g. `frontflip` → `IMPORTANT`).
+
+## Reliability
+
+The Python boundary is hardened so transient hiccups do not instantly degrade a decision:
+
+- `decide` and feedback delivery retry up to `app.python.max-attempts` (env
+  `FLY_PYTHON_MAX_ATTEMPTS`, default 2) with growing backoff (`gateway/Retryer.java`)
+  before falling back to `FallbackPolicy`. Health probes stay single-shot for fast feedback.
+- If the learned-policy artifact is missing or broken, production behavior always falls
+  back to the deterministic baseline (never an untested model).
+
+## API auth boundary
+
+The write surface (events, feedback, WhatsApp webhook, developer events/mode) can be
+protected behind a shared token from the environment (never committed):
+
+```
+cd backend
+FLY_API_TOKEN=top-secret mvn spring-boot:run
+curl -X POST http://127.0.0.1:8080/api/v1/events -H 'X-Fly-Token: top-secret' ...
+```
+
+With `FLY_API_TOKEN` unset (default) authentication is disabled for local development.
+When set, POST requests to protected paths must carry a matching `X-Fly-Token` header;
+GET endpoints (health, contract, states, developer mode) stay open. Implemented by
+`backend/.../config/ApiSecurityConfig.java` (+ `ApiTokenInterceptor`).
 
 ## Run
 
@@ -106,7 +157,7 @@ Requires torch in an isolated interpreter (system python is stdlib-only):
 
 ```
 cd connectome
-python3 -m unittest discover -s tests                     # 50 tests (no torch needed)
+python3 -m unittest discover -s tests                     # 93 tests (no torch needed)
 python3 -m connectome.training.rl.offline_exp --episodes 400   # with torch installed
 ```
 
@@ -147,8 +198,16 @@ npm start
 When the backend stack is down, the app falls back to a local demo cycle so the
 fly keeps moving. Feedback buttons drive real learning through the backend.
 
-`desktop/models/` holds the low-poly fly asset (OBJ + texture) from the reference
-prototype, ready for an optional visual upgrade. 
+States that matter audibly (`IMPORTANT`/`SUCCESS`/`WARNING`/`ERROR`) trigger a small
+WebAudio chime (`src/sound.js`, tones are synthesized — no audio files). Audio is
+unlocked on the first user interaction (browser autoplay rule); state sounds mirror
+the Python `state_machine.py` `sound` field.
+
+`desktop/models/fly.png` is an optional 2D Fly image: when present, the renderer
+swaps the primitive 3D fly for a camera-facing billboard textured with it (keeps all
+state animation/position/scale/opacity behavior; drop a transparent-background PNG
+there and restart). When absent, the primitive fly is used unchanged. The reference
+`Fly_uv_Lowpoly.obj` + `Fly_uv.jpg` stay in `desktop/models/` for a future 3D pass. 
 ### Collect a labeled training dataset
 
 ```
