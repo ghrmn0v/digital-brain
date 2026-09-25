@@ -90,6 +90,22 @@ export class BrainContractError extends BrainClientError {
   }
 }
 
+/**
+ * The client (or the connection) was closed, so a request can no longer be
+ * completed. This is a lifecycle condition, not a contract violation and not a
+ * transport failure, which is why it has its own class while still carrying the
+ * documented `BrainClientErrorKind` of `"closed"`.
+ */
+export class BrainClosedError extends BrainClientError {
+  constructor(
+    message: string,
+    details: Readonly<Record<string, unknown>> = {},
+  ) {
+    super("closed", message, null, details);
+    this.name = "BrainClosedError";
+  }
+}
+
 export function isApiErrorCode(value: string): value is ApiErrorCode {
   return (
     value === "bad_request" ||

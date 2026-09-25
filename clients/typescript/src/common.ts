@@ -318,7 +318,7 @@ export class RequestBuilder {
   private readonly idPrefix: string;
   private counter = 0;
 
-  constructor(options: { readonly userId?: string | null; readonly idPrefix?: string }) {
+  constructor(options: { readonly userId?: string | null; readonly idPrefix?: string | undefined }) {
     this.userId = options.userId ?? null;
     this.idPrefix = options.idPrefix ?? "brain";
   }

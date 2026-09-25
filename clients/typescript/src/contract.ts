@@ -42,7 +42,9 @@ export interface ApiError {
   readonly code: string;
   readonly message: string;
   readonly source?: string | null;
-  readonly details?: JsonObject;
+  // `| undefined` is explicit so the type stays assignable under
+  // `exactOptionalPropertyTypes`, which consumers of this client enable.
+  readonly details?: JsonObject | undefined;
 }
 
 export interface ApiRequest<P = JsonObject> {
