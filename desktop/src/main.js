@@ -14,8 +14,21 @@ function createWindow() {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
     },
   });
+  // The shell only ever loads its own local page. Denying navigation and window
+  // opens means that stays true even if a link or a crafted payload ever tries
+  // to turn the renderer into a browser, which is the precondition for most of
+  // the open Electron advisories. Cheap, and it fails closed.
+  win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  win.webContents.on("will-navigate", (event, url) => {
+    const target = new URL(url);
+    if (target.protocol !== "file:") event.preventDefault();
+  });
+  win.webContents.on("will-attach-webview", (event) => event.preventDefault());
+
   win.loadFile(path.join(__dirname, "index.html"));
   if (process.env.FLY_OPEN_DEVTOOLS === "1") {
     win.webContents.openDevTools();
