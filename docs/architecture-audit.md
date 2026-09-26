@@ -49,4 +49,4 @@ Developer Mode is stored as a default-off boolean capability and exposed only th
 - SSE replays recent durable events and then follows the process-local event bus.
 - Tests use an isolated SQLite database and never modify `dev.db`.
 
-See [`API_CONTRACTS.md`](./API_CONTRACTS.md) for external request and response contracts.
+See [`API_CONTRACTS.md`](product/API_CONTRACTS.md) for external request and response contracts.
