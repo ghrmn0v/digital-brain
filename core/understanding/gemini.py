@@ -27,6 +27,17 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from core.config import (
+    ENV_GEMINI_API_KEY,
+    ENV_GEMINI_API_BASE,
+    ENV_GEMINI_ENABLED,
+    ENV_GEMINI_MAX_OUTPUT_TOKENS,
+    ENV_GEMINI_MODEL,
+    ENV_GEMINI_TEMPERATURE,
+    ENV_GEMINI_TIMEOUT,
+)
+from core.observability import register_secret
+
 from .exceptions import (
     InvalidLLMOutputError,
     LLMProviderError,
@@ -36,13 +47,14 @@ from .providers import LLMProvider, LLMRequest, register_provider
 
 _DEFAULT_API_BASE = "https://generativelanguage.googleapis.com"
 _DEFAULT_MODEL = "gemini-3.8-flash"
-_ENV_API_KEY = "GEMINI_API_KEY"
-_ENV_MODEL = "GEMINI_MODEL"
-_ENV_ENABLED = "GEMINI_ENABLED"
-_ENV_API_BASE = "GEMINI_API_BASE"
-_ENV_TIMEOUT = "GEMINI_TIMEOUT_SECONDS"
-_ENV_TEMPERATURE = "GEMINI_TEMPERATURE"
-_ENV_MAX_OUTPUT_TOKENS = "GEMINI_MAX_OUTPUT_TOKENS"
+# Re-exported from core.config so both modules agree on one definition.
+ENV_API_KEY = ENV_GEMINI_API_KEY
+ENV_MODEL = ENV_GEMINI_MODEL
+ENV_ENABLED = ENV_GEMINI_ENABLED
+ENV_API_BASE = ENV_GEMINI_API_BASE
+ENV_TIMEOUT = ENV_GEMINI_TIMEOUT
+ENV_TEMPERATURE = ENV_GEMINI_TEMPERATURE
+ENV_MAX_OUTPUT_TOKENS = ENV_GEMINI_MAX_OUTPUT_TOKENS
 
 _REDACTED = "***"
 
@@ -94,18 +106,22 @@ class GeminiConfig:
         lazy: nothing is read at import time.
         """
         source: Mapping[str, str] = os.environ if env is None else env
+        api_key = (source.get(ENV_API_KEY) or "").strip()
+        # Register the credential as non-emittable the moment it is read, so a
+        # provider error or any future log statement cannot echo it.
+        register_secret(api_key)
         return cls(
-            api_key=(source.get(_ENV_API_KEY) or "").strip(),
-            model=(source.get(_ENV_MODEL) or _DEFAULT_MODEL).strip() or _DEFAULT_MODEL,
-            enabled=_truthy(source.get(_ENV_ENABLED), default=False),
+            api_key=api_key,
+            model=(source.get(ENV_MODEL) or _DEFAULT_MODEL).strip() or _DEFAULT_MODEL,
+            enabled=_truthy(source.get(ENV_ENABLED), default=False),
             api_base=(
-                (source.get(_ENV_API_BASE) or _DEFAULT_API_BASE).strip().rstrip("/")
+                (source.get(ENV_API_BASE) or _DEFAULT_API_BASE).strip().rstrip("/")
                 or _DEFAULT_API_BASE
             ),
-            timeout_seconds=_number(source.get(_ENV_TIMEOUT), 30.0),
-            temperature=_number(source.get(_ENV_TEMPERATURE), 0.2),
+            timeout_seconds=_number(source.get(ENV_TIMEOUT), 30.0),
+            temperature=_number(source.get(ENV_TEMPERATURE), 0.2),
             max_output_tokens=int(
-                _number(source.get(_ENV_MAX_OUTPUT_TOKENS), 2048)
+                _number(source.get(ENV_MAX_OUTPUT_TOKENS), 2048)
             ),
         )
 

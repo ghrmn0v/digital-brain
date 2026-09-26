@@ -70,6 +70,7 @@ connectome/connectome/training/datasets/
 
 # --- logs and debug ---
 *.log
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -77,3 +78,7 @@ yarn-error.log*
 
 # --- os / editor ---
 .DS_Store
+
+data/
+
+

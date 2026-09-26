@@ -13,7 +13,7 @@ from typing import Mapping, Protocol, runtime_checkable
 from contracts.events.source_event import NormalizedSourceEvent
 from core.memory import MemoryCandidate
 
-from .handlers import MappingRule, build_candidate, default_rules
+from .handlers import MappingRule, build_candidate, default_rules, find_rule
 
 
 class EventProcessingError(Exception):
@@ -48,8 +48,20 @@ class DeterministicEventProcessor:
     def rules(self) -> dict[tuple[str, str], MappingRule]:
         return dict(self._rules)
 
+    def _resolve(self, event: NormalizedSourceEvent) -> MappingRule | None:
+        """The rule for an event: this processor's own registry first, then the
+        shared resolution (exact match, then known action synonym)."""
+        direct = self._rules.get(_slice(event))
+        if direct is not None:
+            return direct
+        return find_rule(event)
+
     def process(self, event: NormalizedSourceEvent) -> list[MemoryCandidate]:
-        rule = self._rules.get(_slice(event))
+        # Resolution goes through the shared helper so validation and processing
+        # can never disagree about which rule an event maps to. A second lookup
+        # here previously bypassed action synonyms, so a real event could pass
+        # validation and then silently produce nothing.
+        rule = self._resolve(event)
         if rule is None:
             return []
         try:

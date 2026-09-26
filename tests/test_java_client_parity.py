@@ -73,9 +73,16 @@ class JavaClientParityTests(unittest.TestCase):
     def test_the_java_method_table_matches_the_registry_exactly(self) -> None:
         self.assertEqual(java_method_table(), [method.value for method in ApiMethod])
 
-    def test_the_java_method_count_is_17(self) -> None:
-        self.assertEqual(len(java_method_table()), 17)
-        self.assertEqual(len(set(java_method_table())), 17)
+    def test_the_java_method_count_matches_the_registry(self) -> None:
+        """The table must track the registry, not a remembered number.
+
+        The count is derived so that appending a method cannot leave this test
+        asserting a stale literal, while still failing loudly if the Java client
+        and the canonical registry ever disagree about size or content.
+        """
+        expected = [method.value for method in ApiMethod]
+        self.assertEqual(len(java_method_table()), len(expected))
+        self.assertEqual(len(set(java_method_table())), len(expected))
 
     def test_the_endpoint_paths_match_the_core_transports(self) -> None:
         source = java_sources()

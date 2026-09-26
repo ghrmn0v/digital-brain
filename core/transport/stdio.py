@@ -54,6 +54,7 @@ from contracts.brain_events.events import BrainEvent
 
 from core.brain_events.sink import EventSink, NullEventSink
 from core.service.api import BrainApi
+from core.config import resolve_llm_provider
 from core.service.brain_service import BrainService, build_brain_service
 
 
@@ -240,10 +241,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="data/brain.sqlite3",
         help="SQLite database path (use ':memory:' for a transient brain).",
     )
+    parser.add_argument(
+        "--provider",
+        default=None,
+        help=(
+            "LLM provider for understanding/analysis. Defaults to "
+            "BRAIN_LLM_PROVIDER, then 'heuristic'."
+        ),
+    )
     args = parser.parse_args(argv)
 
+    provider = resolve_llm_provider(args.provider)
     sink = JsonLinesEventSink(sys.stdout)
-    service = build_brain_service(args.db, sink=sink)
+    service = build_brain_service(args.db, sink=sink, provider=provider)
     daemon = StdioDaemon(
         BrainApi(service),
         stdin=sys.stdin,

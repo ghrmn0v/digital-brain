@@ -180,14 +180,59 @@ def default_rules() -> dict[tuple[str, str], MappingRule]:
     return dict(_RULES)
 
 
+#: Accepted spellings of an action that map onto a canonical rule.
+#:
+#: Connectors name the same real-world thing differently — a job posting is
+#: "seen" to the Brain, "discovered" or "found" to whoever wrote the connector.
+#: Without this table such an event is schema-valid, gets receipted, and
+#: silently produces no memory, which is indistinguishable from having learned
+#: something. Resolving the synonym here fixes it for every sender instead of
+#: asking each one to learn the Brain's internal vocabulary.
+#:
+#: Keys are ``(provider, alias)``; values are the canonical
+#: ``(provider, action)`` present in ``_RULES``.
+_ACTION_ALIASES: dict[tuple[str, str], tuple[str, str]] = {
+    ("linkedin", "job_discovered"): ("linkedin", "job_seen"),
+    ("linkedin", "job_found"): ("linkedin", "job_seen"),
+    ("linkedin", "job_viewed"): ("linkedin", "job_seen"),
+    ("linkedin", "profile_viewed"): ("linkedin", "profile_updated"),
+    ("calendar", "event_created"): ("calendar", "event_created"),
+    ("todo", "task_created"): ("todo", "task_created"),
+}
+
+
 def find_rule(event: NormalizedSourceEvent) -> MappingRule | None:
-    """Rule for ``source.<provider>.<action...>``, or None if unsupported."""
+    """Rule for ``source.<provider>.<action...>``, or None if unsupported.
+
+    An exact ``(provider, action)`` match always wins; a known synonym is
+    resolved to its canonical rule. Anything else is genuinely unmapped and
+    returns None, which the ingestion service reports rather than hiding.
+    """
     parts = event.type.split(".")
     if len(parts) < 3 or parts[0] != "source":
         return None
     provider = parts[1]
     action = ".".join(parts[2:])
-    return _RULES.get((provider, action))
+    key = (provider, action)
+    rule = _RULES.get(key)
+    if rule is not None:
+        return rule
+    canonical = _ACTION_ALIASES.get(key)
+    if canonical is not None:
+        return _RULES.get(canonical)
+    return None
+
+
+def rule_key(event: NormalizedSourceEvent) -> tuple[str, str] | None:
+    """The canonical ``(provider, action)`` a rule was found under, if any.
+
+    Lets the caller name the rule that actually matched rather than echoing the
+    event's own spelling back.
+    """
+    rule = find_rule(event)
+    if rule is None:
+        return None
+    return (rule.provider, rule.action)
 
 
 def build_candidate(event: NormalizedSourceEvent, rule: MappingRule) -> MemoryCandidate | None:

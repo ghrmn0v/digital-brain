@@ -41,6 +41,7 @@ from contracts.api import (
 from contracts.brain_events.events import BrainEvent
 
 from core.service.api import BrainApi
+from core.config import resolve_llm_provider
 from core.service.brain_service import build_brain_service
 
 API_PATH = "/v1/brain"
@@ -826,6 +827,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=MAX_MESSAGE_BYTES,
     )
     parser.add_argument(
+        "--provider",
+        default=None,
+        help=(
+            "LLM provider for understanding/analysis. Defaults to "
+            "BRAIN_LLM_PROVIDER, then 'heuristic'."
+        ),
+    )
+    parser.add_argument(
         "--origin",
         action="append",
         help=(
@@ -851,7 +860,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     router = WebSocketEventRouter()
-    service = build_brain_service(args.db, sink=router)
+    provider = resolve_llm_provider(args.provider)
+    service = build_brain_service(args.db, sink=router, provider=provider)
     try:
         server = WebSocketBrainServer(
             BrainApi(service),

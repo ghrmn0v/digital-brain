@@ -44,6 +44,7 @@ from contracts.api import ApiError, ApiErrorCode, ApiResponse, error_response
 
 from core.brain_events.sink import NullEventSink
 from core.service.api import BrainApi
+from core.config import resolve_llm_provider
 from core.service.brain_service import build_brain_service
 
 API_VERSION = "v1"
@@ -305,15 +306,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="data/brain.sqlite3",
         help="SQLite database path (use ':memory:' for a transient brain).",
     )
+    parser.add_argument(
+        "--provider",
+        default=None,
+        help=(
+            "LLM provider for understanding/analysis. Defaults to "
+            "BRAIN_LLM_PROVIDER, then 'heuristic'. Use 'gemini' to call Gemini; "
+            "it still falls back to 'heuristic' if unconfigured or failing."
+        ),
+    )
     args = parser.parse_args(argv)
 
-    service = build_brain_service(args.db, sink=NullEventSink())
+    provider = resolve_llm_provider(args.provider)
+    service = build_brain_service(args.db, sink=NullEventSink(), provider=provider)
     transport = HttpBrainTransport(BrainApi(service))
     server = HttpBrainServer((args.host, args.port), transport)
     try:
         print(
             f"digital-brain-http listening on http://{args.host}:{args.port} "
-            f"(POST /v1/brain, GET /health)",
+            f"(POST /v1/brain, GET /health) provider={provider}",
             file=sys.stderr,
             flush=True,
         )

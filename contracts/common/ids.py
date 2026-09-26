@@ -17,28 +17,53 @@ External systems NEVER mint these IDs. Their own identifiers live in
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import AfterValidator, Field
 
-EntityId = Annotated[str, Field(min_length=1, max_length=512)]
+
+def _not_blank(value: str) -> str:
+    """Reject an identifier that carries no characters.
+
+    ``min_length=1`` alone accepts ``" "``, which would silently create a
+    phantom user namespace: a blank id is a *different* user from every real
+    one, so it is a correctness and isolation problem, not a cosmetic one.
+    Services already refused blank ids on the paths that went through People
+    Intelligence; enforcing it here means every method inherits the rule and no
+    new one can quietly forget it.
+
+    The value is never rewritten — ``" a"`` stays distinct from ``"a"`` — only
+    the blank case is refused.
+    """
+    if not value.strip():
+        raise ValueError("identifier must not be blank")
+    return value
+
+
+_Identifier = Annotated[
+    str,
+    Field(min_length=1, max_length=512),
+    AfterValidator(_not_blank),
+]
+
+EntityId = _Identifier
 """Minimal identifier for any entity exchanged between subsystems."""
 
-UserId = Annotated[str, Field(min_length=1, max_length=512)]
+UserId = _Identifier
 """The human user an event/memory/decision belongs to."""
 
-PersonId = Annotated[str, Field(min_length=1, max_length=512)]
+PersonId = _Identifier
 """Identifies a person known to the Brain (see contract: people.Person)."""
 
-EventId = Annotated[str, Field(min_length=1, max_length=512)]
+EventId = _Identifier
 """Identifies a source or brain event."""
 
-MemoryId = Annotated[str, Field(min_length=1, max_length=512)]
+MemoryId = _Identifier
 """Identifies a Brain-owned memory record."""
 
-DecisionId = Annotated[str, Field(min_length=1, max_length=512)]
+DecisionId = _Identifier
 """Identifies a Brain decision."""
 
-ActionId = Annotated[str, Field(min_length=1, max_length=512)]
+ActionId = _Identifier
 """Identifies a proposed action within a decision."""
 
-FeedbackId = Annotated[str, Field(min_length=1, max_length=512)]
+FeedbackId = _Identifier
 """Identifies a feedback record."""

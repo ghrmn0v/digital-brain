@@ -15,6 +15,7 @@ from contracts.events.source_event import NormalizedSourceEvent
 from core.memory.temporal import now_utc
 
 from .deduplication import identity_of, payload_hash
+from .handlers import find_rule
 from .exceptions import EventValidationError
 from .models import IngestionOutcome, IngestionReceipt, IngestionResult
 from .processor import EventProcessor
@@ -95,12 +96,24 @@ class IngestionService:
                 reason=str(exc),
             )
 
+        # An event with no mapping rule is valid and is receipted (dedup must
+        # still see it), but nothing was learned from it. Saying only "accepted"
+        # makes that indistinguishable from having created a memory, so the
+        # reason is stated and the case is logged. The event is deliberately not
+        # rejected: it is well-formed, and rejecting it would be a lie about why.
+        unmapped = not memory_ids and find_rule(event) is None
         return IngestionResult(
             outcome=IngestionOutcome.ACCEPTED,
             event_id=event.id,
             user_id=event.user_id,
             correlation_id=event.correlation_id,
             memory_ids=tuple(memory_ids),
+            reason=(
+                f"no mapping rule for {event.type!r}; event receipted but no "
+                f"memory was created"
+                if unmapped
+                else None
+            ),
         )
 
     # -- internals ---------------------------------------------------------
