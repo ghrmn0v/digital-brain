@@ -9,7 +9,7 @@ import {
   ListTodo,
   PlugZap,
   Sparkles,
-} from "lucide-react";
+} from "@/components/icons";
 import { AiOperationsPanel } from "@/components/ai-operations-panel";
 import {
   Badge,
@@ -121,14 +121,14 @@ export default async function DashboardPage() {
           <>
             <Link
               href="/tasks?status=todo"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-700 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
             >
               <ListTodo aria-hidden="true" className="h-4 w-4" />
               Review tasks
             </Link>
             <Link
               href="/approvals"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-sky-300/20 bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
               <CheckCheck aria-hidden="true" className="h-4 w-4" />
               Review approvals
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/tasks"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
               >
                 All tasks
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -206,19 +206,16 @@ export default async function DashboardPage() {
                     <div className="flex items-start gap-3">
                       <span
                         aria-hidden="true"
-                        className={cn(
-                          "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                          overdue ? "bg-rose-300" : "bg-amber-300",
-                        )}
+                        className={cn( "mt-1.5 h-2 w-2 shrink-0 rounded-full", overdue ? "bg-rose-300" : "bg-amber-300", )}
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="min-w-0 break-words text-sm font-medium text-slate-200">
+                          <h3 className="min-w-0 break-words text-sm font-medium text-[var(--text-primary)]">
                             {task.title}
                           </h3>
                           <StatusBadge status={overdue ? "overdue" : task.priority} />
                         </div>
-                        <p className="mt-1.5 text-xs text-slate-500">
+                        <p className="mt-1.5 text-xs text-[var(--text-muted)]">
                           {task.dueAt ? (
                             <time
                               dateTime={task.dueAt}
@@ -254,7 +251,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/calendar"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
               >
                 Open calendar
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -265,8 +262,8 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-slate-800/80">
               {upcoming.items.map((event) => (
                 <li key={event.id} className="flex items-start gap-3 px-5 py-4">
-                  <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-800/70 text-cyan-200">
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel-raised)] text-[var(--accent)]">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
                       {new Intl.DateTimeFormat("en-US", { month: "short" }).format(
                         new Date(event.startsAt),
                       )}
@@ -278,10 +275,10 @@ export default async function DashboardPage() {
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="break-words text-sm font-medium text-slate-200">
+                    <h3 className="break-words text-sm font-medium text-[var(--text-primary)]">
                       {event.title}
                     </h3>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--text-muted)]">
                       <time dateTime={event.startsAt} title={formatDateTime(event.startsAt)}>
                         {formatDateTime(event.startsAt)}
                       </time>
@@ -298,7 +295,7 @@ export default async function DashboardPage() {
               title="No upcoming events"
               description="Your calendar has no confirmed or tentative event starting from now."
               action={
-                <Link href="/calendar" className="text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                <Link href="/calendar" className="text-sm font-semibold text-[var(--accent)]">
                   Add an event
                 </Link>
               }
@@ -313,7 +310,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/jobs"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
               >
                 Job inbox
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -324,12 +321,12 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-slate-800/80">
               {recentJobs.items.map((job) => (
                 <li key={job.id} className="flex items-center gap-3 px-5 py-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/70 text-slate-400">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel-raised)] text-[var(--text-secondary)]">
                     <BriefcaseBusiness aria-hidden="true" className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-medium text-slate-200">{job.title}</h3>
-                    <p className="mt-1 truncate text-xs text-slate-500">
+                    <h3 className="truncate text-sm font-medium text-[var(--text-primary)]">{job.title}</h3>
+                    <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
                       {job.company}
                       {job.location ? ` · ${job.location}` : ""}
                     </p>
@@ -354,7 +351,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/approvals"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
               >
                 Decision queue
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -367,10 +364,10 @@ export default async function DashboardPage() {
                 <li key={action.id} className="px-5 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="break-words font-mono text-sm font-semibold text-cyan-200">
+                      <h3 className="break-words font-mono text-sm font-semibold text-[var(--accent)]">
                         {action.action}
                       </h3>
-                      <p className="mt-1.5 text-xs text-slate-500">
+                      <p className="mt-1.5 text-xs text-[var(--text-muted)]">
                         {action.source} · requested {formatRelativeTime(action.requestedAt, now)}
                       </p>
                     </div>
@@ -398,7 +395,7 @@ export default async function DashboardPage() {
           action={
             <Link
               href="/connectors"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 transition hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
             >
               Manage connectors
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -406,15 +403,15 @@ export default async function DashboardPage() {
           }
         />
         {connectors.length > 0 ? (
-          <div className="grid gap-px bg-slate-800 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-px bg-[var(--panel-raised)] sm:grid-cols-2 xl:grid-cols-3">
             {connectors.map((connector) => (
-              <div key={connector.id} className="flex items-center gap-3 bg-slate-900/70 px-5 py-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-400">
+              <div key={connector.id} className="flex items-center gap-3 bg-[var(--panel)]/70 px-5 py-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel-raised)] text-[var(--text-secondary)]">
                   <PlugZap aria-hidden="true" className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-200">{connector.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="truncate text-sm font-medium text-[var(--text-primary)]">{connector.name}</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
                     {connector.lastSyncAt
                       ? `Synced ${formatRelativeTime(connector.lastSyncAt, now)}`
                       : "No sync recorded"}
@@ -422,7 +419,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                   <StatusBadge status={connector.status} />
-                  {!connector.enabled ? <span className="text-[10px] text-slate-600">Disabled</span> : null}
+                  {!connector.enabled ? <span className="text-[10px] text-[var(--text-muted)]">Disabled</span> : null}
                 </div>
               </div>
             ))}
@@ -434,8 +431,8 @@ export default async function DashboardPage() {
             description="The local database currently contains no connector records."
           />
         )}
-        <div className="flex items-center gap-2 border-t border-slate-800/80 px-5 py-3 text-xs text-slate-500">
-          <span className="font-semibold text-slate-400">{enabledConnectors}</span>
+        <div className="flex items-center gap-2 border-t border-[var(--panel-line)]/80 px-5 py-3 text-xs text-[var(--text-muted)]">
+          <span className="font-semibold text-[var(--text-secondary)]">{enabledConnectors}</span>
           of {connectors.length} connectors enabled
         </div>
       </Panel>

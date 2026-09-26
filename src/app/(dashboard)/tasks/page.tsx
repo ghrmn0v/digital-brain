@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Filter, RotateCcw } from "lucide-react";
+import { Filter, RotateCcw } from "@/components/icons";
 import { TasksManager } from "@/components/tasks-manager";
 import {
   InlineNotice,
@@ -38,7 +38,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       <InlineNotice>
         AI does not need to use the task form. It sends actions such as
-        <code className="mx-1 font-mono text-cyan-100">tasks.create_task</code>;
+        <code className="mx-1 font-mono text-sky-100">tasks.create_task</code>;
         Product applies AUTOMATIC, ASK_FIRST, or OFF policy before writing.
       </InlineNotice>
 
@@ -48,7 +48,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,1fr)_11rem_11rem_auto] lg:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Search</span>
             <input
               type="search"
@@ -59,7 +59,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Status</span>
             <select name="status" defaultValue={query.status ?? ""} className={selectClassName}>
               <option value="">All statuses</option>
@@ -70,7 +70,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               <option value="cancelled">Cancelled</option>
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Priority</span>
             <select name="priority" defaultValue={query.priority ?? ""} className={selectClassName}>
               <option value="">All priorities</option>

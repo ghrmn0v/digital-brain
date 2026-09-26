@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Code2, FileCode2, ShieldCheck, X } from "lucide-react";
+import { Check, Code2, FileCode2, ShieldCheck, X } from "@/components/icons";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import {
   Badge,
@@ -63,10 +63,10 @@ export function DeveloperProposalsManager({
       <Panel>
         <SectionHeading
           title="Core Brain proposals"
-          description="Approval changes proposal state only; Product does not run Git, tests, deployment, or fixes"
+          description="Approval records state only. No Git, test or deploy."
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-slate-500">
-              <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
+            <span className="inline-flex items-center gap-2 text-xs text-[var(--text-muted)]">
+              <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
               Permission required
             </span>
           }
@@ -89,7 +89,7 @@ export function DeveloperProposalsManager({
                 <article key={proposal.id} className="space-y-4 p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-300">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
                         AI proposal
                       </p>
                       <h3 className="mt-1 text-base font-semibold text-white">
@@ -103,7 +103,7 @@ export function DeveloperProposalsManager({
                       <StatusBadge status={proposal.status.toLowerCase()} />
                     </div>
                   </div>
-                  <div className="grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                  <div className="grid gap-2 text-xs text-[var(--text-muted)] sm:grid-cols-2">
                     <span className="inline-flex items-center gap-2">
                       <Code2 aria-hidden="true" className="h-3.5 w-3.5" />
                       {proposal.repository}
@@ -116,11 +116,11 @@ export function DeveloperProposalsManager({
                       </span>
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-primary)]">
                     {proposal.message}
                   </p>
                   {proposal.status === "PENDING" ? (
-                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4">
+                    <div className="flex flex-wrap gap-2 border-t border-[var(--panel-line)] pt-4">
                       <button
                         type="button"
                         disabled={pending}
@@ -141,7 +141,7 @@ export function DeveloperProposalsManager({
                       </button>
                     </div>
                   ) : (
-                    <div className="border-t border-slate-800 pt-4 text-xs text-slate-500">
+                    <div className="border-t border-[var(--panel-line)] pt-4 text-xs text-[var(--text-muted)]">
                       Decision recorded{proposal.decidedBy ? ` by ${proposal.decidedBy}` : ""}. No action execution is attached.
                     </div>
                   )}
@@ -153,7 +153,7 @@ export function DeveloperProposalsManager({
           <EmptyState
             icon={ShieldCheck}
             title="No developer proposals"
-            description="Validated Core Brain bug events will appear here when Developer Mode is enabled."
+            description="Core Brain bug events appear when mode is on"
           />
         )}
       </Panel>

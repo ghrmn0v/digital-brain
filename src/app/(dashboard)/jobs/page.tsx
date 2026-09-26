@@ -5,7 +5,7 @@ import {
   BriefcaseBusiness,
   Filter,
   RotateCcw,
-} from "lucide-react";
+} from "@/components/icons";
 import { JobsManager } from "@/components/jobs-manager";
 import {
   EmptyState,
@@ -73,16 +73,16 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
             <ul className="divide-y divide-slate-800/80">
               {report.jobs.slice(0, 3).map((job) => (
                 <li key={job.id} className="flex items-center gap-3 px-5 py-3.5">
-                  <BriefcaseBusiness aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-500" />
+                  <BriefcaseBusiness aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-200">
+                    <p className="truncate text-sm font-medium text-[var(--text-primary)]">
                       {job.title} · {job.company}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                       First seen {formatRelativeTime(job.firstSeenAt, now)}
                     </p>
                   </div>
-                  <span className="text-xs text-slate-500">{job.source}</span>
+                  <span className="text-xs text-[var(--text-muted)]">{job.source}</span>
                 </li>
               ))}
             </ul>
@@ -102,7 +102,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,1fr)_11rem_11rem_auto] lg:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Search</span>
             <input
               type="search"
@@ -113,7 +113,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Source</span>
             <select name="source" defaultValue={query.source ?? ""} className={selectClassName}>
               <option value="">All sources</option>
@@ -123,7 +123,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
               <option value="other">Other</option>
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Status</span>
             <select name="status" defaultValue={query.status ?? ""} className={selectClassName}>
               <option value="">All statuses</option>

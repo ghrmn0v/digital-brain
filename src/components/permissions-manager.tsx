@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ShieldCheck, SlidersHorizontal } from "@/components/icons";
 import type { PermissionDto } from "@/modules/permissions/contracts";
 import { Switch } from "@/components/switch";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
@@ -71,13 +71,13 @@ function PermissionRow({
 
   return (
     <>
-      <tr className="border-t border-slate-800/80 hover:bg-slate-800/20">
+      <tr className="border-t border-[var(--panel-line)]/80">
         <th scope="row" className="px-5 py-4 text-left align-top">
-          <code className="break-all font-mono text-xs font-semibold text-cyan-200">
+          <code className="break-all font-mono text-xs font-semibold text-[var(--accent)]">
             {permission.action}
           </code>
           {permission.description ? (
-            <p className="mt-1.5 max-w-lg text-xs leading-5 text-slate-500">
+            <p className="mt-1.5 max-w-lg text-xs leading-5 text-[var(--text-muted)]">
               {permission.description}
             </p>
           ) : null}
@@ -91,7 +91,7 @@ function PermissionRow({
           <StatusBadge status={level} />
         </td>
         <td className="px-5 py-4 align-top">
-          <label className="block min-w-36 space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="block min-w-36 space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span className="sr-only">Permission level for {permission.action}</span>
             <select
               value={level}
@@ -122,7 +122,7 @@ function PermissionRow({
                 void save({ enabled: next });
               }}
             />
-            <span className="text-xs text-slate-500">{enabled ? "Enabled" : "Disabled"}</span>
+            <span className="text-xs text-[var(--text-muted)]">{enabled ? "Enabled" : "Disabled"}</span>
             {pending ? <ButtonSpinner /> : null}
           </div>
         </td>
@@ -156,7 +156,7 @@ export function PermissionsManager({ permissions }: { permissions: PermissionDto
                   title={source}
                   description={`${sourcePermissions.length} ${sourcePermissions.length === 1 ? "policy" : "policies"} for this source`}
                   action={
-                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
                       <SlidersHorizontal aria-hidden="true" className="h-3.5 w-3.5" />
                       Policy controls
                     </span>
@@ -166,7 +166,7 @@ export function PermissionsManager({ permissions }: { permissions: PermissionDto
                   <table className="w-full min-w-[760px] border-collapse text-left">
                     <caption className="sr-only">Permission policies for {source}</caption>
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+                      <tr className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                         <th scope="col" className="px-5 py-3">Action</th>
                         <th scope="col" className="px-5 py-3">Current</th>
                         <th scope="col" className="px-5 py-3">Level</th>
@@ -197,7 +197,7 @@ export function PermissionsManager({ permissions }: { permissions: PermissionDto
           <EmptyState
             icon={ShieldCheck}
             title="No permission policies"
-            description="No local policy records exist. Unconfigured actions fall back to ASK_FIRST by design."
+            description="No policies. Unconfigured actions fall back to ASK_FIRST."
           />
         </Panel>
       )}

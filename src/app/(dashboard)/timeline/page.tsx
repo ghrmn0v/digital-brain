@@ -9,7 +9,7 @@ import {
   ListTodo,
   RadioTower,
   RotateCcw,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   Badge,
   EmptyState,
@@ -79,23 +79,23 @@ function TimelineRow({ item, now }: { item: TimelineItemDto; now: Date }) {
 
   return (
     <li className="relative pl-12 sm:pl-14">
-      <span className="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-slate-400 shadow-lg">
+      <span className="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel)] text-[var(--text-secondary)]">
         <Icon aria-hidden="true" className="h-4 w-4" />
       </span>
       <div className="pb-7">
-        <article className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-4 transition hover:border-slate-700 sm:p-5">
+        <article className="rounded-lg border border-[var(--panel-line)]/90 bg-[var(--panel)]/50 p-4 transition sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="info">{humanizeToken(item.kind)}</Badge>
                 <StatusBadge status={item.status} />
-                {source ? <span className="text-xs text-slate-500">Source: {source}</span> : null}
+                {source ? <span className="text-xs text-[var(--text-muted)]">Source: {source}</span> : null}
               </div>
-              <h2 className="mt-3 break-words text-sm font-semibold text-slate-100">
+              <h2 className="mt-3 break-words text-sm font-semibold text-[var(--text-primary)]">
                 {item.title}
               </h2>
               {item.description ? (
-                <p className="mt-1.5 line-clamp-3 text-sm leading-6 text-slate-500">
+                <p className="mt-1.5 line-clamp-3 text-sm leading-6 text-[var(--text-muted)]">
                   {item.description}
                 </p>
               ) : null}
@@ -120,7 +120,7 @@ function TimelineRow({ item, now }: { item: TimelineItemDto; now: Date }) {
               )
             ) : null}
           </div>
-          <p className="mt-4 border-t border-slate-800/70 pt-3 text-xs text-slate-500">
+          <p className="mt-4 border-t border-[var(--panel-line)]/70 pt-3 text-xs text-[var(--text-muted)]">
             <time
               dateTime={item.occurredAt}
               title={formatDateTime(item.occurredAt)}
@@ -163,7 +163,7 @@ export default async function TimelinePage({
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-[12rem_auto_auto] sm:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Kind</span>
             <select name="kind" defaultValue={kind ?? ""} className={selectClassName}>
               <option value="">All kinds</option>
@@ -194,7 +194,7 @@ export default async function TimelinePage({
         />
         {items.length > 0 ? (
           <div className="px-5 py-6 sm:px-6">
-            <ol className="relative before:absolute before:bottom-3 before:left-[1.12rem] before:top-3 before:w-px before:bg-slate-800">
+            <ol className="relative before:absolute before:bottom-3 before:left-[1.12rem] before:top-3 before:w-px before:bg-[var(--panel-raised)]">
               {items.map((item) => (
                 <TimelineRow key={item.id} item={item} now={now} />
               ))}

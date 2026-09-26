@@ -1,4 +1,4 @@
-import { Braces } from "lucide-react";
+import { Braces } from "@/components/icons";
 import { cn } from "@/components/ui";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -12,9 +12,9 @@ function formatPrimitive(value: unknown): string {
 }
 
 function primitiveClassName(value: unknown): string {
-  if (value === null) return "text-slate-500";
+  if (value === null) return "text-[var(--text-muted)]";
   if (typeof value === "boolean") return "text-amber-200";
-  if (typeof value === "number") return "text-cyan-200";
+  if (typeof value === "number") return "text-[var(--accent)]";
   return "text-emerald-200";
 }
 
@@ -29,10 +29,10 @@ function JsonNode({
 }) {
   if (Array.isArray(value)) {
     return (
-      <div className={cn(depth > 0 && "ml-3 border-l border-slate-800 pl-3")}>
-        <p className="text-xs font-semibold text-slate-300">
+      <div className={cn(depth > 0 && "ml-3 border-l border-[var(--panel-line)] pl-3")}>
+        <p className="text-xs font-semibold text-[var(--text-primary)]">
           {label}
-          <span className="ml-1 font-normal text-slate-600">[{value.length}]</span>
+          <span className="ml-1 font-normal text-[var(--text-muted)]">[{value.length}]</span>
         </p>
         <div className="mt-1.5 space-y-1.5">
           {value.length > 0 ? (
@@ -45,7 +45,7 @@ function JsonNode({
               />
             ))
           ) : (
-            <p className="text-xs text-slate-600">Empty array</p>
+            <p className="text-xs text-[var(--text-muted)]">Empty array</p>
           )}
         </div>
       </div>
@@ -55,8 +55,8 @@ function JsonNode({
   if (isRecord(value)) {
     const entries = Object.entries(value);
     return (
-      <div className={cn(depth > 0 && "ml-3 border-l border-slate-800 pl-3")}>
-        <p className="text-xs font-semibold text-slate-300">{label}</p>
+      <div className={cn(depth > 0 && "ml-3 border-l border-[var(--panel-line)] pl-3")}>
+        <p className="text-xs font-semibold text-[var(--text-primary)]">{label}</p>
         {entries.length > 0 ? (
           <div className="mt-1.5 space-y-1.5">
             {entries.map(([key, item]) => (
@@ -64,7 +64,7 @@ function JsonNode({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-slate-600">Empty object</p>
+          <p className="text-xs text-[var(--text-muted)]">Empty object</p>
         )}
       </div>
     );
@@ -72,19 +72,16 @@ function JsonNode({
 
   return (
     <div
-      className={cn(
-        "grid min-w-0 gap-1 py-0.5 sm:grid-cols-[minmax(7rem,0.35fr)_1fr] sm:gap-3",
-        depth > 0 && "ml-3 border-l border-slate-800 pl-3",
+      className={cn( "grid min-w-0 gap-1 py-0.5 sm:grid-cols-[minmax(7rem,0.35fr)_1fr] sm:gap-3",
+        depth > 0 && "ml-3 border-l border-[var(--panel-line)] pl-3",
       )}
     >
-      <span className="break-words text-xs font-semibold text-slate-400">{label}</span>
+      <span className="break-words text-xs font-semibold text-[var(--text-secondary)]">{label}</span>
       <span
-        className={cn(
-          "min-w-0 break-words font-mono text-xs leading-5",
-          primitiveClassName(value),
+        className={cn( "min-w-0 break-words font-mono text-xs leading-5", primitiveClassName(value),
         )}
       >
-        {formatPrimitive(value) || <span className="text-slate-600">Empty string</span>}
+        {formatPrimitive(value) || <span className="text-[var(--text-muted)]">Empty string</span>}
       </span>
     </div>
   );
@@ -98,9 +95,9 @@ export function JsonViewer({
   label?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/65 p-4">
-      <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-300">
-        <Braces aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
+    <div className="rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/65 p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-[var(--text-primary)]">
+        <Braces aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
         {label}
       </div>
       {isRecord(value) ? (
@@ -110,7 +107,7 @@ export function JsonViewer({
               <JsonNode key={key} label={key} value={item} />
             ))
           ) : (
-            <p className="text-xs text-slate-600">No payload fields</p>
+            <p className="text-xs text-[var(--text-muted)]">No payload fields</p>
           )}
         </div>
       ) : (
@@ -122,7 +119,7 @@ export function JsonViewer({
 
 export function JsonBlock({ value }: { value: unknown }) {
   return (
-    <pre className="max-h-64 overflow-auto rounded-xl border border-slate-800 bg-slate-950/70 p-4 font-mono text-xs leading-5 text-slate-300">
+    <pre className="max-h-64 overflow-auto rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/70 p-4 font-mono text-xs leading-5 text-[var(--text-primary)]">
       {JSON.stringify(value, null, 2)}
     </pre>
   );

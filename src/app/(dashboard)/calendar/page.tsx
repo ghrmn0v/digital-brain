@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Filter, RotateCcw } from "lucide-react";
+import { Filter, RotateCcw } from "@/components/icons";
 import { CalendarManager } from "@/components/calendar-manager";
 import {
   InlineNotice,
@@ -49,7 +49,7 @@ export default async function CalendarPage({
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-[minmax(14rem,1fr)_12rem_auto] sm:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Search</span>
             <input
               type="search"
@@ -60,7 +60,7 @@ export default async function CalendarPage({
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
             <span>Status</span>
             <select name="status" defaultValue={query.status ?? ""} className={selectClassName}>
               <option value="">All statuses</option>
