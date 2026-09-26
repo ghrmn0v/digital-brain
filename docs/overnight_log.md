@@ -61,3 +61,19 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   a category chart. All 14 scattered hex literals in the components are gone; the
   only hex left is the token definitions themselves and one doc comment that
   records where the old values came from.
+
+## Task 3 — remove glow shadows and card-radius bloat
+
+- **Files:** `src/components/ui.tsx`,
+  `src/components/dashboard-shell.tsx`,
+  `src/components/connectome/chat-panel.tsx`,
+  `src/components/connectome/command-bar.tsx`,
+  `src/app/(dashboard)/error.tsx`
+- **Result:** PASS
+- **Notes:** All three glow shadows are gone — the cyan bloom on the primary
+  button, the deep drop shadow on every `Panel`, and the halo behind the brand
+  mark. Each was carrying weight without separating anything: a flat accent plus
+  a hairline border does the same job more quietly, and on a page with several
+  CTAs a glowing one out-shouts the content next to it. `Panel` and six repeated
+  cards also stepped down from `rounded-2xl` to `rounded-xl`, so a list of
+  related items reads as a list rather than a stack of tiles.

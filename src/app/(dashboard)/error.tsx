@@ -17,10 +17,10 @@ export default function DashboardError({
   return (
     <div
       role="alert"
-      className="flex min-h-[60vh] items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-500/[0.06] p-6"
+      className="flex min-h-[60vh] items-center justify-center rounded-xl border border-rose-400/20 bg-rose-500/[0.06] p-6"
     >
       <div className="max-w-lg text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-400/20 bg-rose-400/10 text-rose-200">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-rose-400/20 bg-rose-400/10 text-rose-200">
           <AlertTriangle aria-hidden="true" className="h-6 w-6" />
         </div>
         <h1 className="mt-5 text-xl font-semibold text-white">

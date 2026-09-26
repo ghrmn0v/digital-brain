@@ -99,7 +99,7 @@ function Brand() {
       className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
         aria-label="Cerebro Flow dashboard"
     >
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 shadow-[0_0_30px_-14px_rgba(34,211,238,0.8)]">
+      <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
         <Bot aria-hidden="true" className="h-5 w-5" />
         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-slate-950 bg-emerald-300" />
       </span>

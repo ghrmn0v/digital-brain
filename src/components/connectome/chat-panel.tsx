@@ -174,7 +174,7 @@ export function ChatPanel({
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
         {turns.length === 0 ? (
           <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-10 text-center">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+            <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
               <BrainCircuit aria-hidden="true" className="h-5 w-5" />
             </span>
             <h2 className="mt-4 text-base font-semibold text-slate-100">
@@ -327,7 +327,7 @@ function AnswerPanel({ result }: { result: ChatResult }) {
   const grounding = result.grounded_in ?? [];
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
         <p className="whitespace-pre-wrap break-words text-sm leading-7 text-slate-100">
           {result.answer}
         </p>
@@ -364,7 +364,7 @@ function AnswerPanel({ result }: { result: ChatResult }) {
       </div>
 
       {grounding.length > 0 ? (
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/30 p-4">
+        <div className="rounded-xl border border-slate-800/80 bg-slate-900/30 p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Grounded in {grounding.length} memor
             {grounding.length === 1 ? "y" : "ies"}
