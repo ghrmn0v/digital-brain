@@ -160,6 +160,8 @@ function _swapFly(next) {
 function setDevSkin(enabled) {
   _devModeActive = enabled;
   scene.background.setHex(enabled ? 0x080f0a : 0x0b0f14);
+  // Switch bubble style
+  document.getElementById("speech-bubble").classList.toggle("dev", enabled);
 
   if (enabled) {
     if (roboFly) {
@@ -307,23 +309,6 @@ const stateLabel = document.getElementById("state");
 
 const toast = document.getElementById("toast");
 let toastTimer = 0;
-/**
- * Escape a value for interpolation into toast markup.
- *
- * `showToast` needs real HTML because messages carry styled spans, so the
- * markup is authored here and only ever *values* are escaped. Message bodies and
- * sender names already go through `textContent`; this closes the same door for
- * toasts, whose inputs come from the backend response. Today those are enums and
- * numbers, so nothing is exploitable — but a backend that ever echoes free-form
- * text into `fetch` or `flight` would otherwise turn this into script execution
- * inside a renderer that has a preload bridge.
- */
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
-  ));
-}
-
 function showToast(html, cls = "") {
   toast.innerHTML = html;
   toast.className = cls ? `visible ${cls}` : "visible";
@@ -665,7 +650,7 @@ function wireControls() {
       context,
     });
     if (result && result.fetch) {
-      showToast(`Event <span class="t-k">sent</span> → Fly: <span class="t-r">${esc(result.fetch)}</span>`);
+      showToast(`Event <span class="t-k">sent</span> → Fly: <span class="t-r">${result.fetch}</span>`);
     }
     if (context.body_preview) showBubble(context);
   });
@@ -693,12 +678,12 @@ function wireControls() {
         const n = result.synapse_delta ? Object.keys(result.synapse_delta).length : 0;
         const sign = result.reward_value > 0 ? "+" : result.reward_value < 0 ? "" : "±";
         showToast(
-          `Feedback <span class="t-k">${esc(feedback)}</span> · reward <span class="t-r">${sign}${esc(result.reward_value)}</span> · ${n} synapses updated`,
+          `Feedback <span class="t-k">${feedback}</span> · reward <span class="t-r">${sign}${result.reward_value}</span> · ${n} sinaps yeniləndi`,
         );
       } else if (result) {
-        showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · accepted`);
+        showToast(`Feedback <span class="t-k">${feedback}</span> · qəbul edildi`);
       } else {
-        showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · offline — could not reach the brain`);
+        showToast(`Feedback <span class="t-k">${feedback}</span> · offline — beynə çatmadı`);
       }
     });
   }
@@ -735,7 +720,7 @@ function wireControls() {
     if (result && "flight" in result) {
       showToast(
         `Flight mode <span class="t-k">${result.flight ? "ON" : "OFF"}</span> — fly ${
-          result.flight ? "can take off (free flight)" : "perches, only reacts to events"
+          result.flight ? "uça bilər (free flight)" : "oturur, sadəcə eventə reaksiya"
         }`,
       );
     }

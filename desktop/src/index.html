@@ -54,27 +54,103 @@
     button.primary { background: var(--accent); color: #06121f; font-weight: 700; border: none; }
     #priority-value { float: right; color: var(--accent); font-weight: 700; }
 
+    /* ── Normal bubble — warm paper / parchment feel ─────────────── */
     #speech-bubble {
       position: fixed; left: 0; top: 0; z-index: 20;
-      display: none; max-width: 340px;
-      background: #121820; color: var(--text);
-      border: 1px solid var(--accent); border-radius: 12px;
-      padding: 10px 14px; font-size: 13px; line-height: 1.4;
-      box-shadow: 0 0 18px rgba(74, 163, 255, 0.35);
+      display: none; max-width: 300px;
+
+      /* parchment tones */
+      background: #f5f0e8;
+      color: #2c2016;
+
+      /* left accent stripe like a sticky note crease */
+      border: 1px solid #d9ccb4;
+      border-left: 3px solid #b89a6a;
+      border-radius: 3px 12px 12px 3px;
+
+      padding: 10px 14px 10px 12px;
+      font-size: 13px; line-height: 1.55;
+
+      /* warm serif — Georgia is universally available */
+      font-family: Georgia, "Times New Roman", serif;
+
+      /* soft warm shadow, no harsh dark drop */
+      box-shadow:
+        0 2px 8px rgba(90,60,20,0.18),
+        0 0 0 1px rgba(180,150,100,0.12);
+
       transform: translate(-50%, -100%);
-      pointer-events: none; backdrop-filter: blur(6px);
+      pointer-events: none;
     }
+    /* caret — matches parchment background */
     #speech-bubble::after {
       content: ""; position: absolute; top: 100%; left: 50%;
       margin-left: -8px; border: 8px solid transparent;
-      border-top-color: rgba(74, 163, 255, 0.9);
+      border-top-color: #f5f0e8;
     }
-    #speech-bubble .speaker { display: block; color: var(--accent); font-weight: 700; margin-bottom: 3px; font-size: 12px; }
-    #speech-bubble .meta {
-      display: block; margin-top: 5px; padding-top: 5px;
-      border-top: 1px solid var(--line);
-      color: var(--muted); font-size: 11px;
-      font-family: ui-monospace, "Cascadia Code", monospace;
+    /* tiny shadow under caret so it reads against the dark scene */
+    #speech-bubble::before {
+      content: ""; position: absolute; top: calc(100% + 1px); left: 50%;
+      margin-left: -9px; border: 9px solid transparent;
+      border-top-color: rgba(90,60,20,0.15);
+      z-index: -1;
+    }
+    #speech-bubble .speaker {
+      display: block; margin-bottom: 4px;
+      font-size: 10px; font-family: -apple-system, "Segoe UI", sans-serif;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+      color: #8a6a40;   /* warm brown */
+    }
+    #speech-bubble .text { display: block; color: #2c2016; }
+    #speech-bubble .meta { display: none; }   /* hidden in normal mode */
+
+    /* ── Dev bubble (added when _devModeActive) ──────────────────── */
+    #speech-bubble.dev {
+      background: rgba(0, 8, 4, 0.92);
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      border-radius: 4px;
+      font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+      font-size: 12px; line-height: 1.6;
+      box-shadow: 0 0 12px rgba(0,255,136,0.3), 0 0 32px rgba(0,255,136,0.12);
+      max-width: 360px;
+      /* scanline overlay */
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,255,136,0.03) 2px,
+        rgba(0,255,136,0.03) 4px
+      );
+    }
+    #speech-bubble.dev::before {
+      content: "// SIGNAL RECEIVED";
+      display: block; font-size: 9px; letter-spacing: 0.15em;
+      color: rgba(0,255,136,0.45); margin-bottom: 6px;
+    }
+    #speech-bubble.dev::after {
+      border-top-color: #00ff88;
+    }
+    #speech-bubble.dev .speaker {
+      color: #00ffcc; font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; font-weight: 400;
+    }
+    #speech-bubble.dev .text {
+      color: #00ff88;
+    }
+    #speech-bubble.dev .meta {
+      display: block; margin-top: 6px; padding-top: 6px;
+      border-top: 1px solid rgba(0,255,136,0.25);
+      color: rgba(0,255,136,0.55); font-size: 10px;
+    }
+    /* blinking cursor at end of dev bubble text */
+    #speech-bubble.dev .text::after {
+      content: "▋";
+      animation: blink 1s step-end infinite;
+      color: #00ff88; margin-left: 2px;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; } 50% { opacity: 0; }
     }
     #panel .dev-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
     #panel .dev-toggle input { width: auto; margin: 0; }
@@ -114,7 +190,7 @@
     <label for="topic">Context topic</label>
     <input type="text" id="topic" value="job" />
     <label for="msg">Message (thought bubble)</label>
-    <input type="text" id="msg" placeholder="e.g. A job offer arrived: Senior Engineer" />
+    <input type="text" id="msg" placeholder="məs. İş təklifi gəldi: Senior Engineer" />
     <div class="row">
       <button class="primary" id="send">Send event</button>
       <button id="demo-cycle">Demo cycle</button>
@@ -136,7 +212,7 @@
 
     <h3>Developer Mode</h3>
     <label class="dev-toggle"><input type="checkbox" id="dev-mode" /> Receive Core Brain developer events</label>
-    <label class="dev-toggle"><input type="checkbox" id="flight-mode" /> Fly can take off (off: perches and reacts to events)</label>
+    <label class="dev-toggle"><input type="checkbox" id="flight-mode" /> Fly uça bilər (off: oturur + eventə reaksiya)</label>
   </div>
 
   <script type="module" src="./renderer.js"></script>
