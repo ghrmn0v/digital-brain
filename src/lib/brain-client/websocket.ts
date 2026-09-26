@@ -44,7 +44,11 @@ import {
   type EventHandler,
   type RequestOptions,
 } from "./common.ts";
-import { BrainContractError, BrainTransportError } from "./errors.ts";
+import {
+  BrainClosedError,
+  BrainContractError,
+  BrainTransportError,
+} from "./errors.ts";
 
 export type WebSocketReadyState = 0 | 1 | 2 | 3;
 
@@ -57,6 +61,12 @@ export interface WebSocketLike {
 }
 
 export type WebSocketFactory = (url: string) => WebSocketLike;
+
+/** Constructor shape of the platform `WebSocket` global. */
+export type WebSocketConstructorLike = new (
+  url: string,
+  protocols?: string | string[],
+) => WebSocketLike;
 
 export interface WebSocketBrainClientOptions {
   /** Full WebSocket URL, or a base URL that gets `/v1/brain?user_id=...` appended. */
@@ -115,10 +125,10 @@ export class WebSocketBrainClient {
     this.userId = assertValidUserId(options.userId);
     this.url = buildSocketUrl(options.url, this.userId);
     const injected = options.socketFactory;
+    // The platform `WebSocket` is a constructor, not a plain factory function,
+    // so it is looked up through a constructor signature and wrapped below.
     const platformSocket = (
-      globalThis as unknown as {
-        WebSocket?: new (url: string) => WebSocketLike;
-      }
+      globalThis as unknown as { WebSocket?: WebSocketConstructorLike }
     ).WebSocket;
     const resolved =
       injected ??
@@ -172,7 +182,7 @@ export class WebSocketBrainClient {
       return this;
     }
     if (this.closed) {
-      throw new BrainContractError("client is closed", "closed", {
+      throw new BrainClosedError("client is closed", {
         reason: this.closeReason ?? null,
       });
     }
@@ -233,7 +243,7 @@ export class WebSocketBrainClient {
     const socket = this.socket;
     this.socket = null;
     for (const pending of [...this.pending.values()]) {
-      this.settle(pending, null, new BrainContractError(reason, "closed"));
+      this.settle(pending, null, new BrainClosedError(reason));
     }
     if (socket !== null) {
       try {
@@ -259,7 +269,7 @@ export class WebSocketBrainClient {
       await this.connect();
       const socket = this.socket;
       if (socket === null) {
-        throw new BrainContractError("client is closed", "closed", {
+        throw new BrainClosedError("client is closed", {
           reason: this.closeReason ?? null,
         });
       }
@@ -406,7 +416,7 @@ export class WebSocketBrainClient {
           return;
         }
         for (const pending of [...this.pending.values()]) {
-          this.settle(pending, null, new BrainContractError(reason, "closed"));
+          this.settle(pending, null, new BrainClosedError(reason));
         }
       });
     });
