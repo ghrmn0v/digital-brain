@@ -225,7 +225,7 @@ export function ConnectomeWorkspace({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="hidden text-[11px] tabular-nums text-zinc-600 xl:inline">
+          <span className="hidden text-[11px] tabular-nums text-zinc-550 xl:inline">
             {visible.nodes.length} nodes · {visible.edges.length} links
           </span>
           <CommandSettingsLink />
@@ -252,7 +252,7 @@ export function ConnectomeWorkspace({
             developerModeEnabled={developerModeEnabled}
           />
           <div className="shrink-0 border-t border-zinc-800/50 px-3 py-2.5">
-            <p className="text-[11px] leading-4 text-zinc-600">
+            <p className="text-[11px] leading-4 text-zinc-550">
               Local-first. Every node is an event this device recorded.
             </p>
           </div>
@@ -263,7 +263,7 @@ export function ConnectomeWorkspace({
             {[...counts.entries()].map(([kind, count]) => (
               <span
                 key={kind}
-                className="shrink-0 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-zinc-500"
+                className="shrink-0 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-zinc-450"
               >
                 {nodeStyles[kind as keyof typeof nodeStyles]?.short ?? kind} {count}
               </span>
@@ -285,7 +285,7 @@ export function ConnectomeWorkspace({
                   <h2 className="text-sm font-semibold text-zinc-200">
                     Your brain is still learning.
                   </h2>
-                  <p className="mt-1.5 text-xs leading-5 text-zinc-500">
+                  <p className="mt-1.5 text-xs leading-5 text-zinc-450">
                     Connect a source to start building your memory graph. Events
                     appear here the moment they are received.
                   </p>

@@ -65,7 +65,7 @@ export function DeveloperProposalsManager({
           title="Core Brain proposals"
           description="Approval changes proposal state only; Product does not run Git, tests, deployment, or fixes"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
               <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
               Permission required
             </span>
@@ -103,7 +103,7 @@ export function DeveloperProposalsManager({
                       <StatusBadge status={proposal.status.toLowerCase()} />
                     </div>
                   </div>
-                  <div className="grid gap-2 text-xs text-zinc-500 sm:grid-cols-2">
+                  <div className="grid gap-2 text-xs text-zinc-450 sm:grid-cols-2">
                     <span className="inline-flex items-center gap-2">
                       <Code2 aria-hidden="true" className="h-3.5 w-3.5" />
                       {proposal.repository}
@@ -141,7 +141,7 @@ export function DeveloperProposalsManager({
                       </button>
                     </div>
                   ) : (
-                    <div className="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
+                    <div className="border-t border-zinc-800 pt-4 text-xs text-zinc-450">
                       Decision recorded{proposal.decidedBy ? ` by ${proposal.decidedBy}` : ""}. No action execution is attached.
                     </div>
                   )}

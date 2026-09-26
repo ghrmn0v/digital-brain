@@ -218,7 +218,7 @@ export default async function DashboardPage() {
                           </h3>
                           <StatusBadge status={overdue ? "overdue" : task.priority} />
                         </div>
-                        <p className="mt-1.5 text-xs text-zinc-500">
+                        <p className="mt-1.5 text-xs text-zinc-450">
                           {task.dueAt ? (
                             <time
                               dateTime={task.dueAt}
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
               {upcoming.items.map((event) => (
                 <li key={event.id} className="flex items-start gap-3 px-5 py-4">
                   <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/70 text-cyan-200">
-                    <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-450">
                       {new Intl.DateTimeFormat("en-US", { month: "short" }).format(
                         new Date(event.startsAt),
                       )}
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                     <h3 className="break-words text-sm font-medium text-zinc-200">
                       {event.title}
                     </h3>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-zinc-450">
                       <time dateTime={event.startsAt} title={formatDateTime(event.startsAt)}>
                         {formatDateTime(event.startsAt)}
                       </time>
@@ -329,7 +329,7 @@ export default async function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-medium text-zinc-200">{job.title}</h3>
-                    <p className="mt-1 truncate text-xs text-zinc-500">
+                    <p className="mt-1 truncate text-xs text-zinc-450">
                       {job.company}
                       {job.location ? ` · ${job.location}` : ""}
                     </p>
@@ -370,7 +370,7 @@ export default async function DashboardPage() {
                       <h3 className="break-words font-mono text-sm font-semibold text-cyan-200">
                         {action.action}
                       </h3>
-                      <p className="mt-1.5 text-xs text-zinc-500">
+                      <p className="mt-1.5 text-xs text-zinc-450">
                         {action.source} · requested {formatRelativeTime(action.requestedAt, now)}
                       </p>
                     </div>
@@ -414,7 +414,7 @@ export default async function DashboardPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-zinc-200">{connector.name}</p>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-zinc-450">
                     {connector.lastSyncAt
                       ? `Synced ${formatRelativeTime(connector.lastSyncAt, now)}`
                       : "No sync recorded"}
@@ -422,7 +422,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                   <StatusBadge status={connector.status} />
-                  {!connector.enabled ? <span className="text-[10px] text-zinc-600">Disabled</span> : null}
+                  {!connector.enabled ? <span className="text-[10px] text-zinc-550">Disabled</span> : null}
                 </div>
               </div>
             ))}
@@ -434,7 +434,7 @@ export default async function DashboardPage() {
             description="The local database currently contains no connector records."
           />
         )}
-        <div className="flex items-center gap-2 border-t border-zinc-800/80 px-5 py-3 text-xs text-zinc-500">
+        <div className="flex items-center gap-2 border-t border-zinc-800/80 px-5 py-3 text-xs text-zinc-450">
           <span className="font-semibold text-zinc-400">{enabledConnectors}</span>
           of {connectors.length} connectors enabled
         </div>

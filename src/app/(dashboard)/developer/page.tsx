@@ -88,7 +88,7 @@ export default async function DeveloperPage() {
                       <p className="mt-3 text-sm font-semibold text-zinc-200">
                         {item.label}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-500">
+                      <p className="mt-1 text-xs leading-5 text-zinc-450">
                         {item.detail}
                       </p>
                     </div>
@@ -103,7 +103,7 @@ export default async function DeveloperPage() {
                 <p className="mt-3 text-sm font-semibold text-zinc-200">
                   Repository context
                 </p>
-                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                <p className="mt-1 text-xs leading-5 text-zinc-450">
                   {repositories.length > 0
                     ? repositories.join(", ")
                     : "Waiting for Core Brain repository context"}
@@ -112,7 +112,7 @@ export default async function DeveloperPage() {
               <Panel className="p-5">
                 <GitBranch aria-hidden="true" className="h-4 w-4 text-amber-300" />
                 <p className="mt-3 text-sm font-semibold text-zinc-200">Git port</p>
-                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                <p className="mt-1 text-xs leading-5 text-zinc-450">
                   Interface prepared; no Git command or mutation is implemented.
                 </p>
               </Panel>
@@ -121,7 +121,7 @@ export default async function DeveloperPage() {
                 <p className="mt-3 text-sm font-semibold text-zinc-200">
                   Test and deploy ports
                 </p>
-                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                <p className="mt-1 text-xs leading-5 text-zinc-450">
                   Future capabilities only; no test runner or deployment adapter exists.
                 </p>
               </Panel>

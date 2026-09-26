@@ -60,19 +60,19 @@ export function AiOperationsPanel({
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <Workflow aria-hidden="true" className="h-4 w-4 text-cyan-300" />
             <p className="mt-3 text-2xl font-semibold text-white">{enabledAutomations}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">Active automations</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-450">Active automations</p>
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <CheckCheck aria-hidden="true" className="h-4 w-4 text-amber-300" />
             <p className="mt-3 text-2xl font-semibold text-white">{pendingApprovals}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">Waiting for you</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-450">Waiting for you</p>
           </div>
           <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <ShieldCheck aria-hidden="true" className="h-4 w-4 text-emerald-300" />
             <p className="mt-3 text-2xl font-semibold text-white">
               {permissionSummary.automatic}
             </p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">
+            <p className="mt-1 text-xs leading-5 text-zinc-450">
               Automatic · {permissionSummary.askFirst} ask · {permissionSummary.off} off
             </p>
           </div>

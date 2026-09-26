@@ -16,7 +16,7 @@ export function cn(
 }
 
 export const inputClassName =
-  "min-h-11 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-11 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-550 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const selectClassName = cn(
   inputClassName,
@@ -98,7 +98,7 @@ export function SectionHeading({
       <div>
         <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
         {description ? (
-          <p className="mt-1 text-xs leading-5 text-zinc-500">{description}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-450">{description}</p>
         ) : null}
       </div>
       {action}
@@ -209,7 +209,7 @@ export function EmptyState({
         <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
       <h3 className="mt-4 text-sm font-semibold text-zinc-200">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500">
+      <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-450">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}
@@ -302,7 +302,7 @@ export function MetricCard({
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-450">
           {label}
         </p>
         <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800/70 text-zinc-400 transition group-hover:border-cyan-400/20 group-hover:text-cyan-300">
@@ -310,7 +310,7 @@ export function MetricCard({
         </span>
       </div>
       <p className="mt-5 text-3xl font-semibold tracking-tight text-white">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-zinc-500">{detail}</p>
+      <p className="mt-1 text-xs leading-5 text-zinc-450">{detail}</p>
     </>
   );
 

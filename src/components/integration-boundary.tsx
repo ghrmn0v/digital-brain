@@ -92,7 +92,7 @@ export function IntegrationBoundary({
               </Link>
             </div>
           </div>
-          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-zinc-800 bg-zinc-950/70 text-zinc-600 lg:h-40 lg:w-40">
+          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-zinc-800 bg-zinc-950/70 text-zinc-550 lg:h-40 lg:w-40">
             {configured ? (
               <Cable aria-hidden="true" className="h-12 w-12" />
             ) : (
@@ -108,7 +108,7 @@ export function IntegrationBoundary({
             <h2 className="text-sm font-semibold text-zinc-100">
               Required read contract
             </h2>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">
+            <p className="mt-1 text-xs leading-5 text-zinc-450">
               These are implementation requirements, not assumed endpoints.
             </p>
           </div>
@@ -122,7 +122,7 @@ export function IntegrationBoundary({
                   <h3 className="text-sm font-semibold text-zinc-200">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-6 text-zinc-500">
+                  <p className="mt-1.5 text-sm leading-6 text-zinc-450">
                     {item.description}
                   </p>
                 </div>
@@ -141,7 +141,7 @@ export function IntegrationBoundary({
               <LockKeyhole aria-hidden="true" className="h-4 w-4 text-cyan-300" />
               Security boundary
             </div>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-500">
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-450">
               <li>CORE_BRAIN_API_TOKEN remains server-only.</li>
               <li>URLs and credential values are never passed to Client Components.</li>
               <li>Only configured booleans are exposed on integration screens.</li>

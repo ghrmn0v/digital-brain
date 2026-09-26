@@ -35,8 +35,18 @@ export const palette = {
 
   text: "#FAFAFA",
   textMuted: "#A1A1AA",
-  textSubtle: "#71717A",
-  textFaint: "#52525B",
+  /**
+   * The caption and section-label tier. These are the two dimmest steps in the
+   * ramp and both are load-bearing: captions and uppercase labels are the text
+   * a reader spends the least time on, so they need to be quieter than body
+   * copy without becoming unreadable. Measured against the composited grounds
+   * (a `zinc-900/55` panel over `zinc-950`, and the page itself) these land at
+   * 6.0:1 and 4.8:1, where Tailwind's own `zinc-500` and `zinc-600` would give
+   * 4.0:1 and 2.5:1 and fail WCAG AA at the 10-12px these are used. They are
+   * mirrored as `zinc-450` and `zinc-550` in `globals.css`.
+   */
+  textSubtle: "#8E8E99",
+  textFaint: "#7E7E8A",
 
   /** The only accent. Used for intelligence, selection and focus. */
   accent: "#22D3EE",

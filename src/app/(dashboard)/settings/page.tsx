@@ -45,11 +45,11 @@ function ReadinessCard({
         </Badge>
       </div>
       <h3 className="mt-5 text-sm font-semibold text-zinc-100">{name}</h3>
-      <p className="mt-1.5 text-sm leading-6 text-zinc-500">{description}</p>
-      <div className="mt-4 flex items-center gap-2 border-t border-zinc-800/70 pt-3 text-xs text-zinc-500">
+      <p className="mt-1.5 text-sm leading-6 text-zinc-450">{description}</p>
+      <div className="mt-4 flex items-center gap-2 border-t border-zinc-800/70 pt-3 text-xs text-zinc-450">
         <StatusIcon
           aria-hidden="true"
-          className={configured ? "h-3.5 w-3.5 text-emerald-300" : "h-3.5 w-3.5 text-zinc-600"}
+          className={configured ? "h-3.5 w-3.5 text-emerald-300" : "h-3.5 w-3.5 text-zinc-550"}
         />
         URL configured: {configured ? "yes" : "no"}
       </div>
@@ -108,7 +108,7 @@ export default async function SettingsPage() {
             />
           </div>
         </div>
-        <div className="hidden items-start gap-3 border-t border-zinc-800 px-5 py-4 text-xs leading-5 text-zinc-500 min-[900px]:flex">
+        <div className="hidden items-start gap-3 border-t border-zinc-800 px-5 py-4 text-xs leading-5 text-zinc-450 min-[900px]:flex">
           <Settings2 aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
           CORE_BRAIN_API_TOKEN and FLY_API_TOKEN are never read, returned, or
           rendered by this interface.

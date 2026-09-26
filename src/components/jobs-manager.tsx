@@ -80,7 +80,7 @@ function JobCard({
             <Badge tone="info">{job.source}</Badge>
             <StatusBadge status={job.status} />
             {job.publishedAt ? (
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-zinc-450">
                 Published {formatDate(job.publishedAt)}
               </span>
             ) : null}
@@ -89,7 +89,7 @@ function JobCard({
             {job.title}
           </h3>
           <p className="mt-1 text-sm font-medium text-zinc-400">{job.company}</p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-450">
             {job.location ? (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
@@ -116,7 +116,7 @@ function JobCard({
                 </span>
               ))}
               {job.skills.length > 8 ? (
-                <span className="px-1 py-1 text-[11px] text-zinc-600">
+                <span className="px-1 py-1 text-[11px] text-zinc-550">
                   +{job.skills.length - 8} more
                 </span>
               ) : null}

@@ -87,7 +87,7 @@ function ConnectorCard({
             <StatusBadge status={connector.status} />
             {enabled ? <Badge tone="success">Enabled</Badge> : <Badge>Inactive</Badge>}
           </div>
-          <p className="mt-1.5 font-mono text-xs text-zinc-500">
+          <p className="mt-1.5 font-mono text-xs text-zinc-450">
             {connector.type} · v{connector.version}
           </p>
         </div>
@@ -104,7 +104,7 @@ function ConnectorCard({
 
       <dl className="mt-5 grid gap-4 border-t border-zinc-800/70 pt-4 text-xs sm:grid-cols-2">
         <div>
-          <dt className="font-medium text-zinc-600">Last sync</dt>
+          <dt className="font-medium text-zinc-550">Last sync</dt>
           <dd className="mt-1.5 text-zinc-300">
             {connector.lastSyncAt ? (
               <time dateTime={connector.lastSyncAt} title={formatDateTime(connector.lastSyncAt)}>
@@ -116,7 +116,7 @@ function ConnectorCard({
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-zinc-600">Last error</dt>
+          <dt className="font-medium text-zinc-550">Last error</dt>
           <dd
             className={
               connector.lastError
@@ -178,15 +178,15 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Seeded</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Seeded</p>
           <p className="mt-2 text-2xl font-semibold text-white">{connectors.length}</p>
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Enabled</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Enabled</p>
           <p className="mt-2 text-2xl font-semibold text-white">{enabled}</p>
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Healthy</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Healthy</p>
           <p className="mt-2 text-2xl font-semibold text-white">{healthy}</p>
         </div>
       </div>
@@ -196,7 +196,7 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
           title="Connector registry"
           description="Real connector records from the local database"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
               <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5" />
               Secrets hidden
             </span>

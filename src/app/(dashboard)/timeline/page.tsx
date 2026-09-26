@@ -89,13 +89,13 @@ function TimelineRow({ item, now }: { item: TimelineItemDto; now: Date }) {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="info">{humanizeToken(item.kind)}</Badge>
                 <StatusBadge status={item.status} />
-                {source ? <span className="text-xs text-zinc-500">Source: {source}</span> : null}
+                {source ? <span className="text-xs text-zinc-450">Source: {source}</span> : null}
               </div>
               <h2 className="mt-3 break-words text-sm font-semibold text-zinc-100">
                 {item.title}
               </h2>
               {item.description ? (
-                <p className="mt-1.5 line-clamp-3 text-sm leading-6 text-zinc-500">
+                <p className="mt-1.5 line-clamp-3 text-sm leading-6 text-zinc-450">
                   {item.description}
                 </p>
               ) : null}
@@ -120,7 +120,7 @@ function TimelineRow({ item, now }: { item: TimelineItemDto; now: Date }) {
               )
             ) : null}
           </div>
-          <p className="mt-4 border-t border-zinc-800/70 pt-3 text-xs text-zinc-500">
+          <p className="mt-4 border-t border-zinc-800/70 pt-3 text-xs text-zinc-450">
             <time
               dateTime={item.occurredAt}
               title={formatDateTime(item.occurredAt)}

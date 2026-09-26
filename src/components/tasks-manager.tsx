@@ -93,11 +93,11 @@ function TaskRow({
             <StatusBadge status={task.priority} />
           </div>
           {task.description ? (
-            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-500">
+            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-450">
               {task.description}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-450">
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock aria-hidden="true" className="h-3.5 w-3.5" />
               {task.dueAt ? (
@@ -339,7 +339,7 @@ export function TasksManager({
             />
           </label>
           <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-            <span>Description <span className="text-zinc-600">optional</span></span>
+            <span>Description <span className="text-zinc-550">optional</span></span>
             <input
               name="description"
               type="text"
@@ -366,7 +366,7 @@ export function TasksManager({
             </select>
           </label>
           <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-            <span>Due <span className="text-zinc-600">optional</span></span>
+            <span>Due <span className="text-zinc-550">optional</span></span>
             <input name="dueAt" type="datetime-local" className={inputClassName} />
           </label>
           <button

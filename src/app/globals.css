@@ -11,6 +11,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /*
+   * Two extra steps in the neutral ramp. Tailwind's own zinc-500 and zinc-600
+   * measure 4.0:1 and 2.5:1 against this app's near-black grounds, which fails
+   * WCAG AA for body text, and they were carrying every caption and section
+   * label. There is no passing step between zinc-400 and zinc-500, so the
+   * dimmest legible tier is inserted here rather than flattening the ramp and
+   * losing the distinction between body text and a caption.
+   */
+  --color-zinc-450: #8e8e99;
+  --color-zinc-550: #7e7e8a;
 }
 
 * {

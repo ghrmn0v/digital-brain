@@ -89,7 +89,7 @@ export function ConnectomeTimeline({
 
   if (placements.length === 0) {
     return (
-      <div className="flex items-center gap-2.5 px-4 py-3 text-xs text-zinc-500">
+      <div className="flex items-center gap-2.5 px-4 py-3 text-xs text-zinc-450">
         <CalendarClock aria-hidden="true" className="h-3.5 w-3.5" />
           Your timeline will appear as Cerebro Flow receives events.
       </div>
@@ -99,10 +99,10 @@ export function ConnectomeTimeline({
   return (
     <div className="px-4 py-3">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-450">
           Timeline
         </p>
-        <p className="text-[11px] text-zinc-600">
+        <p className="text-[11px] text-zinc-550">
           {placements.length} event{placements.length === 1 ? "" : "s"} · {caption}
         </p>
       </div>

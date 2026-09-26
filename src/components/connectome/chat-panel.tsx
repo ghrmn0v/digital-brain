@@ -246,14 +246,14 @@ export function ChatPanel({
       <div className="shrink-0 border-t border-zinc-800/70 bg-zinc-950/70 px-4 py-3 sm:px-6">
         <div className="mx-auto w-full max-w-2xl">
           {context ? (
-            <div className="mb-2 flex items-center gap-2 text-[11px] text-zinc-500">
+            <div className="mb-2 flex items-center gap-2 text-[11px] text-zinc-450">
               <span className="truncate">
                 Context: <span className="text-zinc-400">{context}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setContext(null)}
-                className="shrink-0 rounded px-1 text-zinc-500 transition hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="shrink-0 rounded px-1 text-zinc-450 transition hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               >
                 clear
               </button>
@@ -296,7 +296,7 @@ export function ChatPanel({
                 }
               }}
               placeholder="What do I know about…"
-              className="min-h-11 flex-1 resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20"
+              className="min-h-11 flex-1 resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-550 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20"
             />
             <button
               type="submit"
@@ -311,7 +311,7 @@ export function ChatPanel({
               )}
             </button>
           </form>
-          <p className="mt-2 text-[11px] text-zinc-600">
+          <p className="mt-2 text-[11px] text-zinc-550">
             <CornerDownLeft aria-hidden="true" className="mr-1 inline h-3 w-3" />
             Enter to send, Shift+Enter for a new line. Answers come only from stored
             memory.
@@ -332,7 +332,7 @@ function TurnCard({ turn }: { turn: Turn }) {
         <div className="min-w-0 flex-1">
           <p className="break-words text-sm text-zinc-200">{turn.question}</p>
           {turn.contextLabel ? (
-            <p className="mt-0.5 truncate text-[11px] text-zinc-600">
+            <p className="mt-0.5 truncate text-[11px] text-zinc-550">
               while looking at {turn.contextLabel}
             </p>
           ) : null}
@@ -341,7 +341,7 @@ function TurnCard({ turn }: { turn: Turn }) {
 
       <div className="ml-9 space-y-3">
         {turn.status === "pending" ? (
-          <p className="flex items-center gap-2 text-sm text-zinc-500">
+          <p className="flex items-center gap-2 text-sm text-zinc-450">
             <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
             Thinking…
           </p>
@@ -381,7 +381,7 @@ function AnswerPanel({ result }: { result: ChatResult }) {
           <span className="inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800/70 px-2 py-0.5 text-[11px] text-zinc-300">
             {result.provider}
           </span>
-          <span className="text-[11px] text-zinc-500">
+          <span className="text-[11px] text-zinc-450">
             {result.context_fact_count} fact
             {result.context_fact_count === 1 ? "" : "s"} in context
           </span>
@@ -401,7 +401,7 @@ function AnswerPanel({ result }: { result: ChatResult }) {
 
       {grounding.length > 0 ? (
         <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-450">
             Grounded in {grounding.length} memor
             {grounding.length === 1 ? "y" : "ies"}
           </p>
@@ -415,7 +415,7 @@ function AnswerPanel({ result }: { result: ChatResult }) {
                   {renderInlineMarkdown(item.content)}
                   {item.content_truncated ? "…" : ""}
                 </p>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-zinc-600">
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-zinc-550">
                   <span className="font-mono">{item.memory_id}</span>
                   <span>score {item.score.toFixed(2)}</span>
                   <span>{item.type}</span>
@@ -425,13 +425,13 @@ function AnswerPanel({ result }: { result: ChatResult }) {
           </ul>
         </div>
       ) : (
-        <p className="text-[11px] text-zinc-600">
+        <p className="text-[11px] text-zinc-550">
           No memories were used for this answer.
         </p>
       )}
 
       {result.missing_context?.length ? (
-        <p className="text-[11px] leading-5 text-zinc-500">
+        <p className="text-[11px] leading-5 text-zinc-450">
           The Brain reported that it is still missing:{" "}
           {result.missing_context.join(", ")}.
         </p>

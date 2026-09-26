@@ -63,7 +63,7 @@ function EventCard({
     <article className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-4">
         <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-cyan-400/15 bg-cyan-400/[0.07] text-cyan-200">
-          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-450">
             {new Intl.DateTimeFormat("en-US", { month: "short" }).format(
               new Date(event.startsAt),
             )}
@@ -83,11 +83,11 @@ function EventCard({
             {event.allDay ? <StatusBadge status="all day" /> : null}
           </div>
           {event.description ? (
-            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-500">
+            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-450">
               {event.description}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-450">
             <span className="inline-flex items-center gap-1.5">
               <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
               {event.allDay ? (
@@ -301,7 +301,7 @@ export function CalendarManager({
                 />
               </label>
               <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-                <span>Description <span className="text-zinc-600">optional</span></span>
+                <span>Description <span className="text-zinc-550">optional</span></span>
                 <input
                   name="description"
                   type="text"
@@ -390,7 +390,7 @@ export function CalendarManager({
                 All-day event
               </label>
               <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-zinc-450">
                   {allDay
                     ? "The end date is exclusive; the same date creates a one-day event."
                     : `Ends at ${

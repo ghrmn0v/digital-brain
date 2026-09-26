@@ -68,7 +68,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
             <Code2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
             <div>
               <p className="text-sm font-semibold text-zinc-200">Desktop only</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
+              <p className="mt-1 text-xs leading-5 text-zinc-450">
                 The full workspace and developer actions never appear on mobile.
               </p>
             </div>
@@ -77,7 +77,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
             <MonitorSmartphone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
             <div>
               <p className="text-sm font-semibold text-zinc-200">Shared information</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
+              <p className="mt-1 text-xs leading-5 text-zinc-450">
                 Mobile keeps read-only access to Core Brain developer updates.
               </p>
             </div>
@@ -86,7 +86,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
             <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
             <div>
               <p className="text-sm font-semibold text-zinc-200">No auto-fix</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">
+              <p className="mt-1 text-xs leading-5 text-zinc-450">
                 Approval records a proposal only; no Git, test, or deployment action runs.
               </p>
             </div>

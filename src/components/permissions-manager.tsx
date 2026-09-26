@@ -77,7 +77,7 @@ function PermissionRow({
             {permission.action}
           </code>
           {permission.description ? (
-            <p className="mt-1.5 max-w-lg text-xs leading-5 text-zinc-500">
+            <p className="mt-1.5 max-w-lg text-xs leading-5 text-zinc-450">
               {permission.description}
             </p>
           ) : null}
@@ -122,7 +122,7 @@ function PermissionRow({
                 void save({ enabled: next });
               }}
             />
-            <span className="text-xs text-zinc-500">{enabled ? "Enabled" : "Disabled"}</span>
+            <span className="text-xs text-zinc-450">{enabled ? "Enabled" : "Disabled"}</span>
             {pending ? <ButtonSpinner /> : null}
           </div>
         </td>
@@ -156,7 +156,7 @@ export function PermissionsManager({ permissions }: { permissions: PermissionDto
                   title={source}
                   description={`${sourcePermissions.length} ${sourcePermissions.length === 1 ? "policy" : "policies"} for this source`}
                   action={
-                    <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-zinc-450">
                       <SlidersHorizontal aria-hidden="true" className="h-3.5 w-3.5" />
                       Policy controls
                     </span>
@@ -166,7 +166,7 @@ export function PermissionsManager({ permissions }: { permissions: PermissionDto
                   <table className="w-full min-w-[760px] border-collapse text-left">
                     <caption className="sr-only">Permission policies for {source}</caption>
                     <thead>
-                      <tr className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+                      <tr className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-550">
                         <th scope="col" className="px-5 py-3">Action</th>
                         <th scope="col" className="px-5 py-3">Current</th>
                         <th scope="col" className="px-5 py-3">Level</th>

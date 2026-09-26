@@ -498,7 +498,7 @@ export function ConnectomeCanvas({
         </div>
       ) : null}
 
-      <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-zinc-600">
+      <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-zinc-550">
         Drag to pan · scroll to zoom · press 0 to fit
       </p>
     </div>

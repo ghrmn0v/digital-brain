@@ -107,7 +107,7 @@ function Brand() {
         <span className="block text-sm font-semibold tracking-tight text-white">
             Cerebro Flow
           </span>
-          <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-500">
+          <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-450">
             Personal AI
           </span>
       </span>
@@ -129,7 +129,7 @@ function Navigation({
       <div className="space-y-6">
         {navigation.map((section) => (
           <div key={section.label}>
-            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-600">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-550">
               {section.label}
             </p>
             <ul className="space-y-1">
@@ -169,7 +169,7 @@ function Navigation({
                         aria-hidden="true"
                         className={cn(
                           "h-4 w-4 shrink-0",
-                          active ? "text-cyan-300" : "text-zinc-500 group-hover:text-zinc-300",
+                          active ? "text-cyan-300" : "text-zinc-450 group-hover:text-zinc-300",
                         )}
                       />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -199,7 +199,7 @@ function SidebarFooter() {
           <CircleDot aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
           Local-first workspace
         </div>
-        <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
+        <p className="mt-1.5 text-[11px] leading-5 text-zinc-550">
           Product data stays in the local SQLite database.
         </p>
       </div>
@@ -326,11 +326,11 @@ export function DashboardShell({
 
       <div className="lg:pl-64">
         <div className="hidden h-16 items-center justify-between border-b border-zinc-800/70 bg-zinc-950/60 px-8 backdrop-blur lg:flex">
-          <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
+          <div className="flex items-center gap-2 text-xs font-medium text-zinc-450">
             <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
               Your local-first personal intelligence
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <div className="flex items-center gap-2 text-xs text-zinc-450">
             <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
             Fresh server data on every visit
           </div>

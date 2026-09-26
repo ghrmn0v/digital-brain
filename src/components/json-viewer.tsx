@@ -12,7 +12,7 @@ function formatPrimitive(value: unknown): string {
 }
 
 function primitiveClassName(value: unknown): string {
-  if (value === null) return "text-zinc-500";
+  if (value === null) return "text-zinc-450";
   if (typeof value === "boolean") return "text-amber-200";
   if (typeof value === "number") return "text-cyan-200";
   return "text-emerald-200";
@@ -32,7 +32,7 @@ function JsonNode({
       <div className={cn(depth > 0 && "ml-3 border-l border-zinc-800 pl-3")}>
         <p className="text-xs font-semibold text-zinc-300">
           {label}
-          <span className="ml-1 font-normal text-zinc-600">[{value.length}]</span>
+          <span className="ml-1 font-normal text-zinc-550">[{value.length}]</span>
         </p>
         <div className="mt-1.5 space-y-1.5">
           {value.length > 0 ? (
@@ -45,7 +45,7 @@ function JsonNode({
               />
             ))
           ) : (
-            <p className="text-xs text-zinc-600">Empty array</p>
+            <p className="text-xs text-zinc-550">Empty array</p>
           )}
         </div>
       </div>
@@ -64,7 +64,7 @@ function JsonNode({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-zinc-600">Empty object</p>
+          <p className="text-xs text-zinc-550">Empty object</p>
         )}
       </div>
     );
@@ -84,7 +84,7 @@ function JsonNode({
           primitiveClassName(value),
         )}
       >
-        {formatPrimitive(value) || <span className="text-zinc-600">Empty string</span>}
+        {formatPrimitive(value) || <span className="text-zinc-550">Empty string</span>}
       </span>
     </div>
   );
@@ -110,7 +110,7 @@ export function JsonViewer({
               <JsonNode key={key} label={key} value={item} />
             ))
           ) : (
-            <p className="text-xs text-zinc-600">No payload fields</p>
+            <p className="text-xs text-zinc-550">No payload fields</p>
           )}
         </div>
       ) : (

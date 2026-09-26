@@ -99,27 +99,27 @@ function AutomationCard({
             {automation.name}
           </h3>
           {automation.description ? (
-            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-zinc-500">
+            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-zinc-450">
               {automation.description}
             </p>
           ) : null}
           <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
             <div>
-              <dt className="font-medium text-zinc-600">Trigger</dt>
+              <dt className="font-medium text-zinc-550">Trigger</dt>
               <dd className="mt-1 break-all font-mono text-zinc-300">
                 {automation.triggerValue ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-zinc-600">Action</dt>
+              <dt className="font-medium text-zinc-550">Action</dt>
               <dd className="mt-1 break-all font-mono text-cyan-200">{automation.action}</dd>
             </div>
             <div>
-              <dt className="font-medium text-zinc-600">Last run</dt>
+              <dt className="font-medium text-zinc-550">Last run</dt>
               <dd className="mt-1 text-zinc-400">{formatDateTime(automation.lastRunAt)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-zinc-600">Next run</dt>
+              <dt className="font-medium text-zinc-550">Next run</dt>
               <dd className="mt-1 text-zinc-400">{formatDateTime(automation.nextRunAt)}</dd>
             </div>
           </dl>
@@ -329,7 +329,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                 <input name="name" type="text" required maxLength={200} placeholder="Automation name" className={inputClassName} />
               </label>
               <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-                <span>Description <span className="text-zinc-600">optional</span></span>
+                <span>Description <span className="text-zinc-550">optional</span></span>
                 <input name="description" type="text" maxLength={2_000} placeholder="What this automation does" className={inputClassName} />
               </label>
               <label className="space-y-1.5 text-xs font-medium text-zinc-400">
@@ -383,7 +383,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                 />
               </label>
               <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-                <span>Conditions JSON <span className="text-zinc-600">optional</span></span>
+                <span>Conditions JSON <span className="text-zinc-550">optional</span></span>
                 <textarea
                   name="conditions"
                   rows={7}
@@ -426,7 +426,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                 <ButtonSpinner /> Processing
               </span>
             ) : (
-              <Activity aria-hidden="true" className="h-4 w-4 text-zinc-500" />
+              <Activity aria-hidden="true" className="h-4 w-4 text-zinc-450" />
             )
           }
         />

@@ -42,13 +42,13 @@ export function ConnectomeInspector({
   if (!node) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 py-10 text-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-500">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-450">
           <GitBranch aria-hidden="true" className="h-5 w-5" />
         </span>
         <h2 className="mt-4 text-sm font-semibold text-zinc-200">
           Select a node to explore its context.
         </h2>
-        <p className="mt-1.5 max-w-[16rem] text-xs leading-5 text-zinc-500">
+        <p className="mt-1.5 max-w-[16rem] text-xs leading-5 text-zinc-450">
           The map is drawn from events this device has actually recorded. Pick a
           node to see where it came from and where it went.
         </p>
@@ -96,7 +96,7 @@ export function ConnectomeInspector({
         <h2 className="mt-2.5 break-words text-base font-semibold leading-6 text-white">
           {node.label}
         </h2>
-        <p className="mt-1 text-xs leading-5 text-zinc-500">{style.description}</p>
+        <p className="mt-1 text-xs leading-5 text-zinc-450">{style.description}</p>
       </header>
 
       {node.detail ? (
@@ -132,7 +132,7 @@ export function ConnectomeInspector({
             ))}
           </dl>
         ) : (
-          <p className="text-xs leading-5 text-zinc-500">
+          <p className="text-xs leading-5 text-zinc-450">
             This node carries no additional stored fields.
           </p>
         )}
@@ -140,7 +140,7 @@ export function ConnectomeInspector({
 
       <InspectorSection title="Relationships" icon={GitBranch}>
         {related.length === 0 ? (
-          <p className="text-xs leading-5 text-zinc-500">
+          <p className="text-xs leading-5 text-zinc-450">
             Nothing else in the graph references this node yet.
           </p>
         ) : (
@@ -152,7 +152,7 @@ export function ConnectomeInspector({
       </InspectorSection>
 
       <InspectorSection title="AI understanding" icon={BrainCircuit}>
-        <p className="text-xs leading-5 text-zinc-500">
+        <p className="text-xs leading-5 text-zinc-450">
           The Core Brain does the understanding, and Product cannot read its
           memories yet. What you see above is the recorded event, not a summary
           the Brain wrote about it.
@@ -187,7 +187,7 @@ export function ConnectomeInspector({
         ) : null}
       </div>
       {!node.href ? (
-        <p className="border-t border-zinc-800/70 px-4 py-3 text-[11px] leading-5 text-zinc-600">
+        <p className="border-t border-zinc-800/70 px-4 py-3 text-[11px] leading-5 text-zinc-550">
           <Radio aria-hidden="true" className="mr-1 inline h-3 w-3" />
           No screen exists for this kind of record, so there is nothing to open.
         </p>
@@ -207,7 +207,7 @@ function InspectorSection({
 }) {
   return (
     <section className="border-b border-zinc-800/70 px-4 py-3.5">
-      <h3 className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+      <h3 className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-450">
         <Icon aria-hidden="true" className="h-3 w-3" />
         {title}
       </h3>
@@ -227,7 +227,7 @@ function Row({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-zinc-600">
+      <dt className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-zinc-550">
         {term}
       </dt>
       <dd
@@ -255,7 +255,7 @@ function RelationshipGroup({
   if (entries.length === 0) return null;
   return (
     <div>
-      <p className="mb-1.5 text-[11px] text-zinc-600">{heading}</p>
+      <p className="mb-1.5 text-[11px] text-zinc-550">{heading}</p>
       <ul className="space-y-1.5">
         {entries.map(({ edge, other }) => (
           <li
@@ -274,7 +274,7 @@ function RelationshipGroup({
               {other.label}
             </span>
             {edge.status ? (
-              <span className="shrink-0 text-[10px] uppercase tracking-wider text-zinc-600">
+              <span className="shrink-0 text-[10px] uppercase tracking-wider text-zinc-550">
                 {edge.status.toLowerCase()}
               </span>
             ) : null}

@@ -39,7 +39,7 @@ export function ChatView() {
         <span className="text-[13px] font-semibold tracking-tight text-white">
           Cerebro Flow
         </span>
-        <div className="ml-auto flex items-center gap-2 text-[11px] text-zinc-600">
+        <div className="ml-auto flex items-center gap-2 text-[11px] text-zinc-550">
           <span className="hidden sm:inline">Grounded in stored memory</span>
         </div>
       </header>
@@ -49,7 +49,7 @@ export function ChatView() {
       <main id="main-content" className="flex min-h-0 flex-1 flex-col">
         <Suspense
           fallback={
-            <p className="px-6 py-8 text-center text-sm text-zinc-500">
+            <p className="px-6 py-8 text-center text-sm text-zinc-450">
               Loading the question box…
             </p>
           }

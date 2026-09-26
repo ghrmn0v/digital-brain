@@ -90,7 +90,7 @@ function SettingEditor({
             <h3 className="break-all font-mono text-sm font-semibold text-cyan-200">
               {setting.key}
             </h3>
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-zinc-450">
               Updated {formatDateTime(setting.updatedAt)}
             </p>
           </div>
@@ -151,7 +151,7 @@ export function SettingsManager({ settings }: { settings: SettingDto[] }) {
           title="Product settings"
           description="Existing JSON-safe values from the local settings registry"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
               <Braces aria-hidden="true" className="h-3.5 w-3.5" />
               {settings.length} {settings.length === 1 ? "setting" : "settings"}
             </span>

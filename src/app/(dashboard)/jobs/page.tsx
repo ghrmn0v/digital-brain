@@ -73,16 +73,16 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
             <ul className="divide-y divide-zinc-800/80">
               {report.jobs.slice(0, 3).map((job) => (
                 <li key={job.id} className="flex items-center gap-3 px-5 py-3.5">
-                  <BriefcaseBusiness aria-hidden="true" className="h-4 w-4 shrink-0 text-zinc-500" />
+                  <BriefcaseBusiness aria-hidden="true" className="h-4 w-4 shrink-0 text-zinc-450" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-zinc-200">
                       {job.title} · {job.company}
                     </p>
-                    <p className="mt-0.5 text-xs text-zinc-500">
+                    <p className="mt-0.5 text-xs text-zinc-450">
                       First seen {formatRelativeTime(job.firstSeenAt, now)}
                     </p>
                   </div>
-                  <span className="text-xs text-zinc-500">{job.source}</span>
+                  <span className="text-xs text-zinc-450">{job.source}</span>
                 </li>
               ))}
             </ul>

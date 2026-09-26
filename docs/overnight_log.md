@@ -197,3 +197,32 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
 
   Verified by grepping the built stylesheet for the old hexes (zero) and
   screenshotting the dashboard against the rebuilt ground.
+
+## Task 9 — the muted text was failing WCAG AA
+
+- **Files:** `src/app/globals.css`, `src/components/connectome/theme.ts`,
+  and every component using `text-zinc-500` / `text-zinc-600` (88 and 54
+  occurrences)
+- **Result:** PASS
+- **Notes:** Measuring the neutral ramp against this app's actual composited
+  grounds — a `zinc-900/55` panel over `zinc-950`, and a `zinc-950/55` card over
+  that panel — `zinc-500` reaches only 4.0:1 and `zinc-600` only 2.5:1. Both
+  fail WCAG AA, which needs 4.5:1 for text under 18px, and between them they
+  carried every caption, every stat-card label and every uppercase section
+  heading in the product, most of them at 10-12px, which is exactly the size
+  that gets no large-text allowance.
+
+  The obvious fix — promote both to `zinc-400` — would have passed and cost the
+  design its hierarchy, leaving body copy, captions and section labels all at
+  one weight. Tailwind's scale has no step between `zinc-400` (7.6:1) and
+  `zinc-500` (4.0:1), so the fix was to insert the two missing tiers into the
+  scale: `zinc-450` at `#8e8e99` and `zinc-550` at `#7e7e8a`, landing at 6.0:1
+  and 4.8:1. Every caption and label moves up one tier in brightness and the
+  ramp keeps three distinguishable steps, so the UI still reads as a dim
+  monochrome product rather than brightening into a different one.
+
+  The values are declared once in `globals.css` next to the other theme
+  variables and mirrored in `theme.ts`, which is what the SVG canvas and
+  anything in a style object use. The two files are kept in agreement by
+  comment rather than by a build step, which is a real fragility worth knowing
+  about: nothing fails if they drift.
