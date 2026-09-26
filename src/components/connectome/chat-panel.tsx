@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -61,6 +61,42 @@ const SUGGESTIONS = [
   "Who is helping me, and what should I follow up on?",
   "What is connected to this?",
 ];
+
+/**
+ * Render the small subset of Markdown the Brain actually uses, as React
+ * elements rather than as HTML.
+ *
+ * The answer arrives with `**bold**` and backticked code in it, which read as
+ * literal asterisks if printed as text. Pushing it through
+ * `dangerouslySetInnerHTML` would be the obvious shortcut and exactly the wrong
+ * one: this is model output, so any markup path that parses it is an
+ * injection surface. Splitting on the markers and returning elements keeps
+ * every piece of text a text node, which React escapes for us.
+ */
+export function renderInlineMarkdown(text: string): ReactNode[] {
+  const pattern = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  const parts = text.split(pattern).filter((part) => part !== "");
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return (
+        <strong key={index} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+      return (
+        <code
+          key={index}
+          className="rounded border border-zinc-800 bg-zinc-950 px-1 py-0.5 font-mono text-[0.85em] text-zinc-200"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
 
 function confidenceTone(value: number): string {
   if (value >= 0.75) return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
@@ -328,9 +364,9 @@ function AnswerPanel({ result }: { result: ChatResult }) {
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-        <p className="whitespace-pre-wrap break-words text-sm leading-7 text-slate-100">
-          {result.answer}
-        </p>
+        <div className="whitespace-pre-wrap break-words text-sm leading-7 text-zinc-100">
+          {renderInlineMarkdown(result.answer)}
+        </div>
 
         <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-slate-800/70 pt-3">
           <span
@@ -375,8 +411,8 @@ function AnswerPanel({ result }: { result: ChatResult }) {
                 key={item.memory_id}
                 className="rounded-lg border border-slate-800/80 bg-slate-950/40 px-3 py-2"
               >
-                <p className="break-words text-xs leading-5 text-slate-300">
-                  {item.content}
+                <p className="break-words text-xs leading-5 text-zinc-300">
+                  {renderInlineMarkdown(item.content)}
                   {item.content_truncated ? "…" : ""}
                 </p>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-slate-600">

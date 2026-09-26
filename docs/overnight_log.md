@@ -89,3 +89,32 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   a layout does need them — but dropped from `/70` to `/50`, which is enough to
   separate surfaces that differ by almost nothing in luminance. Verified by
   screenshot at 1440, 768 and 390 before committing, not assumed.
+
+## Task 5 — Chat answers stop showing raw Markdown
+
+- **Files:** `src/components/connectome/chat-panel.tsx`,
+  `src/components/connectome/chat-panel.test.ts`
+- **Result:** PASS
+- **Notes:** A live reply came back as `**Planning Meeting:** tomorrow at 10`,
+  and the asterisks were rendered as literal characters. The model was writing
+  Markdown and the UI was showing it as source. `renderInlineMarkdown` now
+  handles the two markers the Brain's prompt actually asks for — `**bold**` and
+  `` `code` `` — and returns React elements, so nothing is ever handed to
+  `dangerouslySetInnerHTML`. The parser is deliberately small: it splits on the
+  markers and emits `null` for an unclosed or empty one instead of inventing a
+  repair, which is why `**unclosed` degrades to visible text rather than
+  swallowing the rest of the sentence.
+
+  Only the first pass is applied, so a marker inside a code span is not
+  re-interpreted. Escaping is inherited from React's own text-node handling, and
+  that is now asserted rather than assumed: the test feeds the renderer a
+  `<script>` tag and an `<img onerror>` and requires both to still be markup in
+  the output. A test that only checked for the presence of `<strong>` would have
+  passed just as happily against a `dangerouslySetInnerHTML` implementation.
+
+  The live check was inconclusive on purpose. Gemini was rate-limited during it,
+  so the reply came from `context-only` and contained no markers to format. The
+  fallback rendered honestly, which is the behaviour Task 5 is not about, so
+  rather than retry until the quota came back and call a lucky screenshot
+  "verified", the fix is pinned by five direct unit tests over the parser
+  itself. `renderInlineMarkdown` is exported for that reason and for no other.
