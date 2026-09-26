@@ -37,6 +37,8 @@ export interface SimulationOptions {
   damping?: number;
   centerStrength?: number;
   iterations?: number;
+  /** Stretch the finished cloud to fill the frame. See the option docs. */
+  fill?: boolean;
 }
 
 /** A stable per-id offset, so layout is reproducible across renders and runs. */
@@ -77,6 +79,14 @@ export function createSimulation(
     damping = 0.82,
     centerStrength = 0.014,
     iterations = 320,
+    /**
+     * Stretch the finished cloud to fill the canvas. A force layout settles
+     * into a roughly circular blob, which in a wide frame leaves the map
+     * marooned in the middle at a fraction of the space available. Normalising
+     * to the frame afterwards means the fit zoom stays near 1 and the graph
+     * actually occupies the surface it is given.
+     */
+    fill = true,
   } = options;
 
   const degree = new Map<string, number>();
@@ -163,7 +173,53 @@ export function createSimulation(
     }
   }
 
+  if (fill && simulation.length > 1) {
+    normaliseToFrame(simulation, width, height);
+  }
+
   return simulation;
+}
+
+/**
+ * Stretch a point cloud to occupy as much of `width` x `height` as it can.
+ *
+ * The two axes are scaled separately so a tall, narrow canvas - a phone held
+ * upright - actually gets a graph that fills it instead of a small square
+ * marooned in the middle. Pure anisotropy would distort the structure the
+ * simulation found, so the ratio between the two scales is capped by
+ * `maxStretch`: the graph takes the shape of the frame up to a point and no
+ * further.
+ *
+ * Deterministic, and it only reads coordinates the simulation already produced.
+ */
+export function normaliseToFrame(
+  points: Point[],
+  width: number,
+  height: number,
+  padding = 0.88,
+  maxStretch = 1.7,
+): void {
+  if (points.length < 2) return;
+  const bounds = boundsOf(points);
+  const spanX = Math.max(1, bounds.maxX - bounds.minX);
+  const spanY = Math.max(1, bounds.maxY - bounds.minY);
+  const targetX = Math.max(1, width * padding);
+  const targetY = Math.max(1, height * padding);
+
+  let scaleX = targetX / spanX;
+  let scaleY = targetY / spanY;
+
+  const ratio = scaleX / scaleY;
+  if (ratio > maxStretch) scaleX = scaleY * maxStretch;
+  else if (ratio < 1 / maxStretch) scaleY = scaleX * maxStretch;
+
+  const centreX = (bounds.minX + bounds.maxX) / 2;
+  const centreY = (bounds.minY + bounds.maxY) / 2;
+
+  for (const point of points) {
+    point.x = width / 2 + (point.x - centreX) * scaleX;
+    point.y = height / 2 + (point.y - centreY) * scaleY;
+  }
 }
 
 export interface Bounds {

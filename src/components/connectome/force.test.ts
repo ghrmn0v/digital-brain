@@ -4,6 +4,7 @@ import {
   boundsOf,
   createSimulation,
   neighboursOf,
+  normaliseToFrame,
   radiusFor,
 } from "@/components/connectome/force";
 
@@ -84,6 +85,66 @@ describe("connectome force layout", () => {
     expect(neighboursOf(edges, "b")).toEqual(new Set(["a", "c"]));
     expect(neighboursOf(edges, "a")).toEqual(new Set(["b"]));
     expect(neighboursOf(edges, "zzz")).toEqual(new Set());
+  });
+
+  it("fills a tall narrow frame instead of squatting in the middle", () => {
+    // A square-ish cloud on a phone-shaped canvas: the height has to be used,
+    // or the graph is a small square adrift in empty space.
+    const points = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 5, y: 9 },
+    ];
+    normaliseToFrame(points, 320, 640);
+    const bounds = boundsOf(points);
+    expect(bounds.maxX - bounds.minX).toBeGreaterThan(250);
+    expect(bounds.maxY - bounds.minY).toBeGreaterThan(400);
+    expect(bounds.maxX).toBeLessThanOrEqual(320);
+    expect(bounds.maxY).toBeLessThanOrEqual(640);
+  });
+
+  it("keeps the axes from being stretched absurdly far apart", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+    ];
+    normaliseToFrame(points, 300, 3000, 0.88, 1.7);
+    const bounds = boundsOf(points);
+    const usedX = bounds.maxX - bounds.minX;
+    const usedY = bounds.maxY - bounds.minY;
+    // A 10x taller frame cannot make a square graph 10x taller; the cap holds.
+    expect(usedY / usedX).toBeLessThan(1.8);
+  });
+
+  it("stays inside a wide frame", () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 10, y: 4 },
+      { x: 5, y: 9 },
+    ];
+    normaliseToFrame(points, 800, 400);
+    const bounds = boundsOf(points);
+    expect(bounds.maxX).toBeLessThanOrEqual(800);
+    expect(bounds.maxY).toBeLessThanOrEqual(400);
+    expect(bounds.minX).toBeGreaterThanOrEqual(0);
+    expect(bounds.minY).toBeGreaterThanOrEqual(0);
+  });
+
+  it("leaves a single node alone instead of dividing by zero", () => {
+    const points = [{ x: 3, y: 4 }];
+    normaliseToFrame(points, 800, 400);
+    expect(Number.isFinite(points[0].x)).toBe(true);
+  });
+
+  it("keeps the laid-out graph inside the canvas after fitting", () => {
+    const nodes = Array.from({ length: 10 }, (_, index) => node(`n${index}`));
+    const placed = createSimulation(nodes, [], { width: 900, height: 500, iterations: 120 });
+    for (const item of placed) {
+      expect(item.x).toBeGreaterThanOrEqual(-1);
+      expect(item.x).toBeLessThanOrEqual(901);
+      expect(item.y).toBeGreaterThanOrEqual(-1);
+      expect(item.y).toBeLessThanOrEqual(501);
+    }
   });
 
   it("scales radius with real weight and keeps it restrained", () => {

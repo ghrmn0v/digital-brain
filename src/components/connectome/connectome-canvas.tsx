@@ -10,15 +10,15 @@ import {
   type PointerEvent as ReactPointerEvent,
   type WheelEvent as ReactWheelEvent,
 } from "react";
-import { Focus, Maximize2, Minus, Plus } from "lucide-react";
+import { Maximize2, Minus, Plus } from "lucide-react";
 import type { ConnectomeEdgeDto, ConnectomeNodeDto } from "@/modules/connectome";
 import {
-  boundsOf,
   createSimulation,
   neighboursOf,
   radiusFor,
   type SimulationNode,
 } from "@/components/connectome/force";
+import { placeLabels } from "@/components/connectome/labels";
 import { edgeStyles, nodeStyles, surface } from "@/components/connectome/theme";
 
 /**
@@ -76,6 +76,7 @@ export function ConnectomeCanvas({
     originX: number;
     originY: number;
     moved: boolean;
+    onControl: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -104,6 +105,11 @@ export function ConnectomeCanvas({
       createSimulation(nodes, edges, {
         width: Math.max(320, size.width),
         height: Math.max(280, size.height),
+        // Scaled to the canvas so the map fills the space it is given instead of
+        // huddling in the middle of it. A graph that occupies a quarter of the
+        // frame reads as a loading state, not as a map.
+        repulsion: Math.max(5200, (size.width * size.height) / 240),
+        springLength: Math.max(120, Math.min(size.width, size.height) / 5.2),
       }),
     [nodes, edges, size.width, size.height],
   );
@@ -125,29 +131,14 @@ export function ConnectomeCanvas({
     [edges, focus],
   );
 
-  const fitted = useMemo<Viewport>(() => {
-    if (placed.length === 0) return { zoom: 1, offsetX: 0, offsetY: 0 };
-    const bounds = boundsOf(placed);
-    const padding = 72;
-    const width = Math.max(1, bounds.maxX - bounds.minX);
-    const height = Math.max(1, bounds.maxY - bounds.minY);
-    const zoom = Math.max(
-      MIN_ZOOM,
-      Math.min(
-        MAX_ZOOM,
-        Math.min(
-          (size.width - padding * 2) / width,
-          (size.height - padding * 2) / height,
-          1.35,
-        ),
-      ),
-    );
-    return {
-      zoom,
-      offsetX: size.width / 2 - ((bounds.minX + bounds.maxX) / 2) * zoom,
-      offsetY: size.height / 2 - ((bounds.minY + bounds.maxY) / 2) * zoom,
-    };
-  }, [placed, size.width, size.height]);
+  // The layout is already normalised to this exact box, so the resting view is
+  // the identity transform. Computing a second fit on top of it would shrink the
+  // map twice - badly enough to make it illegible on a phone, where the canvas
+  // is only a few hundred pixels across and a fixed padding is a third of it.
+  const fitted = useMemo<Viewport>(
+    () => ({ zoom: 1, offsetX: 0, offsetY: 0 }),
+    [],
+  );
 
   const viewport = pinnedView ?? fitted;
 
@@ -202,6 +193,16 @@ export function ConnectomeCanvas({
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 && event.pointerType === "mouse") return;
+    // A press that begins on something interactive belongs to that thing, not to
+    // the pan. Capturing the pointer here would retarget the following click to
+    // this element, so the target's own handler would never run: tapping a node
+    // cleared the selection instead of opening it, and the zoom buttons did
+    // nothing at all. Nodes and the overlay controls both count as interactive.
+    const onControl = Boolean(
+      (event.target as Element | null)?.closest?.(
+        'g[role="button"], button, [role="button"], a[href], input',
+      ),
+    );
     dragState.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -209,8 +210,9 @@ export function ConnectomeCanvas({
       originX: viewport.offsetX,
       originY: viewport.offsetY,
       moved: false,
+      onControl,
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
+    if (!onControl) event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -232,8 +234,9 @@ export function ConnectomeCanvas({
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    // A drag that ended without moving is a click on empty canvas.
-    if (drag && !drag.moved) onSelect(null);
+    // A press on empty canvas that never moved is a click on the background.
+    // A press that began on a node or a control is left to its own handler.
+    if (drag && !drag.moved && !drag.onControl) onSelect(null);
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -253,6 +256,33 @@ export function ConnectomeCanvas({
       return;
     }
   };
+
+  // Labels are placed against the real positions, emphasised nodes first, and
+  // any label that cannot find a free slot is simply not drawn rather than
+  // printed on top of another.
+  const labelBoxes = useMemo(() => {
+    const emphasis = new Set<string>();
+    if (focus) {
+      emphasis.add(focus);
+      for (const id of highlighted ?? []) emphasis.add(id);
+    }
+    if (selectedId) emphasis.add(selectedId);
+    // A phone has a few hundred pixels to spend and every label competes for
+    // them, so the budget tightens with the canvas instead of scaling with area:
+    // twelve overlapping names are worse than six legible ones plus a tooltip.
+    const roomy = size.width >= 640;
+    const budget = roomy
+      ? Math.max(12, Math.round((size.width * size.height) / 9000))
+      : 6;
+    return placeLabels({
+      nodes,
+      positions: byId,
+      radiusOf: radiusFor,
+      emphasis,
+      limit: Math.min(30, budget),
+      bounds: { width: size.width, height: size.height },
+    });
+  }, [nodes, byId, focus, highlighted, selectedId, size.width, size.height]);
 
   const motion = reducedMotion
     ? ""
@@ -397,20 +427,37 @@ export function ConnectomeCanvas({
                     aria-hidden="true"
                   />
                 ) : null}
-                <text
-                  y={radius + 15}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill={style.text}
-                  opacity={dimmed ? 0.5 : 0.92}
-                  aria-hidden="true"
-                  style={{ pointerEvents: "none", userSelect: "none" }}
-                >
-                  {node.label.length > 26
-                    ? `${node.label.slice(0, 25)}…`
-                    : node.label}
-                </text>
               </g>
+            );
+          })}
+        </g>
+
+        {/* Labels are drawn outside the zoom group and positioned in screen
+            space on purpose. Inside it they would scale with the map, so
+            zooming in would turn 11px text into a billboard and zooming out
+            would render it unreadable. */}
+        <g aria-hidden="true">
+          {nodes.map((node) => {
+            const box = labelBoxes.get(node.id);
+            if (!box) return null;
+            const style = nodeStyles[node.kind];
+            const dimmed =
+              focus !== null && !highlighted?.has(node.id) && focus !== node.id;
+            const text =
+              node.label.length > 26 ? `${node.label.slice(0, 25)}…` : node.label;
+            return (
+              <text
+                key={`label-${node.id}`}
+                x={(box.x + box.width / 2) * viewport.zoom + viewport.offsetX}
+                y={(box.y + box.height - 3) * viewport.zoom + viewport.offsetY}
+                textAnchor="middle"
+                fontSize={11}
+                fill={style.text}
+                opacity={dimmed ? 0.4 : 0.95}
+                style={{ pointerEvents: "none", userSelect: "none" }}
+              >
+                {text}
+              </text>
             );
           })}
         </g>
@@ -447,7 +494,7 @@ export function ConnectomeCanvas({
       ) : null}
 
       <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-slate-600">
-        Drag to pan · scroll to zoom · <Focus aria-hidden="true" className="inline h-3 w-3" /> 0 to fit
+        Drag to pan · scroll to zoom · press 0 to fit
       </p>
     </div>
   );

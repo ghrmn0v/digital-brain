@@ -181,7 +181,7 @@ export function ConnectomeWorkspace({
   const motion = reducedMotion ? "" : "transition-opacity duration-200 motion-reduce:transition-none";
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#04070f] text-slate-100">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[#04070f] text-slate-100">
       <a
         href="#connectome-graph"
         className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-slate-900 px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
@@ -241,7 +241,7 @@ export function ConnectomeWorkspace({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800/70 bg-[#060a14]/80 min-[1120px]:flex">
           <ContextNav
             sources={sources}
@@ -249,15 +249,15 @@ export function ConnectomeWorkspace({
             onSourceChange={setActiveSource}
             developerModeEnabled={developerModeEnabled}
           />
-          <div className="border-t border-slate-800/70 p-3">
-            <p className="text-[11px] leading-5 text-slate-600">
-              Local-first. Every node here is an event this device recorded.
+          <div className="shrink-0 border-t border-slate-800/70 px-3 py-2.5">
+            <p className="text-[11px] leading-4 text-slate-600">
+              Local-first. Every node is an event this device recorded.
             </p>
           </div>
         </aside>
 
-        <main className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-800/70 px-3 py-2 lg:hidden">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-slate-800/70 px-3 py-2 lg:hidden">
             {[...counts.entries()].map(([kind, count]) => (
               <span
                 key={kind}
@@ -268,7 +268,7 @@ export function ConnectomeWorkspace({
             ))}
           </div>
 
-          <div id="connectome-graph" className="relative min-h-[52vh] flex-1">
+          <div id="connectome-graph" className="relative min-h-0 flex-1">
             <ConnectomeCanvas
               className="absolute inset-0"
               nodes={visible.nodes}
@@ -302,7 +302,7 @@ export function ConnectomeWorkspace({
           </div>
         </main>
 
-        <aside className="hidden w-80 shrink-0 border-l border-slate-800/70 bg-[#060a14]/80 min-[1280px]:block">
+        <aside className="hidden w-80 shrink-0 overflow-hidden border-l border-slate-800/70 bg-[#060a14]/80 min-[1280px]:block">
           <ConnectomeInspector
             node={selected}
             nodes={visible.nodes}
