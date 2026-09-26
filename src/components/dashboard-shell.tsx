@@ -221,6 +221,10 @@ export function DashboardShell({
   useEffect(() => {
     if (!mobileOpen) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
+    // Captured now, not in the cleanup: by the time the effect tears down the
+    // ref may already point at a different node, and focusing whatever happens
+    // to be mounted then would drop the caret somewhere arbitrary.
+    const toggle = toggleRef.current;
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
 
@@ -240,7 +244,7 @@ export function DashboardShell({
       window.cancelAnimationFrame(focusFirst);
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = overflow;
-      (toggleRef.current ?? previouslyFocused)?.focus();
+      (toggle ?? previouslyFocused)?.focus();
     };
   }, [mobileOpen]);
 
