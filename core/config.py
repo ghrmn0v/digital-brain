@@ -57,6 +57,7 @@ ENV_GEMINI_MAX_OUTPUT_TOKENS = "GEMINI_MAX_OUTPUT_TOKENS"
 __all__ = [
     "DEFAULT_LOG_FORMAT",
     "DEFAULT_ENV_FILENAME",
+    "ENV_FILE_POINTER",
     "DEFAULT_LOG_LEVEL",
     "DEFAULT_PROVIDER",
     "ENV_LLM_PROVIDER",
@@ -175,18 +176,30 @@ def log_settings(
 
 
 DEFAULT_ENV_FILENAME = ".env"
+ENV_FILE_POINTER = "BRAIN_ENV_FILE"
 
 
-def env_file_candidates(explicit: str | Path | None = None) -> list[Path]:
+def env_file_candidates(
+    explicit: str | Path | None = None,
+    *,
+    env: Mapping[str, str] | None = None,
+) -> list[Path]:
     """Where a local ``.env`` may live, most specific first.
 
-    An explicit path is the only candidate, so a caller can point at one file
-    and be certain nothing else is read. Otherwise the current working
-    directory is tried first, then the repository root, so starting the Brain
-    from a subdirectory still finds the same file.
+    Precedence: an explicit argument, then ``BRAIN_ENV_FILE``, then the working
+    directory, then the repository root. The first two are single candidates, so
+    naming one file means nothing else is read.
+
+    ``BRAIN_ENV_FILE`` exists for the case where a checkout keeps its
+    credentials in another worktree's ``.env``: a demo runner can point every
+    service at one file without copying or printing it.
     """
     if explicit is not None:
         return [Path(explicit)]
+    source = os.environ if env is None else env
+    pointer = (source.get(ENV_FILE_POINTER) or "").strip()
+    if pointer:
+        return [Path(pointer)]
     candidates = [Path.cwd() / DEFAULT_ENV_FILENAME]
     # core/config.py -> core/ -> repository root
     repo_root = Path(__file__).resolve().parents[1]
@@ -225,7 +238,7 @@ def load_env_file(
     except ImportError:  # pragma: no cover - exercised only without the extra
         return None
 
-    for candidate in env_file_candidates(explicit):
+    for candidate in env_file_candidates(explicit, env=env):
         if candidate.is_file():
             load_dotenv(candidate, override=False)
             return candidate

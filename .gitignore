@@ -70,6 +70,10 @@ connectome/connectome/training/datasets/
 
 # --- logs and debug ---
 *.log
+logs/
+
+# --- scripts/demo.sh runtime state (pids, per-run databases, service logs) ---
+.demo/
 
 npm-debug.log*
 yarn-debug.log*

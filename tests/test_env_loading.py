@@ -16,6 +16,7 @@ import textwrap
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from core.config import (
     DEFAULT_ENV_FILENAME,
@@ -47,6 +48,43 @@ class EnvDiscoveryTests(unittest.TestCase):
     def test_a_missing_file_is_not_an_error(self) -> None:
         with TemporaryDirectory() as tmp:
             self.assertIsNone(load_env_file(Path(tmp) / "absent.env"))
+
+    def test_the_pointer_names_one_file_and_skips_the_search(self) -> None:
+        pointer = {"BRAIN_ENV_FILE": "/elsewhere/credentials.env"}
+        self.assertEqual(
+            env_file_candidates(env=pointer), [Path("/elsewhere/credentials.env")]
+        )
+
+    def test_an_explicit_path_outranks_the_pointer(self) -> None:
+        wanted = Path("/tmp/explicit.env")
+        self.assertEqual(
+            env_file_candidates(wanted, env={"BRAIN_ENV_FILE": "/elsewhere/.env"}),
+            [wanted],
+        )
+
+    def test_a_blank_pointer_is_treated_as_absent(self) -> None:
+        candidates = env_file_candidates(env={"BRAIN_ENV_FILE": "   "})
+        self.assertEqual(candidates[0], Path.cwd() / DEFAULT_ENV_FILENAME)
+
+    def test_the_pointer_is_honoured_by_the_loader(self) -> None:
+        with TemporaryDirectory() as tmp:
+            path = write_env(Path(tmp), "BRAIN_LLM_PROVIDER=gemini\n")
+            with patch.dict(os.environ, {"BRAIN_ENV_FILE": str(path)}, clear=False):
+                os.environ.pop("BRAIN_LLM_PROVIDER", None)
+                try:
+                    self.assertEqual(load_env_file(), path)
+                    self.assertEqual(os.environ["BRAIN_LLM_PROVIDER"], "gemini")
+                finally:
+                    os.environ.pop("BRAIN_LLM_PROVIDER", None)
+
+    def test_a_pointer_to_a_missing_file_is_not_an_error(self) -> None:
+        with TemporaryDirectory() as tmp:
+            with patch.dict(
+                os.environ,
+                {"BRAIN_ENV_FILE": str(Path(tmp) / "absent.env")},
+                clear=False,
+            ):
+                self.assertIsNone(load_env_file())
 
     def test_the_repository_env_is_gitignored(self) -> None:
         """A committed .env would be a committed credential.
