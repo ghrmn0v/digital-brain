@@ -69,8 +69,9 @@ docs/typescript-client.md  thin framework-free TypeScript client (HTTP + WebSock
 docs/gemini.md          Gemini provider + long-term learning loop
 docs/brain-service.md BrainService application-service boundary
 docs/developer-mode/  Developer Mode hackathon spec + live doc
-docs/PRODUCT.md       Product / connector layer — its own doc, kept verbatim
-docs/FLY.md           Fly / Connectome subsystem — its own doc, kept verbatim
+docs/product/         Product layer: its own README and API contracts
+docs/fly/             Fly / Connectome: its own README, security audit and
+                      measured improvement log
 docs/operating.md     running, configuring, querying and observing the Brain
 .env.example          every variable the Brain reads (Brain-owned only)
 clients/typescript/  zero-dependency TypeScript client for both Product clients
@@ -93,13 +94,13 @@ src/  prisma/  next.config.ts  package.json
                       Product — local-first Product and connector layer.
                       Next.js + Prisma/SQLite. Owns adapters, permissions,
                       automation, Developer Mode and event delivery.
-                      Its detailed doc is docs/PRODUCT.md.
+                      Its detailed doc is `docs/product/README.md`.
 
 backend/  connectome/  desktop/  whatsapp-gateway/
                       Fly / Connectome — fruit-fly-inspired behaviour engine.
                       Spring Boot service boundary, stdlib-only Python engine,
                       Electron client, WhatsApp gateway.
-                      Its detailed doc is docs/FLY.md.
+                      Its detailed doc is `docs/fly/README.md`.
 ```
 
 Wiring between them, and who owns which side of it:

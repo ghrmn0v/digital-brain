@@ -110,7 +110,7 @@ Server-only modules are grouped under `src/modules`:
 - `events`: normalized events, durable delivery and SSE
 - `settings`, `timeline`: Product-owned data
 
-API documentation: [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md)
+API documentation: [`docs/product/API_CONTRACTS.md`](API_CONTRACTS.md)
 
 ## Developer Mode and platform boundaries
 
