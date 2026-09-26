@@ -231,7 +231,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="digital-brain-stdio",
         description=(
-            "Digital Brain stdio JSON-lines daemon. Reads one ApiRequest per "
+              "Cerebro Flow stdio JSON-lines daemon. Reads one ApiRequest per "
             "stdin line and writes one JSON frame per stdout line. "
             "Transport-only and platform-independent. EOF shuts down cleanly."
         ),

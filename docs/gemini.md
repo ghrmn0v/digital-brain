@@ -5,7 +5,7 @@ remembers the user:
 
 ```text
 Gemini does NOT remember the user.
-Digital Brain remembers the user.
+Cerebro Flow remembers the user.
 ```
 
 Each request carries only the context the Brain selected for that request.
@@ -136,7 +136,7 @@ performs real HTTP; only Google's server is absent, so the reply is scripted):
 3. the user changes the preference → the new explicit value supersedes;
 4. asking again → the new value is used.
 
-This proves *the Digital Brain learned*, not that the model did.
+This proves *Cerebro Flow learned*, not that the model did.
 
 ## Real Gemini API
 

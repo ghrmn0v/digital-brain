@@ -808,7 +808,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="digital-brain-websocket",
         description=(
-            "Digital Brain WebSocket transport. Connects to "
+              "Cerebro Flow WebSocket transport. Connects to "
             "/v1/brain?user_id=... and exchanges the stdio response/event "
             "frame envelope over a bounded, user-isolated socket."
         ),

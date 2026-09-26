@@ -1,6 +1,6 @@
-# Digital Brain — TypeScript Client (Phase 8, Slice 6)
+# Cerebro Flow — TypeScript Client (Phase 8, Slice 6)
 
-A thin, framework-free client for the Digital Brain API v1. It speaks the two
+A thin, framework-free client for the Cerebro Flow API v1. It speaks the two
 transport surfaces the Core already exposes and adds nothing else: no UI, no
 state store, no retry/replay queue, no authentication, no action execution.
 

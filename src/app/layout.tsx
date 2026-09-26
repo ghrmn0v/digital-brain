@@ -16,15 +16,16 @@ export const metadata: Metadata = {
   // One product identity across the three subsystems: the Core Brain is the
   // intelligence, Fly the behaviour engine, and this app is the surface the
   // person actually uses. The page title carries the product, not the layer.
-  title: {
-    default: "Digital Brain",
-    template: "%s · Digital Brain",
-  },
-  description:
-    "Your local-first digital brain: it remembers what your life is about, learns how you prefer to work, and proposes what to do next. Tasks, calendar, jobs, approvals and automations, backed by Core Brain memory and Fly behaviour.",
-  applicationName: "Digital Brain",
-  keywords: [
-    "digital brain",
+    title: {
+      default: "Cerebro Flow",
+      template: "%s · Cerebro Flow",
+    },
+    description:
+      "Your local-first personal intelligence: it remembers what your life is about, learns how you prefer to work, and proposes what to do next. Tasks, calendar, jobs, approvals and automations, backed by Core Brain memory and Fly behaviour.",
+    applicationName: "Cerebro Flow",
+    keywords: [
+      "cerebro flow",
+      "digital brain",
     "personal AI",
     "local-first",
     "memory",

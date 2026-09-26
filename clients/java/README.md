@@ -1,6 +1,6 @@
-# Digital Brain — Java Client (Phase 8, Slice 8)
+# Cerebro Flow — Java Client (Phase 8, Slice 8)
 
-A thin, dependency-free Java client for the Digital Brain API v1. Same contract
+A thin, dependency-free Java client for the Cerebro Flow API v1. Same contract
 as the TypeScript client, same two transports, no Brain logic.
 
 ```java

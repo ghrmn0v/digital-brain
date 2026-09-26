@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Digital Brain — one-command local demo.
+# Cerebro Flow — one-command local demo.
 #
 # Starts everything the demo needs, verifies it is actually healthy, runs the
 # scenario, prints the URLs, and shuts down cleanly on Ctrl-C. No JDK is

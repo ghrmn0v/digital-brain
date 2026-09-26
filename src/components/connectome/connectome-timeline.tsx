@@ -91,7 +91,7 @@ export function ConnectomeTimeline({
     return (
       <div className="flex items-center gap-2.5 px-4 py-3 text-xs text-slate-500">
         <CalendarClock aria-hidden="true" className="h-3.5 w-3.5" />
-        Your timeline will appear as Digital Brain receives events.
+          Your timeline will appear as Cerebro Flow receives events.
       </div>
     );
   }

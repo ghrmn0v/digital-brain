@@ -132,7 +132,7 @@ export function CommandBar({
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Search Digital Brain"
+              aria-label="Search Cerebro Flow"
             className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-slate-700/80 bg-slate-900/95 shadow-2xl backdrop-blur-xl"
           >
             <div className="flex items-center gap-2.5 border-b border-slate-800 px-4">

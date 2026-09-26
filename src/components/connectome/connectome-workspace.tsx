@@ -213,9 +213,9 @@ export function ConnectomeWorkspace({
           <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
             <BrainCircuit aria-hidden="true" className="h-3.5 w-3.5" />
           </span>
-          <span className="text-[13px] font-semibold tracking-tight text-white">
-            Digital Brain
-          </span>
+            <span className="text-[13px] font-semibold tracking-tight text-white">
+              Cerebro Flow
+            </span>
         </Link>
 
         <div className="flex min-w-0 flex-1 justify-center">

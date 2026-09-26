@@ -2,7 +2,7 @@
   "name": "digital-brain-client",
   "version": "0.1.0",
   "private": true,
-  "description": "Thin, framework-free TypeScript client for the Digital Brain API v1 (HTTP + WebSocket).",
+    "description": "Thin, framework-free TypeScript client for the Cerebro Flow API v1 (HTTP + WebSocket).",
   "license": "UNLICENSED",
   "type": "module",
   "main": "./src/index.ts",

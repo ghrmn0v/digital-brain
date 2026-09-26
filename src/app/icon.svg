@@ -1,31 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Digital Brain">
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cerebro Flow">
+  <title>Cerebro Flow</title>
   <!--
-    Digital Brain mark: one memory hub with connected associations.
-    Drawn on the product's own palette (slate #020617 ground, cyan accent) and
-    kept deliberately simple: at 16px in a browser tab anything finer than a
-    handful of thick strokes turns to mush, so the shapes are large and the
-    count is small.
+    Favicon crop of the finalized Cerebro Flow logo.
+
+    The full horizontal lockup (600x160) is kept at
+    public/brand/cerebro-flow-logo.svg for header and wordmark use. It cannot
+    serve as a tab icon: at 32px its 28px wordmark collapses into a smear, so
+    this square uses only the left-hand emblem — the three connectors feeding
+    the central intelligence — cropped to its true bounds (x 31-114, y 41-119).
+
+    The geometry, colours and relative proportions are the logo's own. Two
+    changes were required for legibility at 16-32px and are noted here: stroke
+    widths are scaled up to compensate for the 0.675 reduction, and the
+    connector lines take round caps so they do not thin out to nothing.
   -->
-  <rect width="64" height="64" rx="14" fill="#020617" />
+  <rect width="64" height="64" rx="14" fill="#09090B"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="13.5" stroke="#27272A"/>
 
-  <!-- associations -->
-  <g stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" opacity="0.55">
-    <path d="M32 32 L18 20" />
-    <path d="M32 32 L46 20" />
-    <path d="M32 32 L17 45" />
-    <path d="M32 32 L47 45" />
+  <g transform="translate(32 32) scale(0.675) translate(-72.5 -80)">
+    <!-- connectors: data arriving from the outside world -->
+    <g stroke="#71717A" stroke-width="2.4" stroke-linecap="round">
+      <path d="M50 45 L100 80"/>
+      <path d="M35 80 L100 80"/>
+      <path d="M50 115 L100 80"/>
+    </g>
+    <circle cx="50" cy="45" r="5.2" fill="#71717A"/>
+    <circle cx="35" cy="80" r="5.2" fill="#71717A"/>
+    <circle cx="50" cy="115" r="5.2" fill="#71717A"/>
+
+    <!-- cerebro: the central intelligence, with its active spark -->
+    <circle cx="100" cy="80" r="14" stroke="#E4E4E7" stroke-width="3.3" fill="#09090B"/>
+    <circle cx="100" cy="80" r="4" fill="#E4E4E7"/>
   </g>
-
-  <!-- associated memories -->
-  <g fill="#22d3ee">
-    <circle cx="18" cy="20" r="4.4" />
-    <circle cx="46" cy="20" r="4.4" />
-    <circle cx="17" cy="45" r="4.4" />
-    <circle cx="47" cy="45" r="4.4" />
-  </g>
-
-  <!-- the hub -->
-  <circle cx="32" cy="32" r="10" fill="#0e7490" />
-  <circle cx="32" cy="32" r="10" fill="none" stroke="#67e8f9" stroke-width="3" />
-  <circle cx="32" cy="32" r="3.4" fill="#ecfeff" />
 </svg>

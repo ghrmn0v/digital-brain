@@ -47,8 +47,8 @@ DEFAULT_EVIDENCE_LIMIT = 5
 STATEMENT_LIMIT = 300
 
 _SYSTEM_PREAMBLE = (
-    "You are the reasoning model inside Digital Brain.\n"
-    "You do not own persistent memory. Digital Brain supplies the user context "
+    "You are the reasoning model inside Cerebro Flow.\n"
+    "You do not own persistent memory. Cerebro Flow supplies the user context "
     "below.\n"
     "Rules:\n"
     "- Use the provided context when it is relevant; ignore it otherwise.\n"

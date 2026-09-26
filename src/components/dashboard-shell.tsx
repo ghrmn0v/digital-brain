@@ -93,7 +93,7 @@ function Brand() {
     <Link
       href="/dashboard"
       className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-      aria-label="Digital Brain dashboard"
+        aria-label="Cerebro Flow dashboard"
     >
       <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 shadow-[0_0_30px_-14px_rgba(34,211,238,0.8)]">
         <Bot aria-hidden="true" className="h-5 w-5" />
@@ -101,11 +101,11 @@ function Brand() {
       </span>
       <span>
         <span className="block text-sm font-semibold tracking-tight text-white">
-          Digital Brain
-        </span>
-        <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
-          Personal AI
-        </span>
+            Cerebro Flow
+          </span>
+          <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
+            Personal AI
+          </span>
       </span>
     </Link>
   );
@@ -324,7 +324,7 @@ export function DashboardShell({
         <div className="hidden h-16 items-center justify-between border-b border-slate-800/70 bg-slate-950/60 px-8 backdrop-blur lg:flex">
           <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
             <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
-            Your local-first digital brain
+              Your local-first personal intelligence
           </div>
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />

@@ -1,0 +1,29 @@
+<svg width="600" height="160" viewBox="0 0 600 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cerebro Flow">
+  <title>Cerebro Flow</title>
+  <!-- Full horizontal Cerebro Flow lockup: emblem, then the wordmark.
+       The square tab icon derived from the emblem lives at src/app/icon.svg. -->
+  <!-- Clean, minimal dark interface ground -->
+  <rect width="600" height="160" rx="16" fill="#09090B"/>
+  <rect x="0.5" y="0.5" width="599" height="159" rx="15.5" stroke="#27272A"/>
+
+  <!-- 1. CONNECTORS (left - data arriving from the outside world) -->
+  <path d="M50 45 L100 80" stroke="#52525B" stroke-width="1"/>
+  <path d="M35 80 L100 80" stroke="#52525B" stroke-width="1"/>
+  <path d="M50 115 L100 80" stroke="#52525B" stroke-width="1"/>
+
+  <circle cx="50" cy="45" r="4" fill="#71717A"/>
+  <circle cx="35" cy="80" r="4" fill="#71717A"/>
+  <circle cx="50" cy="115" r="4" fill="#71717A"/>
+
+  <!-- 3. FLOW (right - the clean result the system returns) -->
+  <path d="M100 80 L160 80" stroke="#E4E4E7" stroke-width="1.5"/>
+  <circle cx="160" cy="80" r="4" fill="#E4E4E7"/>
+
+  <!-- 2. CEREBRO (centre - the central intelligence: an empty vessel with an active spark inside) -->
+  <circle cx="100" cy="80" r="14" stroke="#E4E4E7" stroke-width="2" fill="#09090B"/>
+  <circle cx="100" cy="80" r="3" fill="#E4E4E7"/>
+
+  <!-- TYPOGRAPHY (heavy structure, light flow) -->
+  <text x="200" y="89" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="28" font-weight="800" fill="#F4F4F5" letter-spacing="4">CEREBRO</text>
+  <text x="375" y="89" font-family="'Inter', system-ui, -apple-system, sans-serif" font-size="28" font-weight="300" fill="#71717A" letter-spacing="4">FLOW</text>
+</svg>

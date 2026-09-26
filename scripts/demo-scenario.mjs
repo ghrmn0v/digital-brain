@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Digital Brain demo scenario.
+ * Cerebro Flow demo scenario.
  *
  * One coherent story, driven entirely through the Product's public API so the
  * demo exercises the real integration path rather than calling the Brain
@@ -165,7 +165,7 @@ const CORRELATION = `corr-demo-${RUN}`;
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log(bold("\n  Digital Brain — integrated demo"));
+    console.log(bold("\n  Cerebro Flow — integrated demo"));
   console.log(dim(`  product ${BASE}`));
   console.log(dim(`  brain   ${BRAIN_URL}`));
   console.log(dim(`  user    ${USER_ID || "(not configured)"}`));

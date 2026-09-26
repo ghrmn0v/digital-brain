@@ -1,8 +1,9 @@
-# Digital Brain
+# Cerebro Flow
 
-A personal AI digital brain. External systems (LinkedIn, WhatsApp, Calendar,
-Tasks, Jobs) feed a normalized event stream; the **Core Brain** learns a
-long-term model about a person's people, relationships, preferences and intent,
+A personal AI system that remembers what your digital life is about. External
+systems (LinkedIn, WhatsApp, Calendar, Tasks, Jobs) feed a normalized event
+stream; the **Core Brain** learns a long-term model about a person's people,
+relationships, preferences and intent,
 proposes actions, and the product layer executes them — all behind permission
 checks.
 

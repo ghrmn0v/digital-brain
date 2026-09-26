@@ -1,4 +1,4 @@
-# Digital Brain Product / Connectors
+# Cerebro Flow Product / Connectors
 
 The local-first Product and Connector layer that integrates with Core Brain and
 Fly. This repository does not implement Core Brain intelligence or Fly

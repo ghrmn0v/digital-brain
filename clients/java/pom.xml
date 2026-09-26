@@ -9,11 +9,11 @@
   <version>0.1.0</version>
   <packaging>jar</packaging>
 
-  <name>Digital Brain Java Client</name>
-  <description>
-    Thin, dependency-free client for the Digital Brain API v1 over HTTP and
-    WebSocket. Same contract as the TypeScript client; no Brain logic.
-  </description>
+    <name>Cerebro Flow Java Client</name>
+    <description>
+      Thin, dependency-free client for the Cerebro Flow API v1 over HTTP and
+      WebSocket. Same contract as the TypeScript client; no Brain logic.
+    </description>
 
   <properties>
     <maven.compiler.release>17</maven.compiler.release>

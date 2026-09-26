@@ -284,7 +284,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="digital-brain-http",
         description=(
-            "Digital Brain minimal HTTP transport. POST /v1/brain (one JSON "
+              "Cerebro Flow minimal HTTP transport. POST /v1/brain (one JSON "
             "ApiRequest) -> canonical ApiResponse JSON; GET /health for "
             "liveness. Transport-only adapter over BrainApi; events flow to "
             "the service's own EventSink (here: NullEventSink, discarded)."

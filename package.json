@@ -65,5 +65,5 @@
     "deepmerge-ts": "8.0.2",
     "mysql2": "3.24.4"
   },
-  "description": "Local-first Product surface for Digital Brain: tasks, calendar, jobs, approvals, automations and connectors, backed by Core Brain memory."
+    "description": "Local-first Product surface for Cerebro Flow: tasks, calendar, jobs, approvals, automations and connectors, backed by Core Brain memory."
 }
