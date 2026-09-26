@@ -35,6 +35,21 @@ import { SUPPORTED_SOURCE_EVENTS } from "@/modules/brain/contracts";
 
 const EMPTY_MESSAGES: ChatMessage[] = [];
 
+/*
+ * Hydration gate.
+ *
+ * Conversation history lives in localStorage, which the server cannot read, so
+ * the server renders "no chats" and the client renders the real list. Reading
+ * this through useSyncExternalStore keeps both sides in agreement on the first
+ * paint, and needs no setState inside an effect.
+ */
+/** Stable empty list so the server and the first client render always agree. */
+const NO_CONVERSATIONS: Conversation[] = [];
+
+const noopSubscribe = () => () => {};
+const hydratedOnClient = () => true;
+const notHydratedOnServer = () => false;
+
 function now(): number {
   return Date.now();
 }
@@ -63,7 +78,21 @@ const VIEWS: { id: View; label: string; icon: typeof Motor }[] = [
 ];
 
 export function ChatApp({ status }: { status: BrainStatusDto }) {
-  const conversations = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  /*
+   * The third argument matters: the server has no localStorage, so its snapshot
+   * is the empty list. Passing the real snapshot there is what produced the
+   * hydration mismatch on the chat history.
+   */
+  const conversations = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    () => NO_CONVERSATIONS,
+  );
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    hydratedOnClient,
+    notHydratedOnServer,
+  );
   const [view, setView] = useState<View>("chat");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [draftChat, setDraftChat] = useState<Conversation | null>(null);
@@ -240,7 +269,7 @@ export function ChatApp({ status }: { status: BrainStatusDto }) {
           </p>
           {conversations.length === 0 ? (
             <p className="px-3 text-[0.8125rem] leading-6 text-[var(--text-muted)]">
-              Your chats will appear here.
+              {hydrated ? "Your chats will appear here." : ""}
             </p>
           ) : (
             <ul className="space-y-0.5">
@@ -269,7 +298,7 @@ export function ChatApp({ status }: { status: BrainStatusDto }) {
                       if (activeId === item.id) startNew();
                     }}
                     aria-label={`Delete ${item.title}`}
-                    className="rounded-lg p-2 text-[var(--text-muted)] opacity-0 transition focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40 group-hover:opacity-100"
+                    className="rounded-lg p-2 text-[var(--text-muted)] opacity-50 transition-opacity focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
                   >
                     <Trash aria-hidden="true" className="h-4 w-4" />
                   </button>

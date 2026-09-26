@@ -208,8 +208,10 @@ input[type="checkbox"] {
   pointer-events: none;
 }
 
+/*
+ * The composer is the page's single focus, so it carries a permanent accent
+ * edge. The edge is a plain border, not a shadow: the system uses no shadows.
+ */
 .halo-composer {
-  box-shadow:
-    0 0 0 1px rgb(34 211 238 / 0.2),
-    0 16px 44px -20px rgb(34 211 238 / 0.3);
+  border-color: rgb(34 211 238 / 0.28);
 }

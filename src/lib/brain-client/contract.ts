@@ -548,7 +548,6 @@ export interface PersonResolutionResult {
   readonly memory_id?: string | null;
 }
 
-<<<<<<< HEAD
 // -- retrieval (search) and conversation (chat) ---------------------------------
 
 /** The Brain's coarse memory taxonomy; additive, and an unknown value is an error. */
@@ -634,8 +633,6 @@ export interface ChatResultWire {
   readonly correlation_id?: string | null;
 }
 
-=======
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
 export interface AssistanceProfileResult {
   readonly user_id: string;
   readonly feedback_count: number;
@@ -691,11 +688,8 @@ export const API_METHODS = [
   { method: "feedback_history", paramsDef: "FeedbackHistoryParams", resultDef: "FeedbackHistoryResult", hasUserIdParam: true },
   { method: "personalization_profile", paramsDef: "UserParams", resultDef: "AssistanceProfileResult", hasUserIdParam: true },
   { method: "resolve_person", paramsDef: "ResolvePersonParams", resultDef: "PersonResolutionWire", hasUserIdParam: true },
-<<<<<<< HEAD
   { method: "search", paramsDef: "SearchParams", resultDef: "SearchResultWire", hasUserIdParam: true },
   { method: "chat", paramsDef: "ChatParams", resultDef: "ChatResultWire", hasUserIdParam: true },
-=======
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
 ] as const satisfies readonly ApiMethodDescriptor[];
 
 export type ApiMethod = (typeof API_METHODS)[number]["method"];
@@ -718,11 +712,8 @@ export interface MethodParamsMap {
   feedback_history: FeedbackHistoryParams;
   personalization_profile: UserParams;
   resolve_person: ResolvePersonParams;
-<<<<<<< HEAD
   search: SearchParams;
   chat: ChatParams;
-=======
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
 }
 
 export interface MethodResultMap {
@@ -743,11 +734,8 @@ export interface MethodResultMap {
   feedback_history: FeedbackHistoryResult;
   personalization_profile: AssistanceProfileResult;
   resolve_person: PersonResolutionResult;
-<<<<<<< HEAD
   search: SearchResultWire;
   chat: ChatResultWire;
-=======
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
 }
 
 export type MethodParams<M extends ApiMethod> = MethodParamsMap[M];

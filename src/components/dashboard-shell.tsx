@@ -96,13 +96,8 @@ function Brand() {
   return (
     <Link
       href="/dashboard"
-<<<<<<< HEAD
       className="group flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
       aria-label="Digital Brain Product dashboard"
-=======
-      className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-      aria-label="Digital Brain dashboard"
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
     >
       <span className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-sky-300/20 bg-sky-300/10 text-[var(--accent)]">
         <Bot aria-hidden="true" className="h-5 w-5" />
@@ -112,13 +107,8 @@ function Brand() {
         <span className="block text-sm font-semibold tracking-tight text-white">
           Digital Brain
         </span>
-<<<<<<< HEAD
         <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
           Product OS
-=======
-        <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
-          Personal AI
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
         </span>
       </span>
     </Link>
@@ -296,15 +286,11 @@ export function DashboardShell({
           />
           <aside
             id="mobile-navigation"
-<<<<<<< HEAD
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--panel-line)] bg-[#1a1a1a]"
-=======
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-slate-800 bg-slate-950 shadow-2xl"
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
+            className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--panel-line)] bg-[#1a1a1a]"
           >
             <div className="flex h-16 items-center justify-between border-b border-[var(--panel-line)] px-4">
               <Brand />
@@ -327,17 +313,10 @@ export function DashboardShell({
       ) : null}
 
       <div className="lg:pl-64">
-<<<<<<< HEAD
         <div className="hidden h-16 items-center justify-between border-b border-[var(--panel-line)]/70 bg-[#1a1a1a]/60 px-8 backdrop-blur lg:flex">
           <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-muted)]">
             <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
             Personal product control plane
-=======
-        <div className="hidden h-16 items-center justify-between border-b border-slate-800/70 bg-slate-950/60 px-8 backdrop-blur lg:flex">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
-            Your local-first digital brain
->>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
           </div>
           <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
             <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
