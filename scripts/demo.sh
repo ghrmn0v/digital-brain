@@ -83,23 +83,40 @@ dim()  { printf '   %s%s%s\n' "$D" "$*" "$N"; }
 # --- child process management ----------------------------------------------
 # Only processes this script started are ever signalled, so a developer's own
 # server on the same port is never killed by accident.
+#
+# Each service is started with setsid, which makes it a process-group leader, so
+# the recorded pid is also its pgid. That matters because `npm run dev` is not
+# the server: npm spawns node, which spawns next-server. Signalling the recorded
+# pid alone kills npm and leaves the actual listener holding the port, which is
+# how an earlier version of this script left a stray server behind. Signalling
+# the group reaches every descendant.
 declare -a STARTED_PIDS=()
 
 track() { STARTED_PIDS+=("$1"); }
+
+# Signal a whole process group, preferring the negative form. The positive form
+# is the fallback for the case where setsid was unavailable and the child ended
+# up in this script's own group.
+signal_group() { # pid, signal
+  local pid="$1" sig="$2"
+  kill "-$sig" -- "-$pid" 2>/dev/null || kill "-$sig" "$pid" 2>/dev/null || true
+}
+
+group_alive() { kill -0 -- "-$1" 2>/dev/null || kill -0 "$1" 2>/dev/null; }
 
 stop_all() {
   local code=$?
   if [ "${#STARTED_PIDS[@]}" -gt 0 ]; then
     printf '\n%sStopping demo services%s\n' "$B" "$N"
     for pid in "${STARTED_PIDS[@]}"; do
-      if kill -0 "$pid" 2>/dev/null; then
-        kill "$pid" 2>/dev/null || true
+      if group_alive "$pid"; then
+        signal_group "$pid" TERM
         printf '   %s·%s pid %s\n' "$D" "$N" "$pid"
       fi
     done
     sleep 1
     for pid in "${STARTED_PIDS[@]}"; do
-      kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
+      group_alive "$pid" && signal_group "$pid" KILL
     done
   fi
   rm -f "$RUN_DIR"/*.pid 2>/dev/null || true
@@ -116,8 +133,8 @@ stop_recorded() {
   for pidfile in "$RUN_DIR"/*.pid; do
     pid="$(cat "$pidfile" 2>/dev/null || true)"
     case "$pid" in ''|*[!0-9]*) continue ;; esac
-    if kill -0 "$pid" 2>/dev/null; then
-      kill "$pid" 2>/dev/null || true
+    if group_alive "$pid"; then
+      signal_group "$pid" TERM
       found=1
       printf '   %s·%s stopped %s (%s)\n' "$D" "$N" "$pid" "$(basename "$pidfile" .pid)"
     fi
@@ -130,7 +147,7 @@ stop_recorded() {
     for pidfile in "$RUN_DIR"/*.pid; do
       pid="$(cat "$pidfile" 2>/dev/null || true)"
       case "$pid" in ''|*[!0-9]*) continue ;; esac
-      kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
+      group_alive "$pid" && signal_group "$pid" KILL
     done
   fi
   rm -f "$RUN_DIR"/*.pid 2>/dev/null || true
@@ -261,7 +278,15 @@ head1 "Starting services"
 
 start_bg() { # name, logfile, command...
   local name="$1" log="$2"; shift 2
-  "$@" >>"$log" 2>&1 &
+  # setsid puts the service in its own process group, so stop_all can signal
+  # every descendant and not just the npm wrapper in front of it. Without a
+  # controlling terminal available setsid still works; only the group signal
+  # degrades, which signal_group already handles.
+  if command -v setsid >/dev/null 2>&1; then
+    setsid "$@" >>"$log" 2>&1 &
+  else
+    "$@" >>"$log" 2>&1 &
+  fi
   local pid=$!
   track "$pid"
   echo "$pid" > "$RUN_DIR/$name.pid"
