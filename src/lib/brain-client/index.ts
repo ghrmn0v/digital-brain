@@ -56,6 +56,7 @@ export type {
   PersonTimelineSourceWire,
   PersonFactDurability,
   PersonResolutionResult,
+<<<<<<< HEAD
   ChatGroundingWire,
   ChatParams,
   ChatResultWire,
@@ -63,6 +64,8 @@ export type {
   MemoryTypeWire,
   SearchParams,
   SearchResultWire,
+=======
+>>>>>>> 96bb7a7f21d6232ffcf32a0721c8f51511b8bf3f
   PersonRowWire,
   PingParams,
   PingResult,

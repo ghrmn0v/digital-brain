@@ -13,12 +13,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // One product identity across the three subsystems: the Core Brain is the
+  // intelligence, Fly the behaviour engine, and this app is the surface the
+  // person actually uses. The page title carries the product, not the layer.
   title: {
-    default: "Digital Brain Product",
-    template: "%s · Digital Brain Product",
+    default: "Digital Brain",
+    template: "%s · Digital Brain",
   },
   description:
-    "A local-first control plane for tasks, calendar, jobs, approvals, automations, and connectors.",
+    "Your local-first digital brain: it remembers what your life is about, learns how you prefer to work, and proposes what to do next. Tasks, calendar, jobs, approvals and automations, backed by Core Brain memory and Fly behaviour.",
+  applicationName: "Digital Brain",
+  keywords: [
+    "digital brain",
+    "personal AI",
+    "local-first",
+    "memory",
+    "calendar",
+    "tasks",
+    "automations",
+  ],
 };
 
 export const viewport: Viewport = {

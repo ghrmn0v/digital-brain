@@ -8,6 +8,29 @@ export async function parseJsonBody<TSchema extends z.ZodType>(
   schema: TSchema,
   maxBytes = DEFAULT_MAX_BODY_BYTES,
 ): Promise<z.infer<TSchema>> {
+  const body = await readJsonBody(request, maxBytes);
+
+  const result = schema.safeParse(body);
+  if (!result.success) {
+    throw new ApiError(400, "VALIDATION_ERROR", "Request validation failed.", {
+      details: result.error.flatten(),
+    });
+  }
+
+  return result.data;
+}
+
+/**
+ * Transport-level JSON reading without schema validation.
+ *
+ * Used when the payload shape depends on the caller (for example an endpoint
+ * that accepts either a Core Brain event or a Product event); the caller
+ * validates before anything is stored.
+ */
+export async function readJsonBody(
+  request: Request,
+  maxBytes = DEFAULT_MAX_BODY_BYTES,
+): Promise<unknown> {
   const contentType = request.headers.get("content-type")?.split(";", 1)[0];
   if (contentType !== "application/json") {
     throw new ApiError(
@@ -27,21 +50,11 @@ export async function parseJsonBody<TSchema extends z.ZodType>(
     throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body is too large.");
   }
 
-  let body: unknown;
   try {
-    body = JSON.parse(rawBody) as unknown;
+    return JSON.parse(rawBody) as unknown;
   } catch {
     throw new ApiError(400, "INVALID_JSON", "Request body is not valid JSON.");
   }
-
-  const result = schema.safeParse(body);
-  if (!result.success) {
-    throw new ApiError(400, "VALIDATION_ERROR", "Request validation failed.", {
-      details: result.error.flatten(),
-    });
-  }
-
-  return result.data;
 }
 
 export function parsePagination(

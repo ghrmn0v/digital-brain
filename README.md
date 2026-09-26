@@ -1,27 +1,33 @@
 # Digital Brain Product / Connectors
 
-Core Brain və Fly ilə inteqrasiya edən, local-first Product və Connector qatı. Bu repository Core Brain intelligence və Fly behavior implement etmir; o sahələrə yalnız stabil API/event sərhədləri təqdim edir.
+The local-first Product and Connector layer that integrates with Core Brain and
+Fly. This repository does not implement Core Brain intelligence or Fly
+behaviour; it provides stable API and event boundaries for both.
 
-## Əsas funksiyalar
+## Capabilities
 
-- Local Tasks CRUD, due date, priority və təkrarlanan task seriyası
-- Local Calendar CRUD, timezone, reminder və recurrence metadata
-- LinkedIn job ingestion, normalizasiya, deduplication, status history və report
-- `AUTOMATIC`, `ASK_FIRST`, `OFF` permission qaydaları
-- Action registry, approval/rejection audit və structured action response
-- Event/schedule automation engine; automation həmişə permission engine-dən keçir
-- Generic connector event ingestion və real LinkedIn job adapterı
-- SQLite durable event/delivery qatı, Core Brain delivery və Fly SSE stream
-- Connector status/health UI və credential-ləri göstərmədən idarəetmə
-- Product Timeline, Settings, Dashboard və responsive UI
-- PC-only Developer Mode workspace with default-off typed capability
-- Shared, read-only Developer Information feed for PC və mobil
-- Core Brain `developer.bug_detected` projection-i və icra etməyən proposal approval/rejection auditı
-- Mövcud normalized event qatı vasitəsilə dəyişdirilmədən Fly developer event delivery
-- Runtime Zod validation, stabil API errors və mutation idempotency
-- Vitest unit/integration testləri və təmiz test SQLite DB
+- Local Tasks CRUD, with due dates, priority and recurring task series
+- Local Calendar CRUD, with timezone, reminders and recurrence metadata
+- LinkedIn job ingestion, normalization, deduplication, status history and reports
+- `AUTOMATIC`, `ASK_FIRST` and `OFF` permission rules
+- Action registry, approval/rejection audit and structured action responses
+- Event and schedule automation engine; automation always passes through the
+  permission engine
+- Generic connector event ingestion and a real LinkedIn job adapter
+- Durable SQLite event and delivery layer, with Core Brain delivery and a Fly
+  SSE stream
+- Connector status and health UI, with credential-free management
+- Product Timeline, Settings, Dashboard and a responsive UI
+- PC-only Developer Mode workspace, with a typed capability that defaults to off
+- Shared, read-only Developer Information feed for PC and mobile
+- Projection of Core Brain `developer.bug_detected` events, with an audit trail
+  of proposal approval and rejection that never executes anything
+- Fly developer event delivery through the existing normalized event layer,
+  unchanged
+- Runtime Zod validation, stable API errors and mutation idempotency
+- Vitest unit and integration tests against a clean test SQLite database
 
-## Texnoloji stack
+## Tech stack
 
 - Next.js 16 App Router, React 19, TypeScript
 - Tailwind CSS 4, Lucide React
@@ -31,55 +37,55 @@ Core Brain və Fly ilə inteqrasiya edən, local-first Product və Connector qat
 - Vitest 5
 - npm
 
-## Lokal başlatma
+## Running locally
 
-Tələb: Node.js `22.12+`.
+Requires Node.js `22.12+`.
 
-```powershell
-cd "C:\Users\user\OneDrive\Desktop\digital-brain-product"
+```bash
+cd digital-brain-product
 npm ci
-Copy-Item .env.example .env
+cp .env.example .env
 npm run db:deploy
 npm run db:seed
 npm run dev
 ```
 
-Tətbiq: [http://localhost:3000](http://localhost:3000)
+App: [http://localhost:3000](http://localhost:3000)
 
-Health/readiness: [http://localhost:3000/api/health](http://localhost:3000/api/health)
+Health and readiness: [http://localhost:3000/api/health](http://localhost:3000/api/health)
 
 Prisma Studio:
 
-```powershell
+```bash
 npm run db:studio
 ```
 
-Background delivery və one-time schedule worker:
+Background delivery and one-time schedule worker:
 
-```powershell
+```bash
 npm run worker
 ```
 
-## Əsas əmrlər
+## Commands
 
-| Əmr | Təyinat |
+| Command | Purpose |
 | --- | --- |
 | `npm run dev` | Next.js development server |
 | `npm run build` | Production build |
-| `npm run worker` | Event delivery və schedule polling worker |
+| `npm run worker` | Event delivery and schedule polling worker |
 | `npm run lint` | ESLint |
-| `npm run typecheck` | Next route type generation + TypeScript |
-| `npm test` | Unit və integration testlər |
+| `npm run typecheck` | Next route type generation and TypeScript |
+| `npm test` | Unit and integration tests |
 | `npm run test:coverage` | Coverage report |
-| `npm run test:smoke` | Real Next.js HTTP runtime smoke test with isolated DB |
-| `npm run check` | Lint + typecheck + tests |
-| `npm run verify` | Prisma validation + check + production build |
-| `npm run db:migrate -- --name <name>` | Yeni development migration |
-| `npm run db:deploy` | Commit edilmiş migration-ları tətbiq etmək |
-| `npm run db:seed` | Default permissions, connectors və settings |
+| `npm run test:smoke` | Real Next.js HTTP runtime smoke test with an isolated database |
+| `npm run check` | Lint, typecheck and tests |
+| `npm run verify` | Prisma validation, check and production build |
+| `npm run db:migrate -- --name <name>` | Create a new development migration |
+| `npm run db:deploy` | Apply the committed migrations |
+| `npm run db:seed` | Seed default permissions, connectors and settings |
 | `npm run db:studio` | Prisma Studio |
 
-## Arxitektura
+## Architecture
 
 ```text
 External services
@@ -94,70 +100,94 @@ External services
   -> Product UI
 ```
 
-Server-only modullar `src/modules` altında qruplaşır:
+Server-only modules are grouped under `src/modules`:
 
-- `tasks`, `calendar`, `jobs`: domain validation və persistence
+- `tasks`, `calendar`, `jobs`: domain validation and persistence
 - `permissions`: policy resolution
-- `actions`: registry, approval və execution audit
-- `automations`: event/schedule conditions və action dispatch
-- `connectors`: connector lifecycle və LinkedIn normalizer
-- `events`: normalized event, durable delivery və SSE
-- `settings`, `timeline`: product-owned data
+- `actions`: registry, approval and execution audit
+- `automations`: event and schedule conditions, and action dispatch
+- `connectors`: connector lifecycle and the LinkedIn normalizer
+- `events`: normalized events, durable delivery and SSE
+- `settings`, `timeline`: Product-owned data
 
-API sənədləri: [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md)
+API documentation: [`docs/API_CONTRACTS.md`](docs/API_CONTRACTS.md)
 
-## Developer Mode və platform sərhədləri
+## Developer Mode and platform boundaries
 
-- **Developer Mode:** yalnız PC; default `OFF`. Repo context, proposal qərarları və Fly əlaqəli developer workspace yalnız desktop layout-da görünür.
-- **Developer Information:** Core Brain tərəfindən yaradılan oxuna bilən developer məlumatı PC və mobilərdə ortaq API-dən göstərilir.
-- Mobil client Developer Mode toggle-u, lokal repo analizini, Git/test/deploy action-larını və Fly UI-ını görmür.
-- Mobil tətbiqdə `developer-information` yalnız read-only feed-dir.
-- `developer.bug_detected` hadisəsi əvvəlcə dəqiq Zod payload schema-sı ilə yoxlanılır; title və message Core Brain-dən dəyişdirilmədən saxlanılır.
-- Proposal approve/reject yalnız audit statusunu dəyişir; `ActionExecution`, Git, test və deployment başlatmır.
-- Gələcək repository, Git, testing və deployment imkanları üçün yalnız port interfeysləri mövcuddur.
+- **Developer Mode:** PC only, default `OFF`. Repository context, proposal
+  decisions and the Fly-related developer workspace appear only in the desktop
+  layout.
+- **Developer Information:** read-only developer data produced by Core Brain,
+  surfaced on PC and mobile through the same API.
+- The mobile client does not see the Developer Mode toggle, local repository
+  analysis, Git/test/deploy actions, or the Fly UI.
+- In the mobile app `developer-information` is a read-only feed.
+- A `developer.bug_detected` event is validated against an exact Zod payload
+  schema first; title and message are stored exactly as Core Brain sent them.
+- Proposal approve/reject only changes the audit status. It does not start an
+  `ActionExecution`, Git operation, test run or deployment.
+- Repository, Git, testing and deployment capabilities exist only as ports.
 
-## Default təhlükəsizlik davranışı
+## Default security behaviour
 
-- Core Brain tərəfindən task/event yaratma `ASK_FIRST`
-- Task/event silmə və job application `OFF`
-- Naməlum action `400 ACTION_NOT_SUPPORTED`
-- Naməlum permission `ASK_FIRST`
-- Disabled permission `OFF`
-- Automation permission qaydasını keçə bilmir
-- LinkedIn connector relevance/qərar yaratmır
-- `relevanceReason` yalnız Core Brain tərəfindən göndərilən məlumat kimi göstərilir
-- Raw credentials SQLite-də və UI-da göstərilmir
+- Task and event creation from Core Brain is `ASK_FIRST`
+- Task and event deletion, and job applications, are `OFF`
+- An unknown action is `400 ACTION_NOT_SUPPORTED`
+- An unknown permission is `ASK_FIRST`
+- A disabled permission is `OFF`
+- Automation cannot bypass the permission rules
+- The LinkedIn connector does not create relevance or decisions
+- `relevanceReason` is shown only as data sent by Core Brain
+- Raw credentials are never stored in SQLite or shown in the UI
 
-## Xarici integrasiyalar
+## External integrations
 
-`.env` də:
+In `.env`:
 
 ```dotenv
 SERVICE_API_TOKEN="strong-random-service-token"
-CORE_BRAIN_URL="http://localhost:4100"
+CORE_BRAIN_URL="http://127.0.0.1:8765/v1/brain"
+CORE_BRAIN_USER_ID="usr_local_owner"
 CORE_BRAIN_API_TOKEN=""
-FLY_EVENTS_URL="http://localhost:4200/events"
+FLY_EVENTS_URL="http://127.0.0.1:8080/api/v1/events"
 FLY_API_TOKEN=""
 ```
 
-Boş URL-lərdə event hələ də SQLite-da saxlanılır; delivery `PENDING` qalır. URL konfiqurasiya edildikdə worker `core_brain` və `fly` consumer-lərinə bounded retry göndərir.
+`CORE_BRAIN_USER_ID` is required for Brain delivery: the Brain isolates every
+event by user, and this local-first Product acts for a single owner. Without it
+the delivery fails loudly rather than attributing the data to a wrong identity.
 
-LinkedIn scraping bu layihədə yoxdur. LinkedIn endpoint yalnız authorized connector worker-ın ötürdüyü normalized vəziyyəti qəbul edir; həqiqi OAuth/acquisition hərə bir dəstəklənən provider API-si ilə ayrıca həll olunmalıdır.
+With an empty URL the event is still stored in SQLite and the delivery stays
+`PENDING`. Once a URL is configured, the worker retries the `core_brain` and
+`fly` consumers a bounded number of times.
 
-## Core Brain və Fly sərhədləri
+The Brain's ingest contract distinguishes a handled request from a stored event:
+it answers HTTP 200 with `outcome` in the body, where `accepted` and `duplicate`
+mean the event is held and `rejected` means it is not. Delivery inspects that
+outcome, so a rejected event is never recorded as delivered.
 
-- Product Core Brain intelligence yaratmır.
-- Product People/Memory məlumatını lokal DB-də saxlamır.
-- Fly üçün yalnız event stream verilir; Fly behavior qərarı Fly engineer-a məxsusdur.
-- Brain events `/api/brain-events` ilə qəbul edilir.
-- Fly events `/api/fly-events` SSE stream ilə oxunur.
-- Action intent və nəticə Core Brain tərəfindən eyni kontraktla göndərilir və qəbul edilir.
+There is no LinkedIn scraping in this project. The LinkedIn endpoint only
+accepts the normalized state forwarded by an authorized connector worker; real
+OAuth and data acquisition are a separate concern for each supported provider
+API.
 
-## Yoxlama
+## Boundaries with Core Brain and Fly
 
-```powershell
+- The Product does not create Core Brain intelligence.
+- The Product does not store People or Memory data in its local database.
+- Fly receives only an event stream; Fly behaviour decisions belong to the Fly
+  owner.
+- Brain events are accepted at `/api/brain-events`.
+- Fly events are read from the `/api/fly-events` SSE stream.
+- Action intent and outcome are sent and accepted using the same contract from
+  Core Brain.
+
+## Verification
+
+```bash
 npm run verify
 npm audit
 ```
 
-`npm run verify` Prisma sxemini, lint, TypeScript, 24+ test və production build-i yoxlayır.
+`npm run verify` checks the Prisma schema, lint, TypeScript, the test suite and
+the production build.

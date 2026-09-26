@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Digital Brain">
+  <!--
+    Digital Brain mark: one memory hub with connected associations.
+    Drawn on the product's own palette (slate #020617 ground, cyan accent) and
+    kept deliberately simple: at 16px in a browser tab anything finer than a
+    handful of thick strokes turns to mush, so the shapes are large and the
+    count is small.
+  -->
+  <rect width="64" height="64" rx="14" fill="#020617" />
+
+  <!-- associations -->
+  <g stroke="#22d3ee" stroke-width="3.2" stroke-linecap="round" opacity="0.55">
+    <path d="M32 32 L18 20" />
+    <path d="M32 32 L46 20" />
+    <path d="M32 32 L17 45" />
+    <path d="M32 32 L47 45" />
+  </g>
+
+  <!-- associated memories -->
+  <g fill="#22d3ee">
+    <circle cx="18" cy="20" r="4.4" />
+    <circle cx="46" cy="20" r="4.4" />
+    <circle cx="17" cy="45" r="4.4" />
+    <circle cx="47" cy="45" r="4.4" />
+  </g>
+
+  <!-- the hub -->
+  <circle cx="32" cy="32" r="10" fill="#0e7490" />
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#67e8f9" stroke-width="3" />
+  <circle cx="32" cy="32" r="3.4" fill="#ecfeff" />
+</svg>
