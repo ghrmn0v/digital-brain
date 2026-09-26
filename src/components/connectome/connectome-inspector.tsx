@@ -8,6 +8,7 @@ import {
   GitBranch,
   Info,
   Layers,
+  MessageSquareText,
   Radio,
 } from "lucide-react";
 import type {
@@ -165,8 +166,17 @@ export function ConnectomeInspector({
         </Link>
       </InspectorSection>
 
-      {node.href ? (
-        <div className="border-t border-slate-800/70 p-4">
+      <div className="space-y-2 border-t border-slate-800/70 p-4">
+        <Link
+          href={`/chat?context=${encodeURIComponent(
+            `${nodeStyles[node.kind].label}: ${node.label}`,
+          )}`}
+          className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-300/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+        >
+          <MessageSquareText aria-hidden="true" className="h-3.5 w-3.5" />
+          Ask about this
+        </Link>
+        {node.href ? (
           <Link
             href={node.href}
             className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
@@ -174,13 +184,14 @@ export function ConnectomeInspector({
             Open {node.href === "/connectors" ? "connectors" : node.href.slice(1)}
             <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
           </Link>
-        </div>
-      ) : (
+        ) : null}
+      </div>
+      {!node.href ? (
         <p className="border-t border-slate-800/70 px-4 py-3 text-[11px] leading-5 text-slate-600">
           <Radio aria-hidden="true" className="mr-1 inline h-3 w-3" />
           No screen exists for this kind of record, so there is nothing to open.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

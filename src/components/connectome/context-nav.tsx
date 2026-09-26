@@ -11,6 +11,7 @@ import {
   Cpu,
   History,
   ListTodo,
+  MessageSquareText,
   Network,
   PlugZap,
   RadioTower,
@@ -46,6 +47,7 @@ export interface ContextNavProps {
 const contextItems: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/connectome", label: "Connectome", icon: Network },
   { href: "/dashboard", label: "Overview", icon: Cpu },
+  { href: "/chat", label: "Chat", icon: MessageSquareText },
   { href: "/timeline", label: "Timeline", icon: History },
 ];
 

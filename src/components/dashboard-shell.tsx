@@ -18,6 +18,8 @@ import {
   LayoutDashboard,
   ListTodo,
   Menu,
+  MessageSquareText,
+  Network,
   PlugZap,
   Settings,
   ShieldCheck,
@@ -42,16 +44,18 @@ type NavigationSection = {
   items: NavigationItem[];
 };
 
-const navigation: NavigationSection[] = [
-  {
-    label: "Workspace",
-    items: [
-      { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/tasks", label: "Tasks", icon: ListTodo },
-      { href: "/calendar", label: "Calendar", icon: CalendarDays },
-      { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
-    ],
-  },
+  const navigation: NavigationSection[] = [
+    {
+      label: "Workspace",
+      items: [
+        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+        { href: "/connectome", label: "Connectome", icon: Network },
+        { href: "/chat", label: "Chat", icon: MessageSquareText },
+        { href: "/tasks", label: "Tasks", icon: ListTodo },
+        { href: "/calendar", label: "Calendar", icon: CalendarDays },
+        { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
+      ],
+    },
   {
     label: "Control plane",
     items: [

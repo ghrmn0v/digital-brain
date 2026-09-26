@@ -161,8 +161,10 @@ export function ConnectomeWorkspace({
   }
 
   const targets: CommandTarget[] = [
-    { id: "nav-timeline", label: "Timeline", group: "Go to", href: "/timeline" },
+    { id: "nav-chat", label: "Chat", group: "Go to", href: "/chat" },
+    { id: "nav-connectome", label: "Connectome", group: "Go to", href: "/connectome" },
     { id: "nav-dashboard", label: "Overview", group: "Go to", href: "/dashboard" },
+    { id: "nav-timeline", label: "Timeline", group: "Go to", href: "/timeline" },
     { id: "nav-tasks", label: "Tasks", group: "Go to", href: "/tasks", keywords: "todo" },
     { id: "nav-memory", label: "Memories", group: "Go to", href: "/memory" },
     { id: "nav-people", label: "People", group: "Go to", href: "/people" },
