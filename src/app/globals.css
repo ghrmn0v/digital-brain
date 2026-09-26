@@ -140,6 +140,20 @@ textarea,
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * A button that does something must say so before it is pressed, so the
+ * pointer follows it. This is the one piece of hover feedback the system
+ * allows: the cursor changes, nothing on screen does. Disabled buttons opt
+ * out, and links are left alone because browsers already point at them.
+ */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 input[type="date"],
 input[type="datetime-local"],
 input[type="time"] {
@@ -186,7 +200,8 @@ input[type="checkbox"] {
 
 /*
  * A soft neon halo. It marks a focal element and is never triggered by
- * pointer hover: hovering stays quiet, emphasis is explicit.
+ * pointer hover: hovering changes the cursor and nothing else, so emphasis
+ * stays explicit.
  */
 .halo {
   position: relative;
