@@ -20,7 +20,7 @@ export const inputClassName =
 
 export const selectClassName = cn(
   inputClassName,
-  "appearance-none bg-[linear-gradient(45deg,transparent_50%,#64748b_50%),linear-gradient(135deg,#64748b_50%,transparent_50%)] bg-[length:5px_5px,5px_5px] bg-[position:calc(100%-16px)_50%,calc(100%-11px)_50%] bg-no-repeat pr-9",
+  "appearance-none bg-[linear-gradient(45deg,transparent_50%,#a1a1aa_50%),linear-gradient(135deg,#a1a1aa_50%,transparent_50%)] bg-[length:5px_5px,5px_5px] bg-[position:calc(100%-16px)_50%,calc(100%-11px)_50%] bg-no-repeat pr-9",
 );
 
 export const primaryButtonClassName =

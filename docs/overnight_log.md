@@ -172,3 +172,28 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   on the mobile drawer, `shadow-sm` on a control) are deliberately kept. Those
   are elevation, not glow: an overlay needs to read as floating above the page
   behind it, and removing them would leave the drawer flush with its backdrop.
+
+## Task 8 — the ground was still the old blue
+
+- **Files:** `src/app/globals.css`, `src/app/layout.tsx`, `src/components/ui.tsx`
+- **Result:** PASS
+- **Notes:** Task 6 rewrote every `slate-*` utility and the dashboard still had a
+  blue cast, because the page background never came from a utility. `body` takes
+  `background: var(--background)`, and `--background` was `#020617` — slate-950,
+  the exact value Task 6 was supposed to eliminate. Token classes cannot reach a
+  custom property, so a grep for `slate-` reported a clean tree while the single
+  largest surface in the product was untouched. The lesson generalises: the
+  token sweep was only complete for the places a class can reach.
+
+  Four more slate values were living in the same non-utility layer: the page
+  ground and foreground vars, the four `::-webkit-scrollbar` colours, the
+  `themeColor` in the viewport export (which is what a phone's browser chrome
+  paints, so it was the last blue thing a user would see), and the select
+  chevron, which is a `linear-gradient` literal in `selectClassName` and so had
+  to be hand-edited rather than rewritten. All are now on the token palette.
+  The chevron also moved from `#64748b` to `#a1a1aa`, which is not only the
+  right neutral but is legible — at 4.0:1 the old grey was close to invisible
+  against a `zinc-950/70` field.
+
+  Verified by grepping the built stylesheet for the old hexes (zero) and
+  screenshotting the dashboard against the rebuilt ground.
