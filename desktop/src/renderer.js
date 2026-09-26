@@ -26,7 +26,8 @@ const rimLight = new THREE.DirectionalLight(0x88ccff, 0.6);
 rimLight.position.set(-4, 1, -3);
 scene.add(rimLight);
 
-const FLY_TEXTURE_URL = "../models/fly.png";
+const FLY_TEXTURE_URL      = "../models/fly.png";
+const ROBOFLY_TEXTURE_URL  = "../models/roboFly.png";
 
 function buildFly(texture) {
   const group = new THREE.Group();
@@ -128,24 +129,112 @@ function buildFly(texture) {
   return group;
 }
 
-let fly = buildFly(null);
+// ── Fly instances (normal + roboFly dev model) ────────────────────────────────
+// Both are built as soon as their textures load.
+// activeFly tracks which one is currently in the scene.
+let fly         = buildFly(null);   // primitive fallback — visible immediately
+let normalFly   = fly;              // replaced when fly.png loads
+let roboFly     = null;             // built when roboFly.png loads
+let _devModeActive = false;
+
 scene.add(fly);
 
+/**
+ * Swap the active fly for `next`, preserving position and visibility.
+ * The outgoing fly is hidden (not removed) so it can be swapped back cheaply.
+ */
+function _swapFly(next) {
+  if (!next || next === fly) return;
+  next.position.copy(fly.position);
+  next.visible = fly.visible;
+  // Hide old, show new — both stay in the scene for instant toggling
+  fly.visible = false;
+  next.visible = true;
+  fly = next;
+}
+
+/**
+ * Apply or remove the dev-mode look.
+ * Uses roboFly texture when loaded, falls back to green primitive recolor.
+ */
+function setDevSkin(enabled) {
+  _devModeActive = enabled;
+  scene.background.setHex(enabled ? 0x080f0a : 0x0b0f14);
+  // Switch bubble style
+  document.getElementById("speech-bubble").classList.toggle("dev", enabled);
+
+  if (enabled) {
+    if (roboFly) {
+      _swapFly(roboFly);
+    } else {
+      // roboFly.png not loaded yet — use green recolor on the primitive
+      _applyPrimitiveSkin(fly, true);
+    }
+  } else {
+    if (normalFly) {
+      _swapFly(normalFly);
+    } else {
+      _applyPrimitiveSkin(fly, false);
+    }
+  }
+}
+
+const DEV_SKIN    = { body:0x0d1f0d, glossy:0x1a3320, eye:0x00ff88, wing:0x00ffcc, leg:0x0a1a0a, antenna:0x00cc66 };
+const NORMAL_SKIN = { body:0x2a2f35, glossy:0x3a4250, eye:0x661122, wing:0x9fd8ff, leg:0x1a1e22, antenna:0x444c56 };
+
+function _applyPrimitiveSkin(target, devMode) {
+  if (target.userData.billboard) return;
+  const skin = devMode ? DEV_SKIN : NORMAL_SKIN;
+  const mats = target.userData.materials;
+  if (!mats || mats.length < 6) return;
+  mats[0].color.setHex(skin.body);
+  mats[1].color.setHex(skin.glossy);
+  mats[2].color.setHex(skin.eye);
+  if (mats[2].emissive) mats[2].emissive.setHex(devMode ? 0x00ff88 : 0x000000);
+  mats[2].emissiveIntensity = devMode ? 0.8 : 0;
+  mats[3].color.setHex(skin.wing);
+  mats[4].color.setHex(skin.leg);
+  mats[5].color.setHex(skin.antenna);
+}
+
+// Load normal fly texture
 new THREE.TextureLoader().load(
   FLY_TEXTURE_URL,
   (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
-    const textured = buildFly(texture);
-    textured.position.copy(fly.position);
-    textured.visible = fly.visible;
-    scene.remove(fly);
-    scene.add(textured);
-    fly = textured;
+    const built = buildFly(texture);
+    built.position.copy(fly.position);
+    built.visible = !_devModeActive;   // only show if not in dev mode
+    scene.add(built);
+    normalFly = built;
+    if (!_devModeActive) {
+      fly.visible = false;
+      fly = normalFly;
+      fly.visible = true;
+    }
   },
   undefined,
-  () => {
-    console.warn(`no fly image at ${FLY_TEXTURE_URL}, keeping primitive fly`);
+  () => console.warn(`fly.png not found, keeping primitive fly`),
+);
+
+// Load roboFly texture
+new THREE.TextureLoader().load(
+  ROBOFLY_TEXTURE_URL,
+  (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const built = buildFly(texture);
+    built.position.copy(fly.position);
+    built.visible = _devModeActive;    // only show if already in dev mode
+    scene.add(built);
+    roboFly = built;
+    if (_devModeActive) {
+      fly.visible = false;
+      fly = roboFly;
+      fly.visible = true;
+    }
   },
+  undefined,
+  () => console.warn(`roboFly.png not found, using primitive dev skin`),
 );
 
 const floor = new THREE.Mesh(
@@ -218,33 +307,36 @@ const hudTag = document.getElementById("hud-tag");
 const wsDot = document.getElementById("ws-dot");
 const stateLabel = document.getElementById("state");
 
-const toast = document.getElementById("toast");
-let toastTimer = 0;
-/**
- * Escape a value for interpolation into toast markup.
- *
- * `showToast` needs real HTML because messages carry styled spans, so the
- * markup is authored here and only ever *values* are escaped. Message bodies and
- * sender names already go through `textContent`; this closes the same door for
- * toasts, whose inputs come from the backend response. Today those are enums and
- * numbers, so nothing is exploitable — but a backend that ever echoes free-form
- * text into `fetch` or `flight` would otherwise turn this into script execution
- * inside a renderer that has a preload bridge.
- */
-function esc(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => (
-    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
-  ));
-}
+  const toast = document.getElementById("toast");
+  let toastTimer = 0;
 
-function showToast(html, cls = "") {
-  toast.innerHTML = html;
-  toast.className = cls ? `visible ${cls}` : "visible";
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.className = "";
-  }, 3200);
-}
+  /**
+   * Escape a value for interpolation into toast markup.
+   *
+   * `showToast` needs real HTML because messages carry styled spans, so the
+   * markup is authored here and only ever *values* are escaped. Message bodies
+   * and sender names already go through `textContent`; this closes the same door
+   * for toasts, whose inputs come from the backend response. Today those are
+   * enums and numbers, so nothing is exploitable — but a backend that ever
+   * echoes free-form text into `fetch` or `flight` would otherwise turn this
+   * into script execution inside a renderer that has a preload bridge.
+   *
+   * Re-applied after the chat-box redesign, which had dropped it.
+   */
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  function showToast(html, cls = "") {
+    toast.innerHTML = html;
+    toast.className = cls ? `visible ${cls}` : "visible";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.className = "";
+    }, 3200);
+  }
 
 function playState(state) {
   const spec = resolve(state);
@@ -577,9 +669,9 @@ function wireControls() {
       priority: parseFloat(priority.value),
       context,
     });
-    if (result && result.fetch) {
-      showToast(`Event <span class="t-k">sent</span> → Fly: <span class="t-r">${esc(result.fetch)}</span>`);
-    }
+      if (result && result.fetch) {
+        showToast(`Event <span class="t-k">sent</span> → Fly: <span class="t-r">${esc(result.fetch)}</span>`);
+      }
     if (context.body_preview) showBubble(context);
   });
   document.getElementById("demo-cycle").addEventListener("click", () => {
@@ -605,13 +697,13 @@ function wireControls() {
       if (result && typeof result === "object" && "reward_value" in result) {
         const n = result.synapse_delta ? Object.keys(result.synapse_delta).length : 0;
         const sign = result.reward_value > 0 ? "+" : result.reward_value < 0 ? "" : "±";
-        showToast(
-          `Feedback <span class="t-k">${esc(feedback)}</span> · reward <span class="t-r">${sign}${esc(result.reward_value)}</span> · ${n} synapses updated`,
-        );
-      } else if (result) {
-        showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · accepted`);
-      } else {
-        showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · offline — could not reach the brain`);
+          showToast(
+            `Feedback <span class="t-k">${esc(feedback)}</span> · reward <span class="t-r">${sign}${esc(result.reward_value)}</span> · ${n} synapses updated`,
+          );
+        } else if (result) {
+          showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · accepted`);
+        } else {
+          showToast(`Feedback <span class="t-k">${esc(feedback)}</span> · offline — could not reach the brain`);
       }
     });
   }
@@ -628,8 +720,9 @@ function wireControls() {
   };
   devMode.addEventListener("change", () => {
     post("/developer/mode", { enabled: devMode.checked });
+    setDevSkin(devMode.checked);
   });
-  syncDevMode();
+  syncDevMode().then(() => setDevSkin(devMode.checked));
 
   const flightMode = document.getElementById("flight-mode");
   const syncFlight = async () => {
