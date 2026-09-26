@@ -207,7 +207,7 @@ export function ChatPanel({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-slate-800/70 bg-[#060a14]/70 px-4 py-3 sm:px-6">
+      <div className="shrink-0 border-t border-slate-800/70 bg-zinc-950/70 px-4 py-3 sm:px-6">
         <div className="mx-auto w-full max-w-2xl">
           {context ? (
             <div className="mb-2 flex items-center gap-2 text-[11px] text-slate-500">

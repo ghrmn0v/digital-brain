@@ -24,7 +24,7 @@ function ContextFromQuery() {
 
 export function ChatView() {
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[#04070f] text-slate-100">
+    <div className="flex h-dvh flex-col overflow-hidden bg-zinc-950 text-slate-100">
       <a
         href="#chat-input"
         className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-slate-900 px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
@@ -32,7 +32,7 @@ export function ChatView() {
         Skip to the question box
       </a>
 
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-800/70 bg-[#04070f]/92 px-3 backdrop-blur-xl sm:px-4">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-800/70 bg-zinc-950/92 px-3 backdrop-blur-xl sm:px-4">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
           <BrainCircuit aria-hidden="true" className="h-3.5 w-3.5" />
         </span>

@@ -19,7 +19,12 @@ import {
   type SimulationNode,
 } from "@/components/connectome/force";
 import { placeLabels } from "@/components/connectome/labels";
-import { edgeStyles, nodeStyles, surface } from "@/components/connectome/theme";
+import {
+  edgeStyles,
+  nodeStyles,
+  palette,
+  surface,
+} from "@/components/connectome/theme";
 
 /**
  * The Connectome canvas.
@@ -339,7 +344,7 @@ export function ConnectomeCanvas({
                   y1={from.y}
                   x2={to.x}
                   y2={to.y}
-                  stroke={active ? surface.accent : style.stroke}
+                  stroke={active ? palette.accent : style.stroke}
                   strokeWidth={active ? style.width + 0.9 : style.width}
                   strokeDasharray={style.dash}
                   strokeLinecap="round"
@@ -405,7 +410,7 @@ export function ConnectomeCanvas({
                 <circle
                   r={radius}
                   fill={style.fill}
-                  stroke={isSelected ? surface.accent : style.stroke}
+                  stroke={isSelected ? palette.accent : style.stroke}
                   strokeWidth={isSelected ? 2 : 1.25}
                   aria-hidden="true"
                 />

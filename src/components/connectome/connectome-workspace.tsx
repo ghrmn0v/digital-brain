@@ -183,7 +183,7 @@ export function ConnectomeWorkspace({
   const motion = reducedMotion ? "" : "transition-opacity duration-200 motion-reduce:transition-none";
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[#04070f] text-slate-100">
+    <div className="flex h-dvh flex-col overflow-hidden bg-zinc-950 text-slate-100">
       <a
         href="#connectome-graph"
         className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-slate-900 px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
@@ -191,7 +191,7 @@ export function ConnectomeWorkspace({
         Skip to the graph
       </a>
 
-      <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-3 border-b border-slate-800/70 bg-[#04070f]/92 px-3 backdrop-blur-xl sm:px-4">
+      <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-3 border-b border-slate-800/70 bg-zinc-950/92 px-3 backdrop-blur-xl sm:px-4">
         <button
           ref={navToggleRef}
           type="button"
@@ -244,7 +244,7 @@ export function ConnectomeWorkspace({
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800/70 bg-[#060a14]/80 min-[1120px]:flex">
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800/70 bg-zinc-950/80 min-[1120px]:flex">
           <ContextNav
             sources={sources}
             activeSource={activeSource}
@@ -294,7 +294,7 @@ export function ConnectomeWorkspace({
             ) : null}
           </div>
 
-          <div className="shrink-0 border-t border-slate-800/70 bg-[#060a14]/60">
+          <div className="shrink-0 border-t border-slate-800/70 bg-zinc-950/60">
             <ConnectomeTimeline
               nodes={visible.nodes}
               selectedId={selectedId}
@@ -304,7 +304,7 @@ export function ConnectomeWorkspace({
           </div>
         </main>
 
-        <aside className="hidden w-80 shrink-0 overflow-hidden border-l border-slate-800/70 bg-[#060a14]/80 min-[1280px]:block">
+        <aside className="hidden w-80 shrink-0 overflow-hidden border-l border-slate-800/70 bg-zinc-950/80 min-[1280px]:block">
           <ConnectomeInspector
             node={selected}
             nodes={visible.nodes}
@@ -329,7 +329,7 @@ export function ConnectomeWorkspace({
             aria-modal="true"
             aria-label="Context navigation"
             tabIndex={-1}
-            className="absolute inset-y-0 left-0 flex w-[min(17rem,86vw)] flex-col border-r border-slate-800 bg-[#060a14] outline-none"
+            className="absolute inset-y-0 left-0 flex w-[min(17rem,86vw)] flex-col border-r border-slate-800 bg-zinc-950 outline-none"
           >
             <div className="flex h-14 items-center justify-between border-b border-slate-800 px-3">
               <span className="text-[13px] font-semibold text-white">Context</span>
@@ -371,7 +371,7 @@ export function ConnectomeWorkspace({
             aria-modal="true"
             aria-label="Intelligence panel"
             tabIndex={-1}
-            className={`absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col border-l border-slate-800 bg-[#060a14] outline-none ${
+            className={`absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col border-l border-slate-800 bg-zinc-950 outline-none ${
               reducedMotion ? "" : "motion-safe:animate-in motion-safe:fade-in"
             }`}
           >
