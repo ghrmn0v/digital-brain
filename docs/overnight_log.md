@@ -77,3 +77,15 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   CTAs a glowing one out-shouts the content next to it. `Panel` and six repeated
   cards also stepped down from `rounded-2xl` to `rounded-xl`, so a list of
   related items reads as a list rather than a stack of tiles.
+
+## Task 4 — Connectome workspace reads as one full-bleed surface
+
+- **File:** `src/components/connectome/connectome-workspace.tsx`
+- **Result:** PASS
+- **Notes:** The two side panels were a lighter tint over the ground, which drew
+  a visible seam down each side of the map and made the graph look like a box
+  inside a frame. They now sit on the same ground, so the map runs edge to edge
+  behind them and they read as floating panels. Structural dividers were kept —
+  a layout does need them — but dropped from `/70` to `/50`, which is enough to
+  separate surfaces that differ by almost nothing in luminance. Verified by
+  screenshot at 1440, 768 and 390 before committing, not assumed.
