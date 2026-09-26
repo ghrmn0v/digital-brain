@@ -492,11 +492,13 @@ async function main() {
   }
 
   console.log(`\n${bold("Open the app")}`);
-  console.log(`   ${BASE}/dashboard`);
-  console.log(`   ${BASE}/memory      what the Brain remembered`);
-  console.log(`   ${BASE}/people      resolved identities`);
-  console.log(`   ${BASE}/developer   proposals awaiting your decision`);
+  console.log(`   ${BASE}/dashboard   what the system did on its own`);
   console.log(`   ${BASE}/timeline    the event trail, with correlation ids`);
+  console.log(`   ${BASE}/developer   proposals awaiting your decision`);
+  console.log(dim("\n   /memory and /people are an intentional boundary: Product has no"));
+  console.log(dim("   read adapter for the Brain yet, so they show the contract that"));
+  console.log(dim("   one would need rather than inventing an endpoint. The memories"));
+  console.log(dim("   this run created are listed above and in the Brain log."));
   console.log(
     dim("\n   correlation id for this run: " + CORRELATION),
   );
