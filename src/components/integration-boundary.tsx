@@ -61,12 +61,8 @@ export function IntegrationBoundary({
         }
       />
 
-      <Panel className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-cyan-400/[0.06] blur-3xl"
-        />
-        <div className="relative grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+      <Panel className="overflow-hidden">
+        <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="max-w-3xl">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
               <Icon aria-hidden="true" className="h-6 w-6" />

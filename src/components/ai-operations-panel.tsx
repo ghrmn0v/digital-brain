@@ -20,12 +20,8 @@ export function AiOperationsPanel({
   permissionSummary: { automatic: number; askFirst: number; off: number };
 }) {
   return (
-    <Panel className="relative overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-cyan-400/[0.07] blur-3xl"
-      />
-      <div className="relative grid gap-7 p-6 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+    <Panel className="overflow-hidden">
+      <div className="grid gap-7 p-6 lg:grid-cols-[1.15fr_1fr] lg:items-center">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">

@@ -152,3 +152,23 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
 
   Verified by screenshot at 1440 and 390 on Dashboard, Connectome and Chat
   rather than by reading the diff.
+
+## Task 7 — the last two decorative glows
+
+- **Files:** `src/components/ai-operations-panel.tsx`,
+  `src/components/integration-boundary.tsx`
+- **Result:** PASS
+- **Notes:** Task 3 removed the glow *shadows* but missed the glow *blobs* — two
+  `absolute` circles of `bg-cyan-400/[0.07] blur-3xl` parked in the top-right
+  corner of the AI operations panel and the integration boundary panel, one on
+  the dashboard and one on Memory and People. They are the same decoration
+  wearing a different property, and at `/[0.06]` they were faint enough to read
+  as a rendering artifact rather than a choice, which is worse than not having
+  them. Both are gone, and with them the `relative` that existed only to anchor
+  them; `overflow-hidden` stays, since it still clips content to the panel's
+  rounded corners.
+
+  The five named shadows that remain (`shadow-lg` on the skip link, `shadow-2xl`
+  on the mobile drawer, `shadow-sm` on a control) are deliberately kept. Those
+  are elevation, not glow: an overlay needs to read as floating above the page
+  behind it, and removing them would leave the drawer flush with its backdrop.
