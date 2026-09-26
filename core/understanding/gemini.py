@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import os
 import socket
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -47,6 +48,19 @@ from .providers import LLMProvider, LLMRequest, register_provider
 
 _DEFAULT_API_BASE = "https://generativelanguage.googleapis.com"
 _DEFAULT_MODEL = "gemini-3.8-flash"
+#: Statuses that mean "not now", as opposed to "not ever". A 503 or 429 is
+#: capacity or a burst limit, and one more attempt after a short pause usually
+#: succeeds; a 400, 403 or 404 is the request itself and retrying is pointless.
+_RETRYABLE_STATUSES = frozenset({429, 503})
+_RETRY_BACKOFF_SECONDS = 1.5
+
+
+class _TransientStatus(Exception):
+    """Internal marker: a status worth one more attempt.
+
+    It never leaves this module. :meth:`GeminiProvider._post` unwraps it so that
+    callers only ever see the typed ``LLMGatewayError`` they already handle.
+    """
 # Re-exported from core.config so both modules agree on one definition.
 ENV_API_KEY = ENV_GEMINI_API_KEY
 ENV_MODEL = ENV_GEMINI_MODEL
@@ -244,6 +258,25 @@ class GeminiProvider:
         return float(timeout) if timeout and timeout > 0 else self._config.timeout_seconds
 
     def _post(self, payload: dict[str, Any], *, timeout: float) -> str:
+        # A hosted model answers 503 and 429 for reasons that have nothing to do
+        # with the request: no capacity behind the endpoint, or a burst limit.
+        # Retrying once after a short pause turns most of those into a normal
+        # answer. It is deliberately one retry and only for those two statuses:
+        # a bad request, a refused request or a missing key must fail at once,
+        # and a retry storm would just turn an outage into a bill.
+        last: Exception | None = None
+        for attempt in range(2):
+            try:
+                return self._post_once(payload, timeout=timeout)
+            except _TransientStatus as transient:
+                last = transient.__cause__ or transient
+                if attempt == 0:
+                    time.sleep(_RETRY_BACKOFF_SECONDS)
+                    continue
+                raise last from None
+        raise last if last else LLMProviderError("gemini request failed")  # pragma: no cover
+
+    def _post_once(self, payload: dict[str, Any], *, timeout: float) -> str:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         http_request = urllib.request.Request(
             self._endpoint(),
@@ -256,7 +289,10 @@ class GeminiProvider:
                 status = getattr(response, "status", 200) or 200
                 raw = response.read()
         except urllib.error.HTTPError as exc:
-            raise self._http_error(exc) from exc
+            error = self._http_error(exc)
+            if exc.code in _RETRYABLE_STATUSES:
+                raise _TransientStatus(str(exc.code)) from error
+            raise error from exc
         except socket.timeout as exc:
             self._count_failure("timeout")
             raise LLMTimeoutError("gemini request timed out") from exc
@@ -278,7 +314,10 @@ class GeminiProvider:
                 f"gemini request failed: {_redact(str(exc), self._config.api_key)}"
             ) from exc
         if int(status) >= 400:
-            raise self._status_error(int(status))
+            error = self._status_error(int(status))
+            if int(status) in _RETRYABLE_STATUSES:
+                raise _TransientStatus(str(status)) from error
+            raise error
         if isinstance(raw, bytes):
             return raw.decode("utf-8", errors="replace")
         return str(raw)

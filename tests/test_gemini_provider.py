@@ -12,6 +12,7 @@ import io
 import json
 import unittest
 import urllib.error
+from unittest.mock import patch
 
 from core.understanding import (
     GatewayConfig,
@@ -20,6 +21,7 @@ from core.understanding import (
     HeuristicProvider,
     LLMGateway,
     LLMProvider,
+    LLMGatewayError,
     LLMProviderError,
     LLMRequest,
     LLMTimeoutError,
@@ -288,6 +290,72 @@ class GeminiFailureTests(unittest.TestCase):
         with self.assertRaises(LLMProviderError) as caught:
             provider.complete(REQUEST)
         self.assertIn("server error", str(caught.exception))
+
+    def test_a_transient_status_is_retried_once(self) -> None:
+        """A 503 is capacity, not a bad request, so one more try is warranted."""
+        responses = [
+            urllib.error.HTTPError("u", 503, "Unavailable", {}, io.BytesIO(b"")),
+            FakeResponse(gemini_text("recovered")),
+        ]
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            outcome = responses.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+
+        config = GeminiConfig.from_env({"GEMINI_API_KEY": "k", "GEMINI_ENABLED": "true"})
+        with patch("core.understanding.gemini.time.sleep"):
+            provider = GeminiProvider(config, opener=opener)
+            self.assertEqual(provider.complete(REQUEST), "recovered")
+        self.assertEqual(len(calls), 2)
+
+    def test_a_retry_that_also_fails_reports_the_original_error(self) -> None:
+        config = GeminiConfig.from_env({"GEMINI_API_KEY": "k", "GEMINI_ENABLED": "true"})
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            raise urllib.error.HTTPError("u", 503, "Unavailable", {}, io.BytesIO(b""))
+
+        with patch("core.understanding.gemini.time.sleep"):
+            provider = GeminiProvider(config, opener=opener)
+            with self.assertRaises(LLMProviderError) as caught:
+                provider.complete(REQUEST)
+        self.assertIn("server error", str(caught.exception))
+        # Exactly one retry: an outage must not become a request storm.
+        self.assertEqual(len(calls), 2)
+
+    def test_a_client_error_is_never_retried(self) -> None:
+        config = GeminiConfig.from_env({"GEMINI_API_KEY": "k", "GEMINI_ENABLED": "true"})
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            raise urllib.error.HTTPError("u", 400, "Bad Request", {}, io.BytesIO(b""))
+
+        with patch("core.understanding.gemini.time.sleep"):
+            provider = GeminiProvider(config, opener=opener)
+            with self.assertRaises(LLMProviderError):
+                provider.complete(REQUEST)
+        self.assertEqual(len(calls), 1)
+
+    def test_the_retry_marker_never_escapes_the_module(self) -> None:
+        config = GeminiConfig.from_env({"GEMINI_API_KEY": "k", "GEMINI_ENABLED": "true"})
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            raise urllib.error.HTTPError("u", 503, "Unavailable", {}, io.BytesIO(b""))
+
+        with patch("core.understanding.gemini.time.sleep"):
+            provider = GeminiProvider(config, opener=opener)
+            try:
+                provider.complete(REQUEST)
+            except LLMGatewayError as exc:
+                self.assertNotIn("_TransientStatus", type(exc).__name__)
+            else:
+                self.fail("expected a typed gateway error")
 
     def test_timeout_is_typed(self) -> None:
         provider, _ = provider_with({}, error=TimeoutError("timed out"))
