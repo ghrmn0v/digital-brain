@@ -44,7 +44,7 @@ from contracts.api import ApiError, ApiErrorCode, ApiResponse, error_response
 
 from core.brain_events.sink import NullEventSink
 from core.service.api import BrainApi
-from core.config import resolve_llm_provider
+from core.config import load_env_file, resolve_llm_provider
 from core.service.brain_service import build_brain_service
 
 API_VERSION = "v1"
@@ -316,6 +316,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     args = parser.parse_args(argv)
+
+    # Read a local .env before any configuration is resolved, so a filled-in
+    # file works without exporting variables by hand. Existing environment
+    # variables still win, and a missing file is not an error.
+    load_env_file()
 
     provider = resolve_llm_provider(args.provider)
     service = build_brain_service(args.db, sink=NullEventSink(), provider=provider)

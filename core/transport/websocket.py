@@ -41,7 +41,7 @@ from contracts.api import (
 from contracts.brain_events.events import BrainEvent
 
 from core.service.api import BrainApi
-from core.config import resolve_llm_provider
+from core.config import load_env_file, resolve_llm_provider
 from core.service.brain_service import build_brain_service
 
 API_PATH = "/v1/brain"
@@ -851,6 +851,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     args = parser.parse_args(argv)
+
+    # Read a local .env before any configuration is resolved, so a filled-in
+    # file works without exporting variables by hand. Existing environment
+    # variables still win, and a missing file is not an error.
+    load_env_file()
     if not args.allow_unauthenticated_non_loopback and not _is_loopback_host(
         args.host
     ):

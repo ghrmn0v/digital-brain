@@ -10,6 +10,9 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.8",
     "websockets>=12",
+    # Local .env support for the transports. Pure Python, no transitive deps.
+    # Optional at runtime: core.config degrades to the environment alone.
+    "python-dotenv>=1.0",
 ]
 
 [project.scripts]

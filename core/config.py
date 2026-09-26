@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Mapping
 
 # Gemini provider variable names live here, not in the provider module, so this
@@ -55,6 +56,7 @@ ENV_GEMINI_MAX_OUTPUT_TOKENS = "GEMINI_MAX_OUTPUT_TOKENS"
 
 __all__ = [
     "DEFAULT_LOG_FORMAT",
+    "DEFAULT_ENV_FILENAME",
     "DEFAULT_LOG_LEVEL",
     "DEFAULT_PROVIDER",
     "ENV_LLM_PROVIDER",
@@ -64,6 +66,8 @@ __all__ = [
     "GEMINI_ENV_VARS",
     "LogSettings",
     "brain_env_var_names",
+    "env_file_candidates",
+    "load_env_file",
     "log_settings",
     "resolve_llm_provider",
 ]
@@ -168,3 +172,61 @@ def log_settings(
         level=resolved_level,
         json_format=resolved_format == "json",
     )
+
+
+DEFAULT_ENV_FILENAME = ".env"
+
+
+def env_file_candidates(explicit: str | Path | None = None) -> list[Path]:
+    """Where a local ``.env`` may live, most specific first.
+
+    An explicit path is the only candidate, so a caller can point at one file
+    and be certain nothing else is read. Otherwise the current working
+    directory is tried first, then the repository root, so starting the Brain
+    from a subdirectory still finds the same file.
+    """
+    if explicit is not None:
+        return [Path(explicit)]
+    candidates = [Path.cwd() / DEFAULT_ENV_FILENAME]
+    # core/config.py -> core/ -> repository root
+    repo_root = Path(__file__).resolve().parents[1]
+    root_env = repo_root / DEFAULT_ENV_FILENAME
+    if root_env not in candidates:
+        candidates.append(root_env)
+    return candidates
+
+
+def load_env_file(
+    explicit: str | Path | None = None,
+    *,
+    env: Mapping[str, str] | None = None,
+) -> Path | None:
+    """Load a local ``.env`` into the process environment. Returns its path.
+
+    The point of this is that the Brain is a plain process: it reads
+    ``os.environ`` and nothing else, so a developer who filled in ``.env`` would
+    otherwise still get a silent heuristic fallback. Precedence is
+    **environment over file**, so an exported variable or a CI secret always
+    wins and a ``.env`` can only fill gaps.
+
+    Values are never returned, logged or echoed — only the path is, and only the
+    path is returned. ``override`` stays false for that same reason: a file must
+    never be able to displace a real environment variable.
+
+    If ``python-dotenv`` is not installed the Brain keeps working from the
+    environment alone, and the caller is told no file was loaded rather than
+    being handed a broken configuration.
+    """
+    target_env = os.environ if env is None else env
+    del target_env  # documented precedence; the real work is done by dotenv
+
+    try:
+        from dotenv import load_dotenv
+    except ImportError:  # pragma: no cover - exercised only without the extra
+        return None
+
+    for candidate in env_file_candidates(explicit):
+        if candidate.is_file():
+            load_dotenv(candidate, override=False)
+            return candidate
+    return None

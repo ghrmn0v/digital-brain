@@ -32,6 +32,25 @@ them set the Brain runs fully on its deterministic provider. See
 [`.env.example`](../.env.example) for a copyable template, which is committed;
 a filled-in `.env` is gitignored and must stay that way.
 
+### Loading a local `.env`
+
+Each transport calls `core.config.load_env_file()` before it resolves anything,
+so filling in `.env` is enough — no exporting by hand. It looks for
+`.env` in the working directory and then in the repository root, and
+`core.config.load_env_file(path)` will read one explicit file instead.
+
+Three properties worth relying on:
+
+- **The environment wins.** `override` is never enabled, so an exported variable
+  or a CI secret always takes precedence and a file can only fill a gap.
+- **Nothing is read at import time.** Configuration is still resolved lazily and
+  explicitly, so importing `core` has no side effects.
+- **A missing file is not an error,** and neither is a missing `python-dotenv`:
+  the Brain simply runs from the environment it already has.
+
+The file is read by `python-dotenv`; no custom parser is involved, and no value
+is ever returned, logged or echoed.
+
 | Variable | Default | Meaning |
 |---|---|---|
 | `BRAIN_LLM_PROVIDER` | `heuristic` | Provider name. `gemini` to call Gemini. Same as `--provider`, which wins. |
