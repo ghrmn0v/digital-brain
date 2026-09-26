@@ -288,6 +288,12 @@ class ChatTests(unittest.TestCase):
         self.assertIsInstance(result.provider, str)
         self.assertTrue(result.provider)
         self.assertIsInstance(result.fallback_used, bool)
+        # A reason and a flag cannot disagree: a reason means a fallback, and a
+        # real answer has none.
+        if result.fallback_used:
+            self.assertIsNotNone(result.fallback_reason)
+        else:
+            self.assertIsNone(result.fallback_reason)
 
     def test_chat_falls_back_deterministically_without_a_model(self) -> None:
         """No Gemini configured: the answer must still come, honestly labelled."""
@@ -296,6 +302,7 @@ class ChatTests(unittest.TestCase):
         self.assertTrue(result.fallback_used)
         self.assertEqual(result.provider, "context-only")
         self.assertGreater(result.confidence, 0.0)
+        self.assertIsNotNone(result.fallback_reason)
 
     def test_chat_with_nothing_stored_does_not_invent_an_answer(self) -> None:
         result = self.call(

@@ -37,7 +37,7 @@ from core.memory import MemoryCandidate
 from core.people import PeopleIntelligence
 from core.service.brain_service import build_brain_service
 from core.understanding import HeuristicProvider, LLMGateway, LLMProvider, LLMRequest
-from core.understanding.exceptions import LLMProviderError
+from core.understanding.exceptions import LLMProviderError, LLMTimeoutError
 
 NOW = datetime(2026, 9, 25, 10, tzinfo=timezone.utc)
 
@@ -331,6 +331,51 @@ class PersonalizedInsightTests(unittest.TestCase):
         )
         self.assertTrue(insight.fallback_used)
         self.assertIn("Rust", insight.answer)
+        self.assertIsNotNone(insight.fallback_reason)
+        self.assertTrue(insight.fallback_reason.startswith("provider_unavailable"))
+
+    def test_a_timeout_is_reported_distinctly_from_an_outage(self) -> None:
+        class SlowProvider(LLMProvider):
+            name = "slow"
+
+            def complete(self, request: LLMRequest) -> str:
+                raise LLMTimeoutError("took too long")
+
+        self.service._understanding = LLMGateway(SlowProvider(), timeout_seconds=1.0)
+        insight = self.service.personalized_insight(
+            "usr_a", "language?", target_event_id="evt_1"
+        )
+        self.assertEqual(insight.fallback_reason, "provider_timeout")
+
+    def test_a_real_answer_carries_no_fallback_reason(self) -> None:
+        _, insight = self.ask(
+            json.dumps(
+                {
+                    "answer": "Rust, from your recorded preference.",
+                    "confidence": 0.8,
+                    "used_context": True,
+                    "candidates": [],
+                }
+            )
+        )
+        self.assertFalse(insight.fallback_used)
+        self.assertIsNone(insight.fallback_reason)
+
+    def test_the_reason_never_quotes_the_provider_error(self) -> None:
+        secret = "sk-should-never-travel-to-a-caller"
+
+        class LeakyProvider(LLMProvider):
+            name = "leaky"
+
+            def complete(self, request: LLMRequest) -> str:
+                raise LLMProviderError(f"upstream rejected key {secret}")
+
+        self.service._understanding = LLMGateway(LeakyProvider(), timeout_seconds=1.0)
+        insight = self.service.personalized_insight(
+            "usr_a", "language?", target_event_id="evt_1"
+        )
+        self.assertNotIn(secret, insight.fallback_reason or "")
+        self.assertNotIn(secret, insight.answer)
 
     def test_evidence_backed_candidate_reaches_the_learning_engine(self) -> None:
         _, insight = self.ask(

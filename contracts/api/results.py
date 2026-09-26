@@ -525,8 +525,12 @@ class ChatResultWire(BaseModel):
     """One grounded answer, with its provenance and honest uncertainty.
 
     ``provider`` and ``fallback_used`` are always present so a client can tell a
-    model answer from a deterministic one. ``grounded_in`` is empty exactly when
-    the Brain had nothing to answer from.
+    model answer from a deterministic one. ``fallback_reason`` is a short slug
+    naming why the provider was skipped, or ``None`` when a model answered, so a
+    transient outage is not mistaken for a deliberately offline answer. It never
+    carries the provider's own error text.
+
+    ``grounded_in`` is empty exactly when the Brain had nothing to answer from.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -538,6 +542,7 @@ class ChatResultWire(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     provider: str
     fallback_used: bool = False
+    fallback_reason: str | None = None
     grounded_in: list[ChatGroundingWire] = Field(default_factory=list, max_length=32)
     context_fact_count: int = Field(default=0, ge=0)
     missing_context: list[str] = Field(default_factory=list)

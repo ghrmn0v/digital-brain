@@ -83,7 +83,11 @@ from core.people.models import DeveloperPreferences, PreferenceDomain
 from core.reasoning import ReasoningResult
 from core.reasoning.context import ContextDistillationLimits, build_reasoning_context
 from core.reasoning.models import ReasoningContext
-from core.understanding.exceptions import LLMGatewayError
+from core.understanding.exceptions import (
+    LLMGatewayError,
+    LLMProviderError,
+    LLMTimeoutError,
+)
 from core.understanding import (
     DeveloperContext,
     GatewayConfig,
@@ -139,12 +143,29 @@ class PersonalInsight(BaseModel):
     missing_context: list[str] = Field(default_factory=list, max_length=16)
     provider: str
     fallback_used: bool = False
+    #: See :attr:`ChatTurn.fallback_reason` for why this is a slug and not the
+    #: exception text. ``None`` on a real answer.
+    fallback_reason: str | None = None
     context_fact_count: int = Field(default=0, ge=0)
     #: The memories the answer was grounded in. Empty when the Brain had
     #: nothing to answer from, which is the honest signal that an answer is
     #: ungrounded rather than merely short.
     grounding: list[ContextFact] = Field(default_factory=list, max_length=32)
     recorded_candidates: list[RecordedCandidate] = Field(default_factory=list)
+
+
+def _fallback_slug(exc: LLMGatewayError) -> str:
+    """Reduce a gateway failure to a short, quotable slug.
+
+    Exception text from a provider can echo the request or a response body, and
+    an operator reading a log should not have to wade through that either. The
+    class name plus a status hint is enough to tell a timeout from an outage.
+    """
+    if isinstance(exc, LLMTimeoutError):
+        return "provider_timeout"
+    if isinstance(exc, LLMProviderError):
+        return f"provider_unavailable:{' '.join(str(exc).split())[:40]}"
+    return "provider_error"
 
 
 def _context_only_answer(context: PersonalContext) -> PersonalizedAnswer:
@@ -194,6 +215,13 @@ class ChatOutcome(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     provider: str
     fallback_used: bool = False
+    #: Why the provider was not used, as a short machine-readable slug such as
+    #: ``provider_unavailable``. It is deliberately a slug and never the raw
+    #: exception text: a gateway error can quote the request or a response body,
+    #: and that has no business travelling to a caller. ``None`` when no
+    #: fallback happened, so a real answer and a degraded one can be told apart
+    #: without reading logs.
+    fallback_reason: str | None = None
     session_id: str | None = None
     grounding: list[ContextFact] = Field(default_factory=list, max_length=32)
     context_fact_count: int = Field(default=0, ge=0)
@@ -784,6 +812,7 @@ class BrainService:
 
         provider_name = self._understanding.provider.name
         fallback_used = False
+        fallback_reason: str | None = None
         missing: list[str] = []
         try:
             answer = self._understanding.generate_structured(
@@ -793,12 +822,15 @@ class BrainService:
                     context, instruction=answer_instruction()
                 ),
             )
-        except LLMGatewayError:
+        except LLMGatewayError as exc:
             # Deterministic, honest fallback: report what the Brain itself
-            # knows, and that no model was used at all.
+            # knows, and that no model was used at all. The reason travels back
+            # as a slug so a caller can tell a transient outage apart from a
+            # genuine absence of memory without parsing any log.
             answer = _context_only_answer(context)
             provider_name = "context-only"
             fallback_used = True
+            fallback_reason = _fallback_slug(exc)
 
         recorded: list[RecordedCandidate] = []
         if record_learning and self._learning is not None:
@@ -818,6 +850,7 @@ class BrainService:
             user_id=user_id,
             provider=provider_name,
             fallback_used=fallback_used,
+            fallback_reason=fallback_reason,
             confidence=answer.confidence,
             context_fact_count=(
                 len(context.memories)
@@ -838,6 +871,7 @@ class BrainService:
             missing_context=missing or list(answer.missing_context),
             provider=provider_name,
             fallback_used=fallback_used,
+            fallback_reason=fallback_reason,
             context_fact_count=(
                 len(context.memories)
                 + len(context.preferences)
@@ -976,6 +1010,7 @@ class BrainService:
             session_id=session_id,
             provider=insight.provider,
             fallback_used=insight.fallback_used,
+            fallback_reason=insight.fallback_reason,
             confidence=insight.confidence,
             grounding_count=len(grounding),
             learning_recorded=len(insight.recorded_candidates),
@@ -989,6 +1024,7 @@ class BrainService:
             confidence=insight.confidence,
             provider=insight.provider,
             fallback_used=insight.fallback_used,
+            fallback_reason=insight.fallback_reason,
             grounding=grounding,
             context_fact_count=insight.context_fact_count,
             missing_context=insight.missing_context,

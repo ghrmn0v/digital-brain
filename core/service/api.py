@@ -718,6 +718,7 @@ def _handle_chat(
         confidence=outcome.confidence,
         provider=outcome.provider,
         fallback_used=outcome.fallback_used,
+        fallback_reason=outcome.fallback_reason,
         grounded_in=grounding,
         context_fact_count=outcome.context_fact_count,
         missing_context=list(outcome.missing_context),
