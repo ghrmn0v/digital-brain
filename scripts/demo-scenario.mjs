@@ -286,7 +286,10 @@ async function main() {
   heading("Product shows the events it received");
   const health = await api("/api/health");
   line("product database", health.body?.database === "connected" ? green("connected") : red("not connected"));
-  const timeline = await api("/api/timeline?limit=6");
+  // The timeline splits the limit across record kinds rather than treating it
+  // as a total, so a small limit silently caps events at limit/3 and the feed
+  // looks like it lost one. Ask for a budget that fits this run's events.
+  const timeline = await api("/api/timeline?limit=30");
   const rows = Array.isArray(timeline.body?.data) ? timeline.body.data : [];
   line("timeline entries", String(rows.length));
   for (const row of rows.slice(0, 4)) {

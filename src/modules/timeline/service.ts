@@ -7,6 +7,15 @@ import type {
 } from "@/modules/timeline/contracts";
 
 export const timelineService = {
+  /**
+   * List the merged feed, newest first within each kind.
+   *
+   * `limit` is a budget shared across the record kinds rather than a total row
+   * count: each kind is asked for at most `ceil(limit / 3)`. A caller that
+   * passes a small limit therefore sees fewer rows than it asked for, which
+   * reads as records going missing. Pass a limit sized for the kind you care
+   * about, or leave it at the default.
+   */
   async list(kind?: TimelineKind, limit = 100): Promise<TimelineItemDto[]> {
     const perKind = Math.max(1, Math.ceil(limit / 3));
     const include = (value: TimelineKind) => !kind || kind === value;
