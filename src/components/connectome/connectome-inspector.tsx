@@ -42,13 +42,13 @@ export function ConnectomeInspector({
   if (!node) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-6 py-10 text-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/60 text-slate-500">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 text-zinc-500">
           <GitBranch aria-hidden="true" className="h-5 w-5" />
         </span>
-        <h2 className="mt-4 text-sm font-semibold text-slate-200">
+        <h2 className="mt-4 text-sm font-semibold text-zinc-200">
           Select a node to explore its context.
         </h2>
-        <p className="mt-1.5 max-w-[16rem] text-xs leading-5 text-slate-500">
+        <p className="mt-1.5 max-w-[16rem] text-xs leading-5 text-zinc-500">
           The map is drawn from events this device has actually recorded. Pick a
           node to see where it came from and where it went.
         </p>
@@ -78,7 +78,7 @@ export function ConnectomeInspector({
 
   return (
     <div className="flex h-full flex-col overflow-y-auto">
-      <header className="border-b border-slate-800/70 px-4 py-4">
+      <header className="border-b border-zinc-800/70 px-4 py-4">
         <div className="flex items-center gap-2">
           <span
             aria-hidden="true"
@@ -96,11 +96,11 @@ export function ConnectomeInspector({
         <h2 className="mt-2.5 break-words text-base font-semibold leading-6 text-white">
           {node.label}
         </h2>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{style.description}</p>
+        <p className="mt-1 text-xs leading-5 text-zinc-500">{style.description}</p>
       </header>
 
       {node.detail ? (
-        <p className="border-b border-slate-800/70 px-4 py-3 text-sm leading-6 text-slate-300">
+        <p className="border-b border-zinc-800/70 px-4 py-3 text-sm leading-6 text-zinc-300">
           {node.detail}
         </p>
       ) : null}
@@ -132,7 +132,7 @@ export function ConnectomeInspector({
             ))}
           </dl>
         ) : (
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-zinc-500">
             This node carries no additional stored fields.
           </p>
         )}
@@ -140,7 +140,7 @@ export function ConnectomeInspector({
 
       <InspectorSection title="Relationships" icon={GitBranch}>
         {related.length === 0 ? (
-          <p className="text-xs leading-5 text-slate-500">
+          <p className="text-xs leading-5 text-zinc-500">
             Nothing else in the graph references this node yet.
           </p>
         ) : (
@@ -152,7 +152,7 @@ export function ConnectomeInspector({
       </InspectorSection>
 
       <InspectorSection title="AI understanding" icon={BrainCircuit}>
-        <p className="text-xs leading-5 text-slate-500">
+        <p className="text-xs leading-5 text-zinc-500">
           The Core Brain does the understanding, and Product cannot read its
           memories yet. What you see above is the recorded event, not a summary
           the Brain wrote about it.
@@ -166,7 +166,7 @@ export function ConnectomeInspector({
         </Link>
       </InspectorSection>
 
-      <div className="space-y-2 border-t border-slate-800/70 p-4">
+      <div className="space-y-2 border-t border-zinc-800/70 p-4">
         <Link
           href={`/chat?context=${encodeURIComponent(
             `${nodeStyles[node.kind].label}: ${node.label}`,
@@ -179,7 +179,7 @@ export function ConnectomeInspector({
         {node.href ? (
           <Link
             href={node.href}
-            className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+            className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
           >
             Open {node.href === "/connectors" ? "connectors" : node.href.slice(1)}
             <ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -187,7 +187,7 @@ export function ConnectomeInspector({
         ) : null}
       </div>
       {!node.href ? (
-        <p className="border-t border-slate-800/70 px-4 py-3 text-[11px] leading-5 text-slate-600">
+        <p className="border-t border-zinc-800/70 px-4 py-3 text-[11px] leading-5 text-zinc-600">
           <Radio aria-hidden="true" className="mr-1 inline h-3 w-3" />
           No screen exists for this kind of record, so there is nothing to open.
         </p>
@@ -206,8 +206,8 @@ function InspectorSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-slate-800/70 px-4 py-3.5">
-      <h3 className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <section className="border-b border-zinc-800/70 px-4 py-3.5">
+      <h3 className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
         <Icon aria-hidden="true" className="h-3 w-3" />
         {title}
       </h3>
@@ -227,11 +227,11 @@ function Row({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <dt className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-slate-600">
+      <dt className="shrink-0 text-[11px] uppercase tracking-[0.1em] text-zinc-600">
         {term}
       </dt>
       <dd
-        className={`min-w-0 break-words text-right text-xs text-slate-300 ${
+        className={`min-w-0 break-words text-right text-xs text-zinc-300 ${
           mono ? "font-mono text-[11px]" : ""
         }`}
       >
@@ -255,7 +255,7 @@ function RelationshipGroup({
   if (entries.length === 0) return null;
   return (
     <div>
-      <p className="mb-1.5 text-[11px] text-slate-600">{heading}</p>
+      <p className="mb-1.5 text-[11px] text-zinc-600">{heading}</p>
       <ul className="space-y-1.5">
         {entries.map(({ edge, other }) => (
           <li
@@ -267,14 +267,14 @@ function RelationshipGroup({
               className="h-1.5 w-1.5 shrink-0 rounded-full"
               style={{ backgroundColor: edgeStyles[edge.kind].stroke }}
             />
-            <span className="truncate text-slate-400">
+            <span className="truncate text-zinc-400">
               {edgeLabels[edge.kind]}
             </span>
-            <span className="min-w-0 flex-1 truncate text-slate-200">
+            <span className="min-w-0 flex-1 truncate text-zinc-200">
               {other.label}
             </span>
             {edge.status ? (
-              <span className="shrink-0 text-[10px] uppercase tracking-wider text-slate-600">
+              <span className="shrink-0 text-[10px] uppercase tracking-wider text-zinc-600">
                 {edge.status.toLowerCase()}
               </span>
             ) : null}

@@ -38,7 +38,7 @@ export function AiOperationsPanel({
           <h2 className="mt-5 text-xl font-semibold tracking-tight text-white sm:text-2xl">
             AI operates the product. You keep control.
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
             Core Brain and automations use the action API directly. Product checks
             permission, executes supported actions, records the result, and only
             interrupts you when policy is <strong className="text-amber-200">ASK_FIRST</strong>.
@@ -46,14 +46,14 @@ export function AiOperationsPanel({
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/approvals"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60"
             >
               Review AI decisions
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Link>
             <Link
               href="/permissions"
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
             >
               Control permissions
             </Link>
@@ -61,22 +61,22 @@ export function AiOperationsPanel({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-800 bg-slate-950/55 p-4">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <Workflow aria-hidden="true" className="h-4 w-4 text-cyan-300" />
             <p className="mt-3 text-2xl font-semibold text-white">{enabledAutomations}</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Active automations</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">Active automations</p>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-950/55 p-4">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <CheckCheck aria-hidden="true" className="h-4 w-4 text-amber-300" />
             <p className="mt-3 text-2xl font-semibold text-white">{pendingApprovals}</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Waiting for you</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">Waiting for you</p>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-950/55 p-4">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
             <ShieldCheck aria-hidden="true" className="h-4 w-4 text-emerald-300" />
             <p className="mt-3 text-2xl font-semibold text-white">
               {permissionSummary.automatic}
             </p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-zinc-500">
               Automatic · {permissionSummary.askFirst} ask · {permissionSummary.off} off
             </p>
           </div>

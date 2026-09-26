@@ -48,7 +48,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[minmax(14rem,1fr)_11rem_11rem_auto] lg:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Search</span>
             <input
               type="search"
@@ -59,7 +59,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Status</span>
             <select name="status" defaultValue={query.status ?? ""} className={selectClassName}>
               <option value="">All statuses</option>
@@ -70,7 +70,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
               <option value="cancelled">Cancelled</option>
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Priority</span>
             <select name="priority" defaultValue={query.priority ?? ""} className={selectClassName}>
               <option value="">All priorities</option>

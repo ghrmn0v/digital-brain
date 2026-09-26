@@ -55,7 +55,7 @@ export default async function DeveloperPage() {
                 <h2 className="text-lg font-semibold text-white">
                   Developer Mode is off
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
                   Existing product behavior is unchanged. Shared Developer Updates
                   remain available, while the desktop workspace and proposal actions
                   stay inactive.
@@ -73,7 +73,7 @@ export default async function DeveloperPage() {
                 title="Developer execution boundary"
                 description="Preparation only — repository, Git, testing, and deployment ports have no implementation"
               />
-              <div className="grid gap-px bg-slate-800 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="grid gap-px bg-zinc-800 sm:grid-cols-2 xl:grid-cols-5">
                 {[
                   { label: "Core Brain", detail: "Analysis and explanation", icon: BrainCircuit },
                   { label: "Product API", detail: "Validate and persist", icon: Bot },
@@ -83,12 +83,12 @@ export default async function DeveloperPage() {
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} className="bg-slate-900/70 p-5">
+                    <div key={item.label} className="bg-zinc-900/70 p-5">
                       <Icon aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-                      <p className="mt-3 text-sm font-semibold text-slate-200">
+                      <p className="mt-3 text-sm font-semibold text-zinc-200">
                         {item.label}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                      <p className="mt-1 text-xs leading-5 text-zinc-500">
                         {item.detail}
                       </p>
                     </div>
@@ -100,10 +100,10 @@ export default async function DeveloperPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <Panel className="p-5">
                 <Code2 aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-200">
+                <p className="mt-3 text-sm font-semibold text-zinc-200">
                   Repository context
                 </p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="mt-1 text-xs leading-5 text-zinc-500">
                   {repositories.length > 0
                     ? repositories.join(", ")
                     : "Waiting for Core Brain repository context"}
@@ -111,17 +111,17 @@ export default async function DeveloperPage() {
               </Panel>
               <Panel className="p-5">
                 <GitBranch aria-hidden="true" className="h-4 w-4 text-amber-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-200">Git port</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="mt-3 text-sm font-semibold text-zinc-200">Git port</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">
                   Interface prepared; no Git command or mutation is implemented.
                 </p>
               </Panel>
               <Panel className="p-5">
                 <Rocket aria-hidden="true" className="h-4 w-4 text-emerald-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-200">
+                <p className="mt-3 text-sm font-semibold text-zinc-200">
                   Test and deploy ports
                 </p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="mt-1 text-xs leading-5 text-zinc-500">
                   Future capabilities only; no test runner or deployment adapter exists.
                 </p>
               </Panel>

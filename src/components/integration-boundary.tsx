@@ -81,7 +81,7 @@ export function IntegrationBoundary({
                 {configured ? "URL configured" : "URL missing"}
               </Badge>
             </div>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
               {configured
                 ? "CORE_BRAIN_URL is present, but the agreed Core Brain read adapter is not configured. Product will not invent an API, request an undocumented endpoint, or display synthetic data."
                 : "Set CORE_BRAIN_URL on the server to prepare the outbound integration. A read adapter and its contract are still required before this screen can display real records."}
@@ -89,14 +89,14 @@ export function IntegrationBoundary({
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/settings"
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
               >
                 <Settings2 aria-hidden="true" className="h-4 w-4" />
                 Integration readiness
               </Link>
             </div>
           </div>
-          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-slate-800 bg-slate-950/70 text-slate-600 lg:h-40 lg:w-40">
+          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-zinc-800 bg-zinc-950/70 text-zinc-600 lg:h-40 lg:w-40">
             {configured ? (
               <Cable aria-hidden="true" className="h-12 w-12" />
             ) : (
@@ -108,25 +108,25 @@ export function IntegrationBoundary({
 
       <div className="grid gap-5 xl:grid-cols-[1fr_0.72fr]">
         <Panel>
-          <div className="border-b border-slate-800 px-5 py-4 sm:px-6">
-            <h2 className="text-sm font-semibold text-slate-100">
+          <div className="border-b border-zinc-800 px-5 py-4 sm:px-6">
+            <h2 className="text-sm font-semibold text-zinc-100">
               Required read contract
             </h2>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
+            <p className="mt-1 text-xs leading-5 text-zinc-500">
               These are implementation requirements, not assumed endpoints.
             </p>
           </div>
-          <ol className="divide-y divide-slate-800/80">
+          <ol className="divide-y divide-zinc-800/80">
             {requiredContract.map((item, index) => (
               <li key={item.title} className="flex gap-4 px-5 py-5 sm:px-6">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-[11px] font-semibold text-cyan-200">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800 text-[11px] font-semibold text-cyan-200">
                   {index + 1}
                 </span>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-200">
+                  <h3 className="text-sm font-semibold text-zinc-200">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-500">
+                  <p className="mt-1.5 text-sm leading-6 text-zinc-500">
                     {item.description}
                   </p>
                 </div>
@@ -141,11 +141,11 @@ export function IntegrationBoundary({
             does not define a Core Brain {singular} read API.
           </InlineNotice>
           <Panel className="p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+            <div className="flex items-center gap-2 text-sm font-semibold text-zinc-200">
               <LockKeyhole aria-hidden="true" className="h-4 w-4 text-cyan-300" />
               Security boundary
             </div>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-500">
               <li>CORE_BRAIN_API_TOKEN remains server-only.</li>
               <li>URLs and credential values are never passed to Client Components.</li>
               <li>Only configured booleans are exposed on integration screens.</li>

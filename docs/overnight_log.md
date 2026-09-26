@@ -118,3 +118,37 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   rather than retry until the quota came back and call a lucky screenshot
   "verified", the fix is pinned by five direct unit tests over the parser
   itself. `renderInlineMarkdown` is exported for that reason and for no other.
+
+## Task 6 — one neutral scale across both shells
+
+- **Files:** 32 files under `src/` (every component and route)
+- **Result:** PASS
+- **Notes:** `theme.ts` claimed "Tailwind classes use the zinc scale for type and
+  borders". That was aspirational, not descriptive: 30 of the 32 files under
+  `src/` were still `slate-*`, with `zinc-*` in only three. The two shells
+  therefore still differed — the dashboard ground was `#020617`, a blue-tinted
+  near-black, against the Connectome's neutral `#09090B`. That is exactly the
+  "two shells look like two products" problem the token file was written to
+  solve, and it survived Tasks 2 to 4 because those touched the Connectome.
+  All 534 colour tokens are now `zinc-*`, so the ground, borders and muted text
+  across the app are one neutral ramp and the only hue left is the cyan accent.
+
+  The rewrite is mechanical but was not safe to do with a plain string replace,
+  for a reason worth writing down: `translate-x` *contains* the substring
+  `slate-`. `grep -c slate-` therefore reports nine hits that are not colours at
+  all, and `sed s/slate-/zinc-/g` turns `translate-x-[1.4rem]` into
+  `transzinc-x-[1.4rem]` — in the switch thumb, the skip link and two hover
+  transforms. The replacement uses a negative lookbehind, `(?<!tran)`, and the
+  run asserts that `translate` survives at its original count and that
+  `transzinc` appears nowhere, rather than trusting the substitution.
+
+  One scare worth recording: mid-run the generated stylesheet appeared to
+  contain no `zinc` at all, which would have meant the earlier zinc work was
+  dead classes. It was a stale `.next/dev` chunk from before those commits. The
+  freshly built CSS holds 180 `zinc` references and no `slate` colour utility
+  (the 33 remaining `slate` matches are the `translate` custom properties). This
+  is the same stale-dev-build that made `next dev` screenshots untrustworthy
+  earlier, and the reason verification here is done against `next start`.
+
+  Verified by screenshot at 1440 and 390 on Dashboard, Connectome and Chat
+  rather than by reading the diff.

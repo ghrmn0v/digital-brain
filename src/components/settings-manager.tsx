@@ -90,7 +90,7 @@ function SettingEditor({
             <h3 className="break-all font-mono text-sm font-semibold text-cyan-200">
               {setting.key}
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-zinc-500">
               Updated {formatDateTime(setting.updatedAt)}
             </p>
           </div>
@@ -105,7 +105,7 @@ function SettingEditor({
             Delete
           </button>
         </div>
-        <label className="mt-4 block space-y-1.5 text-xs font-medium text-slate-400">
+        <label className="mt-4 block space-y-1.5 text-xs font-medium text-zinc-400">
           <span>JSON value</span>
           <textarea
             value={valueText}
@@ -151,14 +151,14 @@ export function SettingsManager({ settings }: { settings: SettingDto[] }) {
           title="Product settings"
           description="Existing JSON-safe values from the local settings registry"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
               <Braces aria-hidden="true" className="h-3.5 w-3.5" />
               {settings.length} {settings.length === 1 ? "setting" : "settings"}
             </span>
           }
         />
         {settings.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {settings.map((setting) => (
               <SettingEditor
                 key={`${setting.key}:${setting.updatedAt}`}

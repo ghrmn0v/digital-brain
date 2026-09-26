@@ -49,7 +49,7 @@ export default async function CalendarPage({
           method="get"
           className="grid gap-3 p-4 sm:grid-cols-[minmax(14rem,1fr)_12rem_auto] sm:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Search</span>
             <input
               type="search"
@@ -60,7 +60,7 @@ export default async function CalendarPage({
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Status</span>
             <select name="status" defaultValue={query.status ?? ""} className={selectClassName}>
               <option value="">All statuses</option>

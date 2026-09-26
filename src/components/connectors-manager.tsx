@@ -76,18 +76,18 @@ function ConnectorCard({
   return (
     <article className="relative overflow-hidden p-5">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/75 text-slate-300">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800/75 text-zinc-300">
           <Icon aria-hidden="true" className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-sm font-semibold text-slate-100">
+            <h3 className="break-words text-sm font-semibold text-zinc-100">
               {connector.name}
             </h3>
             <StatusBadge status={connector.status} />
             {enabled ? <Badge tone="success">Enabled</Badge> : <Badge>Inactive</Badge>}
           </div>
-          <p className="mt-1.5 font-mono text-xs text-slate-500">
+          <p className="mt-1.5 font-mono text-xs text-zinc-500">
             {connector.type} · v{connector.version}
           </p>
         </div>
@@ -102,10 +102,10 @@ function ConnectorCard({
         </div>
       </div>
 
-      <dl className="mt-5 grid gap-4 border-t border-slate-800/70 pt-4 text-xs sm:grid-cols-2">
+      <dl className="mt-5 grid gap-4 border-t border-zinc-800/70 pt-4 text-xs sm:grid-cols-2">
         <div>
-          <dt className="font-medium text-slate-600">Last sync</dt>
-          <dd className="mt-1.5 text-slate-300">
+          <dt className="font-medium text-zinc-600">Last sync</dt>
+          <dd className="mt-1.5 text-zinc-300">
             {connector.lastSyncAt ? (
               <time dateTime={connector.lastSyncAt} title={formatDateTime(connector.lastSyncAt)}>
                 {formatDateTime(connector.lastSyncAt)}
@@ -116,12 +116,12 @@ function ConnectorCard({
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-slate-600">Last error</dt>
+          <dt className="font-medium text-zinc-600">Last error</dt>
           <dd
             className={
               connector.lastError
                 ? "mt-1.5 break-words leading-5 text-rose-300"
-                : "mt-1.5 text-slate-400"
+                : "mt-1.5 text-zinc-400"
             }
           >
             {connector.lastError || "No connector error recorded"}
@@ -177,16 +177,16 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
       {success ? <SuccessBanner message={success} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Seeded</p>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Seeded</p>
           <p className="mt-2 text-2xl font-semibold text-white">{connectors.length}</p>
         </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Enabled</p>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Enabled</p>
           <p className="mt-2 text-2xl font-semibold text-white">{enabled}</p>
         </div>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">Healthy</p>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600">Healthy</p>
           <p className="mt-2 text-2xl font-semibold text-white">{healthy}</p>
         </div>
       </div>
@@ -196,14 +196,14 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
           title="Connector registry"
           description="Real connector records from the local database"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
               <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5" />
               Secrets hidden
             </span>
           }
         />
         {connectors.length > 0 ? (
-          <div className="grid gap-px bg-slate-800 lg:grid-cols-2">
+          <div className="grid gap-px bg-zinc-800 lg:grid-cols-2">
             {connectors.map((connector) => (
               <ConnectorCard
                 key={`${connector.id}:${connector.enabled}:${connector.updatedAt}`}

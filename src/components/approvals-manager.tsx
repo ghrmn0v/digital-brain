@@ -70,7 +70,7 @@ function ApprovalCard({
           <h3 className="mt-3 break-all font-mono text-base font-semibold text-cyan-100">
             {action.action}
           </h3>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500">
             <span>Source: {action.source}</span>
             <span className="inline-flex items-center gap-1.5">
               <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
@@ -88,9 +88,9 @@ function ApprovalCard({
         <JsonViewer value={action.payload} label="Structured action payload" />
       </div>
 
-      <div className="mt-5 grid gap-3 border-t border-slate-800/70 pt-5 lg:grid-cols-[minmax(14rem,1fr)_auto] lg:items-end">
-        <label className="space-y-1.5 text-xs font-medium text-slate-400">
-          <span>Decision reason <span className="text-slate-600">optional</span></span>
+      <div className="mt-5 grid gap-3 border-t border-zinc-800/70 pt-5 lg:grid-cols-[minmax(14rem,1fr)_auto] lg:items-end">
+        <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+          <span>Decision reason <span className="text-zinc-600">optional</span></span>
           <input
             type="text"
             value={reason}
@@ -205,7 +205,7 @@ export function ApprovalsManager({ actions }: { actions: ActionExecutionDto[] })
           }
         />
         {visibleActions.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {visibleActions.map((action) => (
               <ApprovalCard
                 key={action.id}

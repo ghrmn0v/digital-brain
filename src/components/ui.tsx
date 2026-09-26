@@ -16,7 +16,7 @@ export function cn(
 }
 
 export const inputClassName =
-  "min-h-11 w-full rounded-xl border border-slate-700/80 bg-slate-950/70 px-3.5 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 hover:border-slate-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-11 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const selectClassName = cn(
   inputClassName,
@@ -24,13 +24,13 @@ export const selectClassName = cn(
 );
 
 export const primaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-55";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-55";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/80 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const dangerButtonClassName =
-  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/40 hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/40 hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PageHeader({
   eyebrow,
@@ -44,7 +44,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-5 border-b border-slate-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-5 border-b border-zinc-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow ? (
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
@@ -54,7 +54,7 @@ export function PageHeader({
         <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           {title}
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">
           {description}
         </p>
       </div>
@@ -75,7 +75,7 @@ export function Panel({
   return (
     <Component
       className={cn(
-        "rounded-xl border border-slate-800/90 bg-slate-900/55",
+        "rounded-xl border border-zinc-800/90 bg-zinc-900/55",
         className,
       )}
     >
@@ -94,11 +94,11 @@ export function SectionHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-slate-800/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-b border-zinc-800/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
+        <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
         {description ? (
-          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">{description}</p>
         ) : null}
       </div>
       {action}
@@ -109,7 +109,7 @@ export function SectionHeading({
 type BadgeTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 const badgeToneClasses: Record<BadgeTone, string> = {
-  neutral: "border-slate-700 bg-slate-800/70 text-slate-300",
+  neutral: "border-zinc-700 bg-zinc-800/70 text-zinc-300",
   info: "border-cyan-400/20 bg-cyan-400/10 text-cyan-200",
   success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
   warning: "border-amber-400/20 bg-amber-400/10 text-amber-200",
@@ -117,7 +117,7 @@ const badgeToneClasses: Record<BadgeTone, string> = {
 };
 
 const badgeDotClasses: Record<BadgeTone, string> = {
-  neutral: "bg-slate-400",
+  neutral: "bg-zinc-400",
   info: "bg-cyan-300",
   success: "bg-emerald-300",
   warning: "bg-amber-300",
@@ -205,11 +205,11 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-700 bg-slate-800/60 text-slate-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800/60 text-zinc-400">
         <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
-      <h3 className="mt-4 text-sm font-semibold text-slate-200">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm leading-6 text-slate-500">
+      <h3 className="mt-4 text-sm font-semibold text-zinc-200">{title}</h3>
+      <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}
@@ -302,22 +302,22 @@ export function MetricCard({
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
           {label}
         </p>
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700/80 bg-slate-800/70 text-slate-400 transition group-hover:border-cyan-400/20 group-hover:text-cyan-300">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800/70 text-zinc-400 transition group-hover:border-cyan-400/20 group-hover:text-cyan-300">
           <Icon aria-hidden="true" className="h-4 w-4" />
         </span>
       </div>
       <p className="mt-5 text-3xl font-semibold tracking-tight text-white">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+      <p className="mt-1 text-xs leading-5 text-zinc-500">{detail}</p>
     </>
   );
 
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-slate-800/90 bg-slate-900/55 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/25 hover:bg-slate-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+      className="group rounded-2xl border border-zinc-800/90 bg-zinc-900/55 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/25 hover:bg-zinc-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
     >
       {content}
     </Link>
@@ -334,7 +334,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn("animate-pulse rounded-xl bg-slate-800/80", className)}
+      className={cn("animate-pulse rounded-xl bg-zinc-800/80", className)}
     />
   );
 }

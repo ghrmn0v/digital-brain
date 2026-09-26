@@ -109,13 +109,13 @@ export function CommandBar({
         type="button"
         onClick={() => setOpen(true)}
         aria-keyshortcuts="Meta+K Control+K"
-        className="group mx-auto flex h-9 w-full max-w-xl items-center gap-2.5 rounded-full border border-slate-700/70 bg-slate-900/60 px-3.5 text-left backdrop-blur transition hover:border-slate-600 hover:bg-slate-900/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+        className="group mx-auto flex h-9 w-full max-w-xl items-center gap-2.5 rounded-full border border-zinc-700/70 bg-zinc-900/60 px-3.5 text-left backdrop-blur transition hover:border-zinc-600 hover:bg-zinc-900/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
       >
-        <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-        <span className="min-w-0 flex-1 truncate text-xs text-slate-500">
+        <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        <span className="min-w-0 flex-1 truncate text-xs text-zinc-500">
           Search your brain
         </span>
-        <kbd className="hidden shrink-0 rounded border border-slate-700/80 bg-slate-800/80 px-1.5 py-0.5 font-mono text-[10px] text-slate-500 sm:inline-block">
+        <kbd className="hidden shrink-0 rounded border border-zinc-700/80 bg-zinc-800/80 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 sm:inline-block">
           ⌘K
         </kbd>
       </button>
@@ -126,17 +126,17 @@ export function CommandBar({
             type="button"
             aria-label="Close search"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
           />
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
               aria-label="Search Cerebro Flow"
-            className="relative w-full max-w-xl overflow-hidden rounded-xl border border-slate-700/80 bg-slate-900/95 shadow-2xl backdrop-blur-xl"
+            className="relative w-full max-w-xl overflow-hidden rounded-xl border border-zinc-700/80 bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
           >
-            <div className="flex items-center gap-2.5 border-b border-slate-800 px-4">
-              <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-slate-500" />
+            <div className="flex items-center gap-2.5 border-b border-zinc-800 px-4">
+              <Search aria-hidden="true" className="h-4 w-4 shrink-0 text-zinc-500" />
               <input
                 ref={inputRef}
                 value={query}
@@ -158,13 +158,13 @@ export function CommandBar({
                 }}
                 placeholder="Search your brain"
                 aria-label="Search your brain"
-                className="h-12 min-w-0 flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-600"
+                className="h-12 min-w-0 flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
               />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close search"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-800 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               >
                 <X aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
@@ -172,9 +172,9 @@ export function CommandBar({
 
             <div className="max-h-[min(24rem,50vh)] overflow-y-auto p-1.5">
               {results.length === 0 ? (
-                <p className="px-3 py-6 text-center text-xs leading-5 text-slate-500">
+                <p className="px-3 py-6 text-center text-xs leading-5 text-zinc-500">
                   Nothing in this graph matches “{query}”.
-                  <span className="mt-1 block text-slate-600">
+                  <span className="mt-1 block text-zinc-600">
                     This searches events recorded on this device, not Brain memories.
                   </span>
                 </p>
@@ -191,16 +191,16 @@ export function CommandBar({
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition focus-visible:outline-none ${
                           index === cursor
                             ? "bg-cyan-300/10 text-cyan-50"
-                            : "text-slate-300 hover:bg-slate-800/70"
+                            : "text-zinc-300 hover:bg-zinc-800/70"
                         }`}
                       >
-                        <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
                           {result.group}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm">{result.label}</span>
                           {result.keywords ? (
-                            <span className="block truncate text-[11px] text-slate-500">
+                            <span className="block truncate text-[11px] text-zinc-500">
                               {result.keywords}
                             </span>
                           ) : null}
@@ -212,7 +212,7 @@ export function CommandBar({
               )}
             </div>
 
-            <p className="border-t border-slate-800 px-4 py-2 text-[11px] text-slate-600">
+            <p className="border-t border-zinc-800 px-4 py-2 text-[11px] text-zinc-600">
               Searches events recorded on this device. Brain memories are not
               readable from Product yet.
             </p>
@@ -229,7 +229,7 @@ export function CommandSettingsLink() {
       href="/settings"
       aria-label="Open settings"
       title="Settings"
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-700/70 bg-slate-900/60 text-slate-400 backdrop-blur transition hover:border-slate-600 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-700/70 bg-zinc-900/60 text-zinc-400 backdrop-blur transition hover:border-zinc-600 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
     >
       <Settings2 aria-hidden="true" className="h-4 w-4" />
     </Link>

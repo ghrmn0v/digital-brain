@@ -482,23 +482,23 @@ export function ConnectomeCanvas({
 
       {focus && nodeById.get(focus) ? (
         <div
-          className={`pointer-events-none absolute left-3 top-3 max-w-[min(20rem,70%)] rounded-xl border border-slate-700/70 bg-slate-950/85 px-3 py-2 backdrop-blur ${motion}`}
+          className={`pointer-events-none absolute left-3 top-3 max-w-[min(20rem,70%)] rounded-xl border border-zinc-700/70 bg-zinc-950/85 px-3 py-2 backdrop-blur ${motion}`}
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/80">
             {nodeStyles[nodeById.get(focus)!.kind].label}
           </p>
-          <p className="mt-0.5 truncate text-sm font-medium text-slate-100">
+          <p className="mt-0.5 truncate text-sm font-medium text-zinc-100">
             {nodeById.get(focus)!.label}
           </p>
           {nodeById.get(focus)!.detail ? (
-            <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-slate-400">
+            <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-zinc-400">
               {nodeById.get(focus)!.detail}
             </p>
           ) : null}
         </div>
       ) : null}
 
-      <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-slate-600">
+      <p className="pointer-events-none absolute bottom-3 left-3 text-[11px] text-zinc-600">
         Drag to pan · scroll to zoom · press 0 to fit
       </p>
     </div>
@@ -520,7 +520,7 @@ function CanvasButton({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700/70 bg-slate-900/80 text-slate-400 backdrop-blur transition hover:border-slate-600 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+      className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700/70 bg-zinc-900/80 text-zinc-400 backdrop-blur transition hover:border-zinc-600 hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
     >
       {children}
     </button>

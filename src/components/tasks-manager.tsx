@@ -86,18 +86,18 @@ function TaskRow({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-sm font-semibold text-slate-100">
+            <h3 className="break-words text-sm font-semibold text-zinc-100">
               {task.title}
             </h3>
             <StatusBadge status={task.status} />
             <StatusBadge status={task.priority} />
           </div>
           {task.description ? (
-            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-500">
               {task.description}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock aria-hidden="true" className="h-3.5 w-3.5" />
               {task.dueAt ? (
@@ -128,8 +128,8 @@ function TaskRow({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-3 border-t border-slate-800/70 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(9rem,0.65fr)_minmax(9rem,0.65fr)_minmax(15rem,1fr)_auto] xl:items-end">
-        <label className="space-y-1.5 text-xs font-medium text-slate-400">
+      <div className="mt-4 grid gap-3 border-t border-zinc-800/70 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(9rem,0.65fr)_minmax(9rem,0.65fr)_minmax(15rem,1fr)_auto] xl:items-end">
+        <label className="space-y-1.5 text-xs font-medium text-zinc-400">
           <span>Status</span>
           <select
             value={status}
@@ -154,7 +154,7 @@ function TaskRow({
           </select>
         </label>
 
-        <label className="space-y-1.5 text-xs font-medium text-slate-400">
+        <label className="space-y-1.5 text-xs font-medium text-zinc-400">
           <span>Priority</span>
           <select
             value={priority}
@@ -180,7 +180,7 @@ function TaskRow({
         </label>
 
         <form
-          className="space-y-1.5 text-xs font-medium text-slate-400"
+          className="space-y-1.5 text-xs font-medium text-zinc-400"
           onSubmit={(event) => {
             event.preventDefault();
             void updateField(
@@ -326,7 +326,7 @@ export function TasksManager({
           onSubmit={createTask}
           className="grid gap-4 p-5 md:grid-cols-2 2xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1.5fr)_9rem_9rem_minmax(13rem,1fr)_auto] 2xl:items-end"
         >
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Title</span>
             <input
               name="title"
@@ -338,8 +338,8 @@ export function TasksManager({
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
-            <span>Description <span className="text-slate-600">optional</span></span>
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+            <span>Description <span className="text-zinc-600">optional</span></span>
             <input
               name="description"
               type="text"
@@ -349,7 +349,7 @@ export function TasksManager({
               className={inputClassName}
             />
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Status</span>
             <select name="status" defaultValue="todo" className={selectClassName}>
               {statuses.map((option) => (
@@ -357,7 +357,7 @@ export function TasksManager({
               ))}
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
             <span>Priority</span>
             <select name="priority" defaultValue="medium" className={selectClassName}>
               {priorities.map((option) => (
@@ -365,8 +365,8 @@ export function TasksManager({
               ))}
             </select>
           </label>
-          <label className="space-y-1.5 text-xs font-medium text-slate-400">
-            <span>Due <span className="text-slate-600">optional</span></span>
+          <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+            <span>Due <span className="text-zinc-600">optional</span></span>
             <input name="dueAt" type="datetime-local" className={inputClassName} />
           </label>
           <button
@@ -400,7 +400,7 @@ export function TasksManager({
           }
         />
         {tasks.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {tasks.map((task) => (
               <TaskRow
                 key={`${task.id}:${task.status}:${task.priority}:${task.dueAt ?? ""}`}

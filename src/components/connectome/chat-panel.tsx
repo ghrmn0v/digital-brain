@@ -102,7 +102,7 @@ function confidenceTone(value: number): string {
   if (value >= 0.75) return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
   if (value >= 0.5) return "border-cyan-400/25 bg-cyan-400/10 text-cyan-200";
   if (value > 0) return "border-amber-400/25 bg-amber-400/10 text-amber-200";
-  return "border-slate-700 bg-slate-800/70 text-slate-400";
+  return "border-zinc-700 bg-zinc-800/70 text-zinc-400";
 }
 
 export function ChatPanel({
@@ -213,10 +213,10 @@ export function ChatPanel({
             <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
               <BrainCircuit aria-hidden="true" className="h-5 w-5" />
             </span>
-            <h2 className="mt-4 text-base font-semibold text-slate-100">
+            <h2 className="mt-4 text-base font-semibold text-zinc-100">
               Ask your brain
             </h2>
-            <p className="mt-1.5 max-w-md text-sm leading-6 text-slate-400">
+            <p className="mt-1.5 max-w-md text-sm leading-6 text-zinc-400">
               Answers come from the memories the Core Brain stored on this
               device. It cites what it used, and says so when it could not
               reach a model.
@@ -227,7 +227,7 @@ export function ChatPanel({
                   key={suggestion}
                   type="button"
                   onClick={() => void send(suggestion)}
-                  className="rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1.5 text-xs text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                  className="rounded-full border border-zinc-700 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-300 transition hover:border-cyan-400/30 hover:text-cyan-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
                 >
                   {suggestion}
                 </button>
@@ -243,17 +243,17 @@ export function ChatPanel({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-slate-800/70 bg-zinc-950/70 px-4 py-3 sm:px-6">
+      <div className="shrink-0 border-t border-zinc-800/70 bg-zinc-950/70 px-4 py-3 sm:px-6">
         <div className="mx-auto w-full max-w-2xl">
           {context ? (
-            <div className="mb-2 flex items-center gap-2 text-[11px] text-slate-500">
+            <div className="mb-2 flex items-center gap-2 text-[11px] text-zinc-500">
               <span className="truncate">
-                Context: <span className="text-slate-400">{context}</span>
+                Context: <span className="text-zinc-400">{context}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setContext(null)}
-                className="shrink-0 rounded px-1 text-slate-500 transition hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="shrink-0 rounded px-1 text-zinc-500 transition hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               >
                 clear
               </button>
@@ -296,13 +296,13 @@ export function ChatPanel({
                 }
               }}
               placeholder="What do I know about…"
-              className="min-h-11 flex-1 resize-none rounded-xl border border-slate-700/80 bg-slate-950/70 px-3.5 py-2.5 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 hover:border-slate-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20"
+              className="min-h-11 flex-1 resize-none rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20"
             />
             <button
               type="submit"
               disabled={busy || draft.trim().length === 0}
               aria-label="Send question"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-300 text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-300 text-zinc-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {busy ? (
                 <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />
@@ -311,7 +311,7 @@ export function ChatPanel({
               )}
             </button>
           </form>
-          <p className="mt-2 text-[11px] text-slate-600">
+          <p className="mt-2 text-[11px] text-zinc-600">
             <CornerDownLeft aria-hidden="true" className="mr-1 inline h-3 w-3" />
             Enter to send, Shift+Enter for a new line. Answers come only from stored
             memory.
@@ -326,13 +326,13 @@ function TurnCard({ turn }: { turn: Turn }) {
   return (
     <article className="space-y-3">
       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-400">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-400">
           <User2 aria-hidden="true" className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="break-words text-sm text-slate-200">{turn.question}</p>
+          <p className="break-words text-sm text-zinc-200">{turn.question}</p>
           {turn.contextLabel ? (
-            <p className="mt-0.5 truncate text-[11px] text-slate-600">
+            <p className="mt-0.5 truncate text-[11px] text-zinc-600">
               while looking at {turn.contextLabel}
             </p>
           ) : null}
@@ -341,7 +341,7 @@ function TurnCard({ turn }: { turn: Turn }) {
 
       <div className="ml-9 space-y-3">
         {turn.status === "pending" ? (
-          <p className="flex items-center gap-2 text-sm text-slate-500">
+          <p className="flex items-center gap-2 text-sm text-zinc-500">
             <LoaderCircle aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
             Thinking…
           </p>
@@ -363,12 +363,12 @@ function AnswerPanel({ result }: { result: ChatResult }) {
   const grounding = result.grounded_in ?? [];
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="whitespace-pre-wrap break-words text-sm leading-7 text-zinc-100">
           {renderInlineMarkdown(result.answer)}
         </div>
 
-        <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-slate-800/70 pt-3">
+        <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-zinc-800/70 pt-3">
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
@@ -378,10 +378,10 @@ function AnswerPanel({ result }: { result: ChatResult }) {
             <Sparkles aria-hidden="true" className="h-3 w-3" />
             Confidence {(result.confidence ?? 0).toFixed(2)}
           </span>
-          <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/70 px-2 py-0.5 text-[11px] text-slate-300">
+          <span className="inline-flex items-center rounded-full border border-zinc-700 bg-zinc-800/70 px-2 py-0.5 text-[11px] text-zinc-300">
             {result.provider}
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-zinc-500">
             {result.context_fact_count} fact
             {result.context_fact_count === 1 ? "" : "s"} in context
           </span>
@@ -400,8 +400,8 @@ function AnswerPanel({ result }: { result: ChatResult }) {
       </div>
 
       {grounding.length > 0 ? (
-        <div className="rounded-xl border border-slate-800/80 bg-slate-900/30 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
             Grounded in {grounding.length} memor
             {grounding.length === 1 ? "y" : "ies"}
           </p>
@@ -409,13 +409,13 @@ function AnswerPanel({ result }: { result: ChatResult }) {
             {grounding.map((item) => (
               <li
                 key={item.memory_id}
-                className="rounded-lg border border-slate-800/80 bg-slate-950/40 px-3 py-2"
+                className="rounded-lg border border-zinc-800/80 bg-zinc-950/40 px-3 py-2"
               >
                 <p className="break-words text-xs leading-5 text-zinc-300">
                   {renderInlineMarkdown(item.content)}
                   {item.content_truncated ? "…" : ""}
                 </p>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-slate-600">
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-zinc-600">
                   <span className="font-mono">{item.memory_id}</span>
                   <span>score {item.score.toFixed(2)}</span>
                   <span>{item.type}</span>
@@ -425,13 +425,13 @@ function AnswerPanel({ result }: { result: ChatResult }) {
           </ul>
         </div>
       ) : (
-        <p className="text-[11px] text-slate-600">
+        <p className="text-[11px] text-zinc-600">
           No memories were used for this answer.
         </p>
       )}
 
       {result.missing_context?.length ? (
-        <p className="text-[11px] leading-5 text-slate-500">
+        <p className="text-[11px] leading-5 text-zinc-500">
           The Brain reported that it is still missing:{" "}
           {result.missing_context.join(", ")}.
         </p>
@@ -448,7 +448,7 @@ interface BrainEnvelope {
 
 export function ChatPageHeader() {
   return (
-    <div className="flex flex-col gap-4 border-b border-slate-800/80 px-4 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+    <div className="flex flex-col gap-4 border-b border-zinc-800/80 px-4 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-6">
       <div className="min-w-0">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
           Intelligence
@@ -456,14 +456,14 @@ export function ChatPageHeader() {
         <h1 className="mt-1.5 text-xl font-semibold tracking-tight text-white sm:text-2xl">
           Ask the brain
         </h1>
-        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-400">
+        <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-400">
           Questions are answered by the Core Brain from memory it stored on this
           device. Every answer shows its confidence and the memories behind it.
         </p>
       </div>
       <Link
         href="/connectome"
-        className="shrink-0 rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+        className="shrink-0 rounded-lg border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
       >
         See it on the Connectome
       </Link>

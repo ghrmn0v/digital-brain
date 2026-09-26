@@ -65,7 +65,7 @@ export function DeveloperProposalsManager({
           title="Core Brain proposals"
           description="Approval changes proposal state only; Product does not run Git, tests, deployment, or fixes"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-2 text-xs text-zinc-500">
               <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
               Permission required
             </span>
@@ -82,7 +82,7 @@ export function DeveloperProposalsManager({
           </div>
         ) : null}
         {proposals.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {proposals.map((proposal) => {
               const pending = pendingId === proposal.id;
               return (
@@ -103,7 +103,7 @@ export function DeveloperProposalsManager({
                       <StatusBadge status={proposal.status.toLowerCase()} />
                     </div>
                   </div>
-                  <div className="grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+                  <div className="grid gap-2 text-xs text-zinc-500 sm:grid-cols-2">
                     <span className="inline-flex items-center gap-2">
                       <Code2 aria-hidden="true" className="h-3.5 w-3.5" />
                       {proposal.repository}
@@ -116,11 +116,11 @@ export function DeveloperProposalsManager({
                       </span>
                     </span>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                  <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
                     {proposal.message}
                   </p>
                   {proposal.status === "PENDING" ? (
-                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4">
+                    <div className="flex flex-wrap gap-2 border-t border-zinc-800 pt-4">
                       <button
                         type="button"
                         disabled={pending}
@@ -141,7 +141,7 @@ export function DeveloperProposalsManager({
                       </button>
                     </div>
                   ) : (
-                    <div className="border-t border-slate-800 pt-4 text-xs text-slate-500">
+                    <div className="border-t border-zinc-800 pt-4 text-xs text-zinc-500">
                       Decision recorded{proposal.decidedBy ? ` by ${proposal.decidedBy}` : ""}. No action execution is attached.
                     </div>
                   )}

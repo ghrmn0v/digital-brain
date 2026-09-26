@@ -37,19 +37,19 @@ function ReadinessCard({
   return (
     <article className="p-5">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-800/70 text-slate-300">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800/70 text-zinc-300">
           <Icon aria-hidden="true" className="h-5 w-5" />
         </div>
         <Badge tone={configured ? "success" : "neutral"} dot>
           {configured ? "Configured" : "Not configured"}
         </Badge>
       </div>
-      <h3 className="mt-5 text-sm font-semibold text-slate-100">{name}</h3>
-      <p className="mt-1.5 text-sm leading-6 text-slate-500">{description}</p>
-      <div className="mt-4 flex items-center gap-2 border-t border-slate-800/70 pt-3 text-xs text-slate-500">
+      <h3 className="mt-5 text-sm font-semibold text-zinc-100">{name}</h3>
+      <p className="mt-1.5 text-sm leading-6 text-zinc-500">{description}</p>
+      <div className="mt-4 flex items-center gap-2 border-t border-zinc-800/70 pt-3 text-xs text-zinc-500">
         <StatusIcon
           aria-hidden="true"
-          className={configured ? "h-3.5 w-3.5 text-emerald-300" : "h-3.5 w-3.5 text-slate-600"}
+          className={configured ? "h-3.5 w-3.5 text-emerald-300" : "h-3.5 w-3.5 text-zinc-600"}
         />
         URL configured: {configured ? "yes" : "no"}
       </div>
@@ -92,7 +92,7 @@ export default async function SettingsPage() {
           title="Integration readiness"
           description="Only configuration booleans cross the server boundary"
         />
-        <div className="grid gap-px bg-slate-800 md:grid-cols-2">
+        <div className="grid gap-px bg-zinc-800 md:grid-cols-2">
           <ReadinessCard
             name="Core Brain"
             description="Outbound normalized-event delivery and future read adapters remain server-only."
@@ -108,7 +108,7 @@ export default async function SettingsPage() {
             />
           </div>
         </div>
-        <div className="hidden items-start gap-3 border-t border-slate-800 px-5 py-4 text-xs leading-5 text-slate-500 min-[900px]:flex">
+        <div className="hidden items-start gap-3 border-t border-zinc-800 px-5 py-4 text-xs leading-5 text-zinc-500 min-[900px]:flex">
           <Settings2 aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-300" />
           CORE_BRAIN_API_TOKEN and FLY_API_TOKEN are never read, returned, or
           rendered by this interface.

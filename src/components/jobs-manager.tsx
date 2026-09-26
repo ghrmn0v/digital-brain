@@ -80,16 +80,16 @@ function JobCard({
             <Badge tone="info">{job.source}</Badge>
             <StatusBadge status={job.status} />
             {job.publishedAt ? (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-zinc-500">
                 Published {formatDate(job.publishedAt)}
               </span>
             ) : null}
           </div>
-          <h3 className="mt-3 break-words text-base font-semibold text-slate-100">
+          <h3 className="mt-3 break-words text-base font-semibold text-zinc-100">
             {job.title}
           </h3>
-          <p className="mt-1 text-sm font-medium text-slate-400">{job.company}</p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
+          <p className="mt-1 text-sm font-medium text-zinc-400">{job.company}</p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500">
             {job.location ? (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
@@ -110,13 +110,13 @@ function JobCard({
               {job.skills.slice(0, 8).map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-lg border border-slate-700 bg-slate-800/60 px-2 py-1 text-[11px] text-slate-400"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-2 py-1 text-[11px] text-zinc-400"
                 >
                   {skill}
                 </span>
               ))}
               {job.skills.length > 8 ? (
-                <span className="px-1 py-1 text-[11px] text-slate-600">
+                <span className="px-1 py-1 text-[11px] text-zinc-600">
                   +{job.skills.length - 8} more
                 </span>
               ) : null}
@@ -144,7 +144,7 @@ function JobCard({
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-800/70 pt-4">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-800/70 pt-4">
         {jobActions.map((action) => {
           const Icon = action.icon;
           const active = job.status === action.status;
@@ -215,7 +215,7 @@ export function JobsManager({ jobs }: { jobs: JobDto[] }) {
           }
         />
         {jobs.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {jobs.map((job) => (
               <JobCard
                 key={`${job.id}:${job.status}:${job.updatedAt}`}

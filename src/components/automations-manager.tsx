@@ -95,32 +95,32 @@ function AutomationCard({
             <Badge tone="info">{automation.triggerKind}</Badge>
             {automation.lastError ? <Badge tone="danger">Last run failed</Badge> : null}
           </div>
-          <h3 className="mt-3 break-words text-base font-semibold text-slate-100">
+          <h3 className="mt-3 break-words text-base font-semibold text-zinc-100">
             {automation.name}
           </h3>
           {automation.description ? (
-            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-500">
+            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-zinc-500">
               {automation.description}
             </p>
           ) : null}
           <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
             <div>
-              <dt className="font-medium text-slate-600">Trigger</dt>
-              <dd className="mt-1 break-all font-mono text-slate-300">
+              <dt className="font-medium text-zinc-600">Trigger</dt>
+              <dd className="mt-1 break-all font-mono text-zinc-300">
                 {automation.triggerValue ?? "—"}
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-slate-600">Action</dt>
+              <dt className="font-medium text-zinc-600">Action</dt>
               <dd className="mt-1 break-all font-mono text-cyan-200">{automation.action}</dd>
             </div>
             <div>
-              <dt className="font-medium text-slate-600">Last run</dt>
-              <dd className="mt-1 text-slate-400">{formatDateTime(automation.lastRunAt)}</dd>
+              <dt className="font-medium text-zinc-600">Last run</dt>
+              <dd className="mt-1 text-zinc-400">{formatDateTime(automation.lastRunAt)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-slate-600">Next run</dt>
-              <dd className="mt-1 text-slate-400">{formatDateTime(automation.nextRunAt)}</dd>
+              <dt className="font-medium text-zinc-600">Next run</dt>
+              <dd className="mt-1 text-zinc-400">{formatDateTime(automation.nextRunAt)}</dd>
             </div>
           </dl>
           {automation.lastError ? (
@@ -131,7 +131,7 @@ function AutomationCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3">
+          <div className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3">
             <Switch
               checked={automation.enabled}
               disabled={cardDisabled}
@@ -141,7 +141,7 @@ function AutomationCard({
                 void onToggle(automation, enabled).finally(() => setPending(null));
               }}
             />
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-zinc-400">
               {automation.enabled ? "Enabled" : "Disabled"}
             </span>
           </div>
@@ -174,8 +174,8 @@ function AutomationCard({
         </div>
       </div>
 
-      <details className="group mt-5 border-t border-slate-800/70 pt-4">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-semibold text-slate-400 transition hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50">
+      <details className="group mt-5 border-t border-zinc-800/70 pt-4">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-semibold text-zinc-400 transition hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50">
           <Braces aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
           Inspect configuration
         </summary>
@@ -324,15 +324,15 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
         {formOpen ? (
           <form onSubmit={createAutomation} className="space-y-5 p-5">
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
                 <span>Name</span>
                 <input name="name" type="text" required maxLength={200} placeholder="Automation name" className={inputClassName} />
               </label>
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
-                <span>Description <span className="text-slate-600">optional</span></span>
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+                <span>Description <span className="text-zinc-600">optional</span></span>
                 <input name="description" type="text" maxLength={2_000} placeholder="What this automation does" className={inputClassName} />
               </label>
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
                 <span>Trigger event type</span>
                 <input
                   name="triggerValue"
@@ -347,7 +347,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                   <option value="connector.event" />
                 </datalist>
               </label>
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
                 <span>Action</span>
                 <input
                   name="action"
@@ -371,7 +371,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
                 <span>Action payload JSON</span>
                 <textarea
                   name="actionPayload"
@@ -382,8 +382,8 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                   className={`${inputClassName} resize-y font-mono leading-6`}
                 />
               </label>
-              <label className="space-y-1.5 text-xs font-medium text-slate-400">
-                <span>Conditions JSON <span className="text-slate-600">optional</span></span>
+              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+                <span>Conditions JSON <span className="text-zinc-600">optional</span></span>
                 <textarea
                   name="conditions"
                   rows={7}
@@ -395,8 +395,8 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-4 text-sm text-slate-300">
-                <input type="checkbox" name="enabled" defaultChecked className="h-4 w-4 rounded border-slate-600 bg-slate-900" />
+              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 text-sm text-zinc-300">
+                <input type="checkbox" name="enabled" defaultChecked className="h-4 w-4 rounded border-zinc-600 bg-zinc-900" />
                 <Power aria-hidden="true" className="h-4 w-4 text-cyan-300" />
                 Enable after creation
               </label>
@@ -426,12 +426,12 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
                 <ButtonSpinner /> Processing
               </span>
             ) : (
-              <Activity aria-hidden="true" className="h-4 w-4 text-slate-500" />
+              <Activity aria-hidden="true" className="h-4 w-4 text-zinc-500" />
             )
           }
         />
         {automations.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-zinc-800/80">
             {automations.map((automation) => (
               <AutomationCard
                 key={`${automation.id}:${automation.enabled}:${automation.updatedAt}`}

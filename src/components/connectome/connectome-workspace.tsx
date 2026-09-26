@@ -183,15 +183,15 @@ export function ConnectomeWorkspace({
   const motion = reducedMotion ? "" : "transition-opacity duration-200 motion-reduce:transition-none";
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-zinc-950 text-slate-100">
+    <div className="flex h-dvh flex-col overflow-hidden bg-zinc-950 text-zinc-100">
       <a
         href="#connectome-graph"
-        className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-slate-900 px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+        className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-zinc-900 px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
       >
         Skip to the graph
       </a>
 
-      <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-3 border-b border-slate-800/50 bg-zinc-950/92 px-3 backdrop-blur-xl sm:px-4">
+      <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-3 border-b border-zinc-800/50 bg-zinc-950/92 px-3 backdrop-blur-xl sm:px-4">
         <button
           ref={navToggleRef}
           type="button"
@@ -199,7 +199,7 @@ export function ConnectomeWorkspace({
           aria-label="Open context navigation"
           aria-expanded={navOpen}
           aria-controls="connectome-navigation"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-400 transition hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 min-[1120px]:hidden"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 min-[1120px]:hidden"
         >
           <span aria-hidden="true" className="flex flex-col gap-1">
             <span className="block h-px w-4 bg-current" />
@@ -225,7 +225,7 @@ export function ConnectomeWorkspace({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="hidden text-[11px] tabular-nums text-slate-600 xl:inline">
+          <span className="hidden text-[11px] tabular-nums text-zinc-600 xl:inline">
             {visible.nodes.length} nodes · {visible.edges.length} links
           </span>
           <CommandSettingsLink />
@@ -236,7 +236,7 @@ export function ConnectomeWorkspace({
             aria-label="Open intelligence panel"
             aria-expanded={inspectorOpen}
             aria-controls="connectome-inspector"
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-slate-400 transition hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 min-[1280px]:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 text-zinc-400 transition hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 min-[1280px]:hidden"
           >
             <PanelRight aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -244,26 +244,26 @@ export function ConnectomeWorkspace({
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-slate-800/50 bg-zinc-950 min-[1120px]:flex">
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-zinc-800/50 bg-zinc-950 min-[1120px]:flex">
           <ContextNav
             sources={sources}
             activeSource={activeSource}
             onSourceChange={setActiveSource}
             developerModeEnabled={developerModeEnabled}
           />
-          <div className="shrink-0 border-t border-slate-800/50 px-3 py-2.5">
-            <p className="text-[11px] leading-4 text-slate-600">
+          <div className="shrink-0 border-t border-zinc-800/50 px-3 py-2.5">
+            <p className="text-[11px] leading-4 text-zinc-600">
               Local-first. Every node is an event this device recorded.
             </p>
           </div>
         </aside>
 
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-slate-800/50 px-3 py-2 lg:hidden">
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto border-b border-zinc-800/50 px-3 py-2 lg:hidden">
             {[...counts.entries()].map(([kind, count]) => (
               <span
                 key={kind}
-                className="shrink-0 rounded-full border border-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-slate-500"
+                className="shrink-0 rounded-full border border-zinc-800 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-zinc-500"
               >
                 {nodeStyles[kind as keyof typeof nodeStyles]?.short ?? kind} {count}
               </span>
@@ -282,10 +282,10 @@ export function ConnectomeWorkspace({
             {visible.nodes.length === 0 ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
                 <div className="max-w-sm text-center">
-                  <h2 className="text-sm font-semibold text-slate-200">
+                  <h2 className="text-sm font-semibold text-zinc-200">
                     Your brain is still learning.
                   </h2>
-                  <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                  <p className="mt-1.5 text-xs leading-5 text-zinc-500">
                     Connect a source to start building your memory graph. Events
                     appear here the moment they are received.
                   </p>
@@ -294,7 +294,7 @@ export function ConnectomeWorkspace({
             ) : null}
           </div>
 
-          <div className="shrink-0 border-t border-slate-800/50 bg-zinc-950">
+          <div className="shrink-0 border-t border-zinc-800/50 bg-zinc-950">
             <ConnectomeTimeline
               nodes={visible.nodes}
               selectedId={selectedId}
@@ -304,7 +304,7 @@ export function ConnectomeWorkspace({
           </div>
         </main>
 
-        <aside className="hidden w-80 shrink-0 overflow-hidden border-l border-slate-800/50 bg-zinc-950 min-[1280px]:block">
+        <aside className="hidden w-80 shrink-0 overflow-hidden border-l border-zinc-800/50 bg-zinc-950 min-[1280px]:block">
           <ConnectomeInspector
             node={selected}
             nodes={visible.nodes}
@@ -320,7 +320,7 @@ export function ConnectomeWorkspace({
             type="button"
             aria-label="Close navigation overlay"
             onClick={() => setNavOpen(false)}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
           />
           <aside
             id="connectome-navigation"
@@ -329,15 +329,15 @@ export function ConnectomeWorkspace({
             aria-modal="true"
             aria-label="Context navigation"
             tabIndex={-1}
-            className="absolute inset-y-0 left-0 flex w-[min(17rem,86vw)] flex-col border-r border-slate-800 bg-zinc-950 outline-none"
+            className="absolute inset-y-0 left-0 flex w-[min(17rem,86vw)] flex-col border-r border-zinc-800 bg-zinc-950 outline-none"
           >
-            <div className="flex h-14 items-center justify-between border-b border-slate-800 px-3">
+            <div className="flex h-14 items-center justify-between border-b border-zinc-800 px-3">
               <span className="text-[13px] font-semibold text-white">Context</span>
               <button
                 type="button"
                 onClick={() => setNavOpen(false)}
                 aria-label="Close navigation"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
@@ -362,7 +362,7 @@ export function ConnectomeWorkspace({
             type="button"
             aria-label="Close intelligence panel overlay"
             onClick={() => setInspectorOpen(false)}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
           />
           <div
             id="connectome-inspector"
@@ -371,17 +371,17 @@ export function ConnectomeWorkspace({
             aria-modal="true"
             aria-label="Intelligence panel"
             tabIndex={-1}
-            className={`absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col border-l border-slate-800 bg-zinc-950 outline-none ${
+            className={`absolute inset-y-0 right-0 flex w-[min(22rem,92vw)] flex-col border-l border-zinc-800 bg-zinc-950 outline-none ${
               reducedMotion ? "" : "motion-safe:animate-in motion-safe:fade-in"
             }`}
           >
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-800 px-3">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800 px-3">
               <span className="text-[13px] font-semibold text-white">Intelligence</span>
               <button
                 type="button"
                 onClick={() => setInspectorOpen(false)}
                 aria-label="Close intelligence panel"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               >
                 <X aria-hidden="true" className="h-4 w-4" />
               </button>
