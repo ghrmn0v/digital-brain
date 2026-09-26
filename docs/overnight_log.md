@@ -226,3 +226,29 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   anything in a style object use. The two files are kept in agreement by
   comment rather than by a build step, which is a real fragility worth knowing
   about: nothing fails if they drift.
+
+## Task 10 — repair drifted indentation in the dashboard shell
+
+- **File:** `src/components/dashboard-shell.tsx`
+- **Result:** PASS
+- **Notes:** 84 lines in this file had drifted out of alignment — the navigation
+  array sat two spaces right of column zero, two of its three elements were
+  indented differently from the first, the `Brand` link had a stray attribute
+  indent, and the `.map()` body and the top-bar labels were each off by their
+  own amount. It is the file every dashboard page renders inside, and it is
+  where the permanent Overview / Connectome / Chat navigation lives, so the cost
+  of reading it wrong is paid on every visit.
+
+  Nothing in the toolchain was catching this: there is no Prettier in the
+  project, the ESLint config sets no formatting rules, and the drift was
+  syntactically valid throughout, so build, types, lint and all 90 tests passed
+  with the file in this state. Whitespace that no tool checks is whitespace no
+  one maintains.
+
+  The corrections are applied as per-line shifts and the run asserts that every
+  touched line has the same stripped content as before, so the change cannot be
+  anything but whitespace. `git diff -w` on the file is empty, which is the
+  proof worth keeping: 84 insertions and 84 deletions with no semantic delta.
+  Rendering was re-checked by screenshot anyway, since JSX text nodes are
+  whitespace-sensitive and a careless shift in a text line would compile
+  cleanly and still change what a user reads.

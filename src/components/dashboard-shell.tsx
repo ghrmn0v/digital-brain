@@ -44,18 +44,18 @@ type NavigationSection = {
   items: NavigationItem[];
 };
 
-  const navigation: NavigationSection[] = [
-    {
-      label: "Workspace",
-      items: [
-        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-        { href: "/connectome", label: "Connectome", icon: Network },
-        { href: "/chat", label: "Chat", icon: MessageSquareText },
-        { href: "/tasks", label: "Tasks", icon: ListTodo },
-        { href: "/calendar", label: "Calendar", icon: CalendarDays },
-        { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
-      ],
-    },
+const navigation: NavigationSection[] = [
+  {
+    label: "Workspace",
+    items: [
+      { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+      { href: "/connectome", label: "Connectome", icon: Network },
+      { href: "/chat", label: "Chat", icon: MessageSquareText },
+      { href: "/tasks", label: "Tasks", icon: ListTodo },
+      { href: "/calendar", label: "Calendar", icon: CalendarDays },
+      { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
+    ],
+  },
   {
     label: "Control plane",
     items: [
@@ -97,7 +97,7 @@ function Brand() {
     <Link
       href="/dashboard"
       className="group flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
-        aria-label="Cerebro Flow dashboard"
+      aria-label="Cerebro Flow dashboard"
     >
       <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
         <Bot aria-hidden="true" className="h-5 w-5" />
@@ -105,11 +105,11 @@ function Brand() {
       </span>
       <span>
         <span className="block text-sm font-semibold tracking-tight text-white">
-            Cerebro Flow
-          </span>
-          <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-450">
-            Personal AI
-          </span>
+          Cerebro Flow
+        </span>
+        <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-450">
+          Personal AI
+        </span>
       </span>
     </Link>
   );
@@ -139,50 +139,50 @@ function Navigation({
                     !item.developerModeOnly || developerModeEnabled,
                 )
                 .map((item) => {
-                const active = isActive(pathname, item.href);
-                const Icon = item.icon;
-                return (
-                  <li
-                    key={item.href}
-                    className={
-                      item.desktopOnly ? "hidden min-[900px]:block" : undefined
-                    }
-                  >
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "group relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
-                        active
-                          ? "bg-cyan-300/[0.11] text-cyan-100"
-                          : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100",
-                      )}
+                  const active = isActive(pathname, item.href);
+                  const Icon = item.icon;
+                  return (
+                    <li
+                      key={item.href}
+                      className={
+                        item.desktopOnly ? "hidden min-[900px]:block" : undefined
+                      }
                     >
-                      {active ? (
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-cyan-300"
-                        />
-                      ) : null}
-                      <Icon
-                        aria-hidden="true"
+                      <Link
+                        href={item.href}
+                        onClick={onNavigate}
+                        aria-current={active ? "page" : undefined}
                         className={cn(
-                          "h-4 w-4 shrink-0",
-                          active ? "text-cyan-300" : "text-zinc-450 group-hover:text-zinc-300",
+                          "group relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50",
+                          active
+                            ? "bg-cyan-300/[0.11] text-cyan-100"
+                            : "text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100",
                         )}
-                      />
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {active ? (
-                        <ChevronRight
+                      >
+                        {active ? (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-cyan-300"
+                          />
+                        ) : null}
+                        <Icon
                           aria-hidden="true"
-                          className="h-3.5 w-3.5 text-cyan-300/70"
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            active ? "text-cyan-300" : "text-zinc-450 group-hover:text-zinc-300",
+                          )}
                         />
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-                })}
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        {active ? (
+                          <ChevronRight
+                            aria-hidden="true"
+                            className="h-3.5 w-3.5 text-cyan-300/70"
+                          />
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                  })}
             </ul>
           </div>
         ))}
@@ -328,7 +328,7 @@ export function DashboardShell({
         <div className="hidden h-16 items-center justify-between border-b border-zinc-800/70 bg-zinc-950/60 px-8 backdrop-blur lg:flex">
           <div className="flex items-center gap-2 text-xs font-medium text-zinc-450">
             <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
-              Your local-first personal intelligence
+            Your local-first personal intelligence
           </div>
           <div className="flex items-center gap-2 text-xs text-zinc-450">
             <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
