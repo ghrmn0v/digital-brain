@@ -242,18 +242,36 @@ input[type="checkbox"] {
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid #020617;
+  border: 3px solid var(--background);
   border-radius: 999px;
-  background: #334155;
+  background: var(--panel-line);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--text-muted);
 }
+
+/*
+ * A strip that scrolls but has no business showing a bar.
+ *
+ * The section tabs are five short labels, so a horizontal scrollbar along
+ * the bottom of the row is pure noise. Overflow stays, because on a narrow
+ * screen the row still has to reach. Firefox needs its own property, which
+ * scrollbar-width has no webkit equivalent for.
+ */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

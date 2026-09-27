@@ -141,7 +141,7 @@ export function SettingsSectionNav() {
       aria-label="Settings sections"
       className="sticky top-0 z-20 -mx-4 border-b border-[var(--panel-line)] bg-[var(--background)]/90 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10"
     >
-      <ul className="-mb-px flex items-center gap-1 overflow-x-auto">
+      <ul className="scrollbar-none -mb-px flex items-center gap-1 overflow-x-auto">
         {SECTIONS.map((section) => {
           const current = section === activeSection;
           return (
