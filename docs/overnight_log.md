@@ -578,3 +578,33 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   Checked rather than assumed: two fresh loads of `/connectome` are
   byte-identical (`compare -metric AE` → 0), so the map still does not reshuffle,
   which is the property the force suite pins.
+
+## Task 18 — a second Electron launch looked like a broken app
+
+- **Files:** `desktop/src/main.js`, `desktop/test/security.test.mjs`
+- **Result:** PASS
+- **Notes:** `npm run smoke` exited 0 and printed *nothing* — no startup line, no
+  `CEREBRO_SMOKE_OK`. The app was not failing; the single-instance lock from
+  Task 14 was doing exactly what it was built to do. With an instance already
+  open, a second process loses the lock, calls `app.quit()` and exits before the
+  window or the smoke hooks are ever created, so a verification run silently
+  passed without having verified anything.
+
+  The lock is right for a double-click, so it stays for normal launches. Two
+  things were wrong around it. A smoke run now bypasses it, because the case
+  that matters most is checking a build *while the app is open* — precisely when
+  the lock would swallow the result. And a refused normal launch now prints
+  "Cerebro Flow is already running — focusing the existing window." instead of
+  vanishing, so "nothing happened" is never a mystery.
+
+  Confirmed by running the same command in all four states: smoke with no
+  instance, smoke with an instance (previously the silent failure), a second
+  normal start, and a bounded Wayland start. The first three behave correctly and
+  the fourth confirms the platform choice — `--ozone-platform=wayland` does
+  launch, but logs `'--ozone-platform=wayland' is not compatible with Vulkan`.
+  That is why `npm start` pins x11, and the pin is now justified by evidence
+  rather than assumption.
+
+  Two regression guards added to the desktop suite, since this is the kind of
+  failure no assertion would otherwise notice: the smoke path must bypass the
+  lock, and a refused launch must say something.

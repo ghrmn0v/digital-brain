@@ -401,14 +401,19 @@ function attachSmoke(win) {
 
 // One window per launch: a second `npm start` focuses the first instead of
 // opening a rival instance that fights over the same ports and userData.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
-  app.on("second-instance", () => {
-    if (!mainWindow) return;
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.focus();
-  });
+//
+// A smoke run is deliberately exempt. It is a verification, not a launch, and
+// the case that matters most is checking a build while the app is already open
+// — which is exactly when the lock would hand back a silent exit 0 and no
+// output at all, so the check would appear to pass without having run.
+if (config.smoke || app.requestSingleInstanceLock()) {
+  if (!config.smoke) {
+    app.on("second-instance", () => {
+      if (!mainWindow) return;
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    });
+  }
 
   app.whenReady().then(() => {
     console.log(`Cerebro Flow shell starting; target ${describeTarget()}`);
@@ -418,7 +423,13 @@ if (!app.requestSingleInstanceLock()) {
     });
   });
 
-  app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") app.quit();
-  });
+    app.on("window-all-closed", () => {
+      if (process.platform !== "darwin") app.quit();
+    });
+} else {
+  // Say so rather than exiting silently, so "nothing happened" is never a
+  // mystery: the window is already open and has just been raised.
+  console.log("Cerebro Flow is already running — focusing the existing window.");
+  app.quit();
 }
+

@@ -117,6 +117,20 @@ test("device permissions are denied by default", () => {
   assert.match(main, /setPermissionCheckHandler\(\(\)\s*=>\s*false\)/);
 });
 
+test("a smoke run is not swallowed by the single-instance lock", () => {
+  // Regression guard. The lock is right for a second launch, but it made
+  // `npm run smoke` exit 0 with no output whenever the app was already open —
+  // so the check appeared to pass without having run, which is worse than not
+  // having it.
+  assert.match(main, /config\.smoke\s*\|\|\s*app\.requestSingleInstanceLock\(\)/);
+});
+
+test("a refused second launch says so instead of exiting silently", () => {
+  // "Nothing happened" should never be a mystery: the window is already open.
+  assert.match(main, /already running/);
+  assert.match(main, /focusing the existing window/);
+});
+
 test("the shell degrades with an explanation when the web server is down", () => {
   assert.match(main, /on\("did-fail-load"/);
   assert.match(main, /offlineDocument/);
