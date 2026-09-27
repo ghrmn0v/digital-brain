@@ -8,6 +8,7 @@ because that is the behaviour a real provider plugs into.
 
 from __future__ import annotations
 
+import email.message
 import io
 import json
 import unittest
@@ -31,6 +32,11 @@ from core.understanding import (
     register_gemini_provider,
 )
 from core.understanding.exceptions import InvalidLLMOutputError
+from core.understanding.gemini import (
+    _quota_facts,
+    _retry_would_be_wasted,
+    _seconds,
+)
 
 REQUEST = LLMRequest(
     operation="understand",
@@ -373,6 +379,128 @@ class GeminiFailureTests(unittest.TestCase):
             provider.complete(REQUEST)
         self.assertNotIn(secret, str(caught.exception))
         self.assertNotIn(secret, str(provider.usage.last_error))
+
+    def _quota_429(self, retry_delay: str | None) -> urllib.error.HTTPError:
+        details: list[dict] = [{
+            "violations": [{
+                "quotaId": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+            }]
+        }]
+        if retry_delay is not None:
+            details.append({
+                "@type": "type.googleapis.com/google.rpc.RetryInfo",
+                "retryDelay": retry_delay,
+            })
+        body = json.dumps({
+            "error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "details": details}
+        }).encode("utf-8")
+        return urllib.error.HTTPError("u", 429, "Too Many Requests", {}, io.BytesIO(body))
+
+    def test_a_long_retry_after_skips_the_retry_entirely(self) -> None:
+        """Retrying a 57-second window after 1.5s cannot succeed.
+
+        It costs a request, adds the backoff to the caller's latency, and comes
+        back with the same 429 — so the quota must be reported on the first
+        response instead.
+        """
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            raise self._quota_429("57.053064831s")
+
+        provider = GeminiProvider(
+            GeminiConfig(api_key="test-key-not-real", model="gemini-2.0-flash", enabled=True),
+            opener=opener,
+        )
+        with self.assertRaises(LLMProviderError) as caught:
+            provider.complete(REQUEST)
+        self.assertEqual(len(calls), 1, "must not retry when told to wait")
+        self.assertIn("quota exhausted", str(caught.exception))
+        self.assertIn("per-minute limit", str(caught.exception))
+
+    def test_a_short_retry_after_still_retries_once(self) -> None:
+        """A hint inside the ceiling is a burst, which does clear."""
+        responses = [self._quota_429("2s"), FakeResponse(gemini_text("recovered"))]
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            item = responses.pop(0)
+            if isinstance(item, Exception):
+                raise item
+            return item
+
+        provider = GeminiProvider(
+            GeminiConfig(api_key="test-key-not-real", model="gemini-2.0-flash", enabled=True),
+            opener=opener,
+        )
+        with patch("core.understanding.gemini.time.sleep") as slept:
+            text = provider.complete(REQUEST)
+        self.assertEqual(len(calls), 2)
+        self.assertIn("recovered", text)
+        slept.assert_called_once()
+
+    def test_no_retry_hint_keeps_the_existing_single_retry(self) -> None:
+        responses = [self._quota_429(None), FakeResponse(gemini_text("recovered"))]
+        calls: list[int] = []
+
+        def opener(request, timeout=None):  # type: ignore[no-untyped-def]
+            calls.append(1)
+            item = responses.pop(0)
+            if isinstance(item, Exception):
+                raise item
+            return item
+
+        provider = GeminiProvider(
+            GeminiConfig(api_key="test-key-not-real", model="gemini-2.0-flash", enabled=True),
+            opener=opener,
+        )
+        with patch("core.understanding.gemini.time.sleep"):
+            provider.complete(REQUEST)
+        self.assertEqual(len(calls), 2)
+
+    def test_the_retry_after_header_is_honoured_too(self) -> None:
+        # RetryInfo in the body is one source; the standard header is the other.
+        error = self._quota_429(None)
+        error.headers = email.message.Message()
+        error.headers["Retry-After"] = "42"
+        self.assertTrue(_retry_would_be_wasted(error))
+
+    def test_the_delay_is_parsed_from_both_shapes_and_never_throws(self) -> None:
+        for raw, expected in [
+            ("57.053064831s", 57.053064831),
+            ("2s", 2.0),
+            ("3", 3.0),
+            (7, 7.0),
+            (7.5, 7.5),
+            ("not a duration", None),
+            ("", None),
+            (None, None),
+            (True, None),
+            (-5, None),
+            ("-5s", None),
+            ([], None),
+        ]:
+            with self.subTest(raw=raw):
+                self.assertEqual(_seconds(raw), expected)
+
+    def test_a_hint_exactly_at_the_ceiling_still_retries(self) -> None:
+        # The ceiling is "longer than", not "at least": 5s is still a pause this
+        # module is willing to take.
+        error = self._quota_429("5s")
+        self.assertFalse(_retry_would_be_wasted(error))
+        error = self._quota_429("5.1s")
+        self.assertTrue(_retry_would_be_wasted(error))
+
+    def test_the_facts_survive_the_retry_reading_the_body_again(self) -> None:
+        """The body is a one-shot stream; the second read must not lose it."""
+        error = self._quota_429("57s")
+        first = _quota_facts(error)
+        second = _quota_facts(error)
+        self.assertEqual(first, second)
+        self.assertEqual(first.window, "per-minute limit")
+        self.assertEqual(first.retry_after, 57.0)
 
     def test_auth_failure_does_not_leak_provider_payload(self) -> None:
         error = urllib.error.HTTPError(

@@ -53,6 +53,13 @@ _DEFAULT_MODEL = "gemini-3.8-flash"
 #: succeeds; a 400, 403 or 404 is the request itself and retrying is pointless.
 _RETRYABLE_STATUSES = frozenset({429, 503})
 _RETRY_BACKOFF_SECONDS = 1.5
+#: A provider that asks us to wait longer than this is telling us the condition
+#: has not passed. Retrying after :data:`_RETRY_BACKOFF_SECONDS` would spend a
+#: request and 1.5 seconds to be told the same thing, so above this the retry is
+#: skipped and the failure is reported immediately. It is a ceiling, not a
+#: target: a 57-second quota window must not become a 57-second sleep in a
+#: request path.
+_RETRY_AFTER_CEILING_SECONDS = 5.0
 
 
 class _TransientStatus(Exception):
@@ -290,7 +297,7 @@ class GeminiProvider:
                 raw = response.read()
         except urllib.error.HTTPError as exc:
             error = self._http_error(exc)
-            if exc.code in _RETRYABLE_STATUSES:
+            if exc.code in _RETRYABLE_STATUSES and not _retry_would_be_wasted(exc):
                 raise _TransientStatus(str(exc.code)) from error
             raise error from exc
         except socket.timeout as exc:
@@ -441,56 +448,70 @@ _QUOTA_WINDOWS = (
 )
 
 
-#: Distinguishes "computed and there is no quota" from "not computed yet", since
-#: ``None`` is a real answer here.
-_QUOTA_WINDOW_UNSET = object()
+#: Distinguishes "computed" from "not computed yet", since ``None`` is a real
+#: answer for both the window and the delay.
+_UNSET = object()
 
 
-def _quota_window(exc: urllib.error.HTTPError) -> str | None:
-    """Name the quota window from a 429 body, or ``None`` if it is not a quota.
+@dataclass(frozen=True)
+class _QuotaFacts:
+    """What a 429 body tells us, and nothing more.
 
-    The answer is memoised on the exception, and that is not an optimisation. A
-    429 is retryable, so ``_post`` raises the *same* ``HTTPError`` object twice —
-    and an ``HTTPError`` is a one-shot stream. Reading it on the first attempt
-    leaves the second attempt with an empty body, which reads as "no quota here"
-    and silently downgrades a precise diagnosis to "rate limit reached". Since
-    every 429 is retried, without this the specific message would never survive
-    to the caller.
-
-    The body is read once and only a window name looked up in a fixed table is
-    returned; nothing from the payload becomes part of a message, because that
-    payload can echo the request. Any failure to read or parse it is treated as
-    "not a quota", which loses one word of detail rather than failing a request.
+    ``window`` names the quota window from a fixed table, and ``retry_after`` is
+    the provider's own hint in seconds. Neither is ever taken from free text: the
+    payload can echo the request back, so only looked-up names and parsed numbers
+    are allowed out.
     """
-    cached = getattr(exc, "_cerbro_quota_window", _QUOTA_WINDOW_UNSET)
-    if cached is not _QUOTA_WINDOW_UNSET:
+
+    window: str | None = None
+    retry_after: float | None = None
+
+
+def _quota_facts(exc: urllib.error.HTTPError) -> _QuotaFacts:
+    """Parse a retryable error once and remember the answer.
+
+    Memoised on the exception, and that is not an optimisation. A 429 is
+    retryable, so ``_post`` raises the *same* ``HTTPError`` object twice — and an
+    ``HTTPError`` is a one-shot stream. Reading it on the first attempt leaves the
+    second attempt with an empty body, which reads as "nothing to see here" and
+    silently discards both the quota window and the retry hint. Since every 429 is
+    retried, without this the precise diagnosis would never reach the caller.
+
+    Any failure to read or parse the body is treated as "no information", which
+    costs a retry rather than failing a request.
+    """
+    cached = getattr(exc, "_cerbro_quota_facts", _UNSET)
+    if cached is not _UNSET:
         return cached  # type: ignore[return-value]
 
-    window = _read_quota_window(exc)
+    facts = _read_quota_facts(exc)
     try:
-        setattr(exc, "_cerbro_quota_window", window)
+        setattr(exc, "_cerbro_quota_facts", facts)
     except Exception:  # pragma: no cover - defensive
         pass
-    return window
+    return facts
 
 
-def _read_quota_window(exc: urllib.error.HTTPError) -> str | None:
+def _read_quota_facts(exc: urllib.error.HTTPError) -> _QuotaFacts:
+    window: str | None = None
+    retry_after = _retry_after_from_headers(exc)
+
     try:
         raw = exc.read()
     except Exception:  # pragma: no cover - defensive
-        return None
+        return _QuotaFacts(window, retry_after)
     if not raw:
-        return None
+        return _QuotaFacts(window, retry_after)
     try:
         data = json.loads(raw.decode("utf-8", errors="replace"))
     except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
-        return None
+        return _QuotaFacts(window, retry_after)
     if not isinstance(data, dict):
-        return None
+        return _QuotaFacts(window, retry_after)
 
     error = data.get("error")
-    if not isinstance(error, dict) or error.get("status") != "RESOURCE_EXHAUSTED":
-        return None
+    if not isinstance(error, dict):
+        return _QuotaFacts(window, retry_after)
 
     quota_ids: list[str] = []
     for detail in error.get("details") or []:
@@ -504,14 +525,69 @@ def _read_quota_window(exc: urllib.error.HTTPError) -> str | None:
                 violation.get("quotaId"), str
             ):
                 quota_ids.append(violation["quotaId"])
+        # RetryInfo rides in the same details list as QuotaFailure.
+        if retry_after is None:
+            retry_after = _seconds(detail.get("retryDelay"))
 
-    lowered = " ".join(quota_ids).lower()
-    for needle, window in _QUOTA_WINDOWS:
-        if needle in lowered:
-            return window
-    # Exhausted, but the window is one this build does not name. Saying so is
-    # still more useful than calling it a rate limit.
-    return "quota exhausted" if quota_ids else None
+    # Only a genuinely exhausted quota earns a window name. A burst limit is a
+    # different problem and keeps its own wording.
+    if error.get("status") == "RESOURCE_EXHAUSTED":
+        lowered = " ".join(quota_ids).lower()
+        for needle, name in _QUOTA_WINDOWS:
+            if needle in lowered:
+                window = name
+                break
+        else:
+            # Exhausted, but the window is one this build does not name. Saying
+            # so is still more useful than calling it a rate limit.
+            window = "quota exhausted" if quota_ids else None
+
+    return _QuotaFacts(window, retry_after)
+
+
+def _retry_after_from_headers(exc: urllib.error.HTTPError) -> float | None:
+    """The standard ``Retry-After`` header, when the provider sends one."""
+    try:
+        headers = exc.headers
+        value = headers.get("Retry-After") if headers is not None else None
+    except Exception:  # pragma: no cover - defensive
+        return None
+    return _seconds(value)
+
+
+def _seconds(value: object) -> float | None:
+    """Parse a duration Google might express as ``57.05s`` or as a number."""
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value) if value >= 0 else None
+    if isinstance(value, str):
+        text = value.strip()
+        if text.endswith("s"):
+            text = text[:-1]
+        try:
+            number = float(text)
+        except ValueError:
+            return None
+        return number if number >= 0 else None
+    return None
+
+
+def _retry_would_be_wasted(exc: urllib.error.HTTPError) -> bool:
+    """True when the provider asked for a wait this module will not honour.
+
+    Retrying a 57-second quota window after :data:`_RETRY_BACKOFF_SECONDS` cannot
+    succeed: the window has not reopened. It costs a request, adds the backoff to
+    the caller's latency, and produces the same 429 — so the honest move is to
+    report the quota immediately and let the fallback speak.
+    """
+    retry_after = _quota_facts(exc).retry_after
+    return retry_after is not None and retry_after > _RETRY_AFTER_CEILING_SECONDS
+
+
+def _quota_window(exc: urllib.error.HTTPError) -> str | None:
+    """Name the quota window from a retryable error body, or ``None``."""
+    return _quota_facts(exc).window
 
 
 def _gemini_factory() -> LLMProvider:

@@ -489,3 +489,47 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   reads "The AI provider's quota for this model is used up.", `provider_unavailable`
   does not appear anywhere in the rendered text, and the span's `title` holds the
   full slug.
+
+## Task 16 — move the demo data to usr_demo, and stop retrying a quota we were told to wait out
+
+- **Files:** `core/understanding/gemini.py`, `tests/test_gemini_provider.py`,
+  and the local `.demo/brain.sqlite3` (gitignored, so not in the commit)
+- **Result:** PASS
+- **Notes:** The user id change in Task 15 orphaned the demo data — all eight
+  memories, three ingestion receipts and one learning-state row belonged to
+  `usr_integration_test`, so `usr_demo` started empty and Chat answered "I do
+  not have any stored information". Migrated in a single transaction after
+  stopping the Brain and checkpointing the WAL, with a copy of the database
+  (plus `-wal` and `-shm`) kept at
+  `/tmp/opencode/brain.sqlite3.pre-migration`. Worth noting that the main
+  database file was 4 KB with all 321 KB of data in the write-ahead log, so
+  editing it while the Brain held it open would have been the wrong move.
+  Verified through the Brain API, not just with SQL: the hackathon question
+  grounds three memories under `usr_demo`, and a broader one reaches four facts.
+
+  Google tells us how long to wait and we were not listening. Every 429 body
+  carries `RetryInfo.retryDelay` — `57.05s` against the free tier's per-minute
+  cap — and the module discarded it, sleeping a fixed 1.5 s and retrying once.
+  That retry cannot succeed: the window has not reopened. It cost a request,
+  added the backoff to the caller's latency, and returned the same 429.
+  `_retry_would_be_wasted` now reads the delay and skips the retry when it
+  exceeds five seconds. The ceiling is a ceiling and not a target: honouring a
+  57-second hint by sleeping 57 seconds would move the problem into the request
+  path, so the ceiling is on skipping, not on waiting.
+
+  The hint is read from `RetryInfo.retryDelay` in the body *and* from a standard
+  `Retry-After` header, because providers use both, and a duration is accepted as
+  `"57.05s"`, `"2s"`, `"3"`, or a bare number. The 5-second boundary is exact:
+  `5s` still retries, `5.1s` does not.
+
+  Body parsing moved into one memoised `_QuotaFacts` record, because the window
+  and the delay arrive together and the previous per-field helpers each wanted a
+  read. Memoisation is load-bearing rather than tidy — `HTTPError` is a one-shot
+  stream, and `_post` raises the same object twice, so anything not remembered
+  from the first attempt is gone on the second. That was the Task 15 bug, and
+  adding the delay to the same record would otherwise have reintroduced it.
+
+  Measured rather than assumed: with the quota deliberately exhausted, a chat
+  returns in **0.40 s** instead of the ~1.9 s the unconditional backoff cost, and
+  the reason still names the window — `provider_unavailable:gemini quota
+  exhausted (daily limit)`, the daily cap having been reached during testing.
