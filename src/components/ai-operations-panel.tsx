@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   Workflow,
 } from "lucide-react";
-import { Badge, Panel } from "@/components/ui";
+import { Badge, Panel, cn } from "@/components/ui";
 
 export function AiOperationsPanel({
   coreBrainConfigured,
@@ -19,9 +19,33 @@ export function AiOperationsPanel({
   enabledAutomations: number;
   permissionSummary: { automatic: number; askFirst: number; off: number };
 }) {
+  const stats = [
+    {
+      id: "automations",
+      icon: Workflow,
+      iconClass: "text-cyan-300",
+      value: enabledAutomations,
+      label: "Active automations",
+    },
+    {
+      id: "approvals",
+      icon: CheckCheck,
+      iconClass: "text-amber-300",
+      value: pendingApprovals,
+      label: "Waiting for you",
+    },
+    {
+      id: "policies",
+      icon: ShieldCheck,
+      iconClass: "text-emerald-300",
+      value: permissionSummary.automatic,
+      label: `Automatic · ${permissionSummary.askFirst} ask · ${permissionSummary.off} off`,
+    },
+  ];
+
   return (
     <Panel className="overflow-hidden">
-      <div className="grid gap-7 p-6 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+      <div className="grid gap-7 p-6 lg:grid-cols-[1.15fr_1fr] lg:items-stretch">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
@@ -56,26 +80,29 @@ export function AiOperationsPanel({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
-            <Workflow aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-            <p className="mt-3 text-2xl font-semibold text-white">{enabledAutomations}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-450">Active automations</p>
-          </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
-            <CheckCheck aria-hidden="true" className="h-4 w-4 text-amber-300" />
-            <p className="mt-3 text-2xl font-semibold text-white">{pendingApprovals}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-450">Waiting for you</p>
-          </div>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4">
-            <ShieldCheck aria-hidden="true" className="h-4 w-4 text-emerald-300" />
-            <p className="mt-3 text-2xl font-semibold text-white">
-              {permissionSummary.automatic}
-            </p>
-            <p className="mt-1 text-xs leading-5 text-zinc-450">
-              Automatic · {permissionSummary.askFirst} ask · {permissionSummary.off} off
-            </p>
-          </div>
+        {/*
+          * Three cards across on small and medium screens, where the column is
+          * the full page width and a row is all they can be. From `lg` the
+          * column is narrower than it is tall, so they become three full-width
+          * rows that divide the column's height exactly — which is what removes
+          * the band of empty space that a centred row of short cards left above
+          * and below itself. The card switches to a horizontal layout at the same
+          * breakpoint, because a 480px-wide row is too much width for a stacked
+          * number-over-label and the third caption no longer has to wrap.
+          */}
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 lg:grid-rows-3">
+          {stats.map(({ id, icon: Icon, iconClass, value, label }) => (
+            <div
+              key={id}
+              className="rounded-xl border border-zinc-800 bg-zinc-950/55 p-4 lg:flex lg:items-center lg:gap-4 lg:px-4 lg:py-3"
+            >
+              <Icon aria-hidden="true" className={cn("h-4 w-4 shrink-0", iconClass)} />
+              <div className="lg:flex lg:items-baseline lg:gap-3">
+                <p className="mt-3 text-2xl font-semibold text-white lg:mt-0">{value}</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-450 lg:mt-0">{label}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </Panel>

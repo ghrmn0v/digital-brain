@@ -330,3 +330,53 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   Two harness bugs were found and fixed while writing it, both my own — parsing
   a value that `returnByValue` had already turned into an object, and only
   patching two of five identical call sites.
+
+## Task 13 — Permissions access matrix and the dashboard hero dead gap
+
+- **Files:** `src/lib/access-status.ts` (new),
+  `src/lib/access-status.test.ts` (new),
+  `src/components/permissions-status.tsx` (new),
+  `src/app/(dashboard)/permissions/page.tsx`,
+  `src/components/ai-operations-panel.tsx`
+- **Result:** PASS
+- **Notes:** `/permissions` rendered 262 characters of real content — a single
+  policy table over an almost-empty database, on the one page where someone
+  arriving worried about access has the least to look at. It now leads with an
+  access status matrix covering the four things actually worth checking: local
+  storage, the Gemini environment, the Brain transport, and the workspace's own
+  policy mix. 262 characters became 2019.
+
+  Every value is observed, not asserted. Storage does a real row-counting read
+  and reports reachable or not; the Brain does a live `GET /health` behind a
+  2.5s timeout so a slow Brain is a reported fact rather than a hanging page;
+  the policy numbers come from the same records the table below renders. The
+  derivation is split from the observation — `deriveAccessStatus` is pure and
+  covered by 15 tests, which is only possible because nothing in it touches a
+  database, a socket or `process.env`.
+
+  The Gemini row is the one worth reading twice. The credential belongs to the
+  Core Brain, so Product reports only that it is held elsewhere and that the
+  Brain was pointed at an environment file; it never opens that file to find out
+  more. A test asserts no detail or value string can match a credential-shaped
+  token, because this is precisely the page someone opens while wondering
+  whether they have been exposed. A missing Brain is reported as "not
+  configured" rather than as a fault: for a local-first tool that is a normal
+  state, and collapsing it into "broken" would train people to ignore the row.
+
+  The first version of the health probe reported the Brain as unreachable with
+  `HTTP 404` on a Brain that was up and serving. `CORE_BRAIN_URL` is the address
+  of the `POST /v1/brain` method endpoint, not the server root, so appending
+  `/health` asked for `/v1/brain/health`. The probe now resolves against the
+  URL's origin and reports `digital-brain` on API `v1`. Caught by screenshot
+  review rather than by a test — no test covered the URL shape, which is a gap
+  worth remembering.
+
+  The hero's dead band came from `lg:items-center` over three cards roughly half
+  the height of the text column, so the leftover space was split above and below
+  them. From `lg` the cards are now three full-width rows sharing the column
+  height exactly (`lg:grid-rows-3` against `lg:items-stretch`) and switch to a
+  horizontal layout, because a 480px row is too wide for a stacked
+  number-over-label — which also stopped the third caption wrapping onto two
+  lines. Three cards across is kept below `lg`, where the column is the full page
+  width and a row is all they can be. The three cards are now one `stats` array
+  instead of three hand-copied blocks, so they cannot drift apart again.
