@@ -70,7 +70,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/jobs">) {
             description="Freshest records included in the rolling 24-hour report"
           />
           {report.jobs.length > 0 ? (
-            <ul className="divide-y divide-slate-800/80">
+            <ul className="divide-y divide-[var(--panel-line)]/80">
               {report.jobs.slice(0, 3).map((job) => (
                 <li key={job.id} className="flex items-center gap-3 px-5 py-3.5">
                   <BriefcaseBusiness aria-hidden="true" className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />

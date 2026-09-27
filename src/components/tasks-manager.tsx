@@ -400,7 +400,7 @@ export function TasksManager({
           }
         />
         {tasks.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {tasks.map((task) => (
               <TaskRow
                 key={`${task.id}:${task.status}:${task.priority}:${task.dueAt ?? ""}`}

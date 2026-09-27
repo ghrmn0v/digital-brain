@@ -13,9 +13,9 @@ function formatPrimitive(value: unknown): string {
 
 function primitiveClassName(value: unknown): string {
   if (value === null) return "text-[var(--text-muted)]";
-  if (typeof value === "boolean") return "text-amber-200";
+  if (typeof value === "boolean") return "text-[var(--warning)]";
   if (typeof value === "number") return "text-[var(--accent)]";
-  return "text-emerald-200";
+  return "text-[var(--success)]";
 }
 
 function JsonNode({
@@ -95,7 +95,7 @@ export function JsonViewer({
   label?: string;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/65 p-4">
+    <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--background)] p-4">
       <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-[var(--text-primary)]">
         <Braces aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
         {label}
@@ -119,7 +119,7 @@ export function JsonViewer({
 
 export function JsonBlock({ value }: { value: unknown }) {
   return (
-    <pre className="max-h-64 overflow-auto rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/70 p-4 font-mono text-xs leading-5 text-[var(--text-primary)]">
+    <pre className="max-h-64 overflow-auto rounded-lg border border-[var(--panel-line)] bg-[var(--background)] p-4 font-mono text-xs leading-5 text-[var(--text-primary)]">
       {JSON.stringify(value, null, 2)}
     </pre>
   );

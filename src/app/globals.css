@@ -49,7 +49,21 @@
   /* Text scale, so switching the theme repaints every screen at once. */
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  --text-muted: #8b8f98;
+
+  /*
+   * Status colours are tuned for contrast against --panel, so they are
+   * declared per theme rather than taken from a fixed palette. In dark mode
+   * they are the light tints; in light mode they are the deep shades, because
+   * a 200-weight tint is unreadable on white.
+   */
+  --success: #6ee7b7;
+  --warning: #fcd34d;
+  --danger: #fda4af;
+
+  /* Ink laid on top of a filled accent surface, and the modal scrim. */
+  --accent-ink: #0d0e12;
+  --scrim: #05060899;
 
   color-scheme: dark;
 }
@@ -69,7 +83,14 @@
 
   --text-primary: #18181b;
   --text-secondary: #52525b;
-  --text-muted: #a1a1aa;
+  --text-muted: #71717a;
+
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #be123c;
+
+  --accent-ink: #ffffff;
+  --scrim: #0d0e1266;
 }
 
 

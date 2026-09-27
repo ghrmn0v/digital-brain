@@ -328,7 +328,7 @@ export function ChatApp({ status }: { status: BrainStatusDto }) {
           type="button"
           aria-label="Close menu"
           onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-30 bg-[var(--scrim)] lg:hidden"
         />
       ) : null}
 
@@ -437,7 +437,7 @@ function Composer({
     <div className="px-5 pb-5 pt-2">
       <div className="mx-auto w-full max-w-3xl">
         {error ? (
-          <p className="mb-3 rounded-lg border border-rose-500/25 bg-rose-500/5 px-4 py-3 text-[0.875rem] text-rose-300">
+          <p className="mb-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/5 px-4 py-3 text-[0.875rem] text-[var(--danger)]">
             {error}
           </p>
         ) : null}
@@ -545,7 +545,7 @@ function Message({ message }: { message: ChatMessage }) {
         <p
           className={cn(
             "whitespace-pre-wrap text-[0.9375rem] leading-8",
-            message.failed ? "text-rose-300" : "text-[var(--text-primary)]",
+            message.failed ? "text-[var(--danger)]" : "text-[var(--text-primary)]",
           )}
         >
           {message.text}
@@ -836,7 +836,7 @@ function Panel({
 function ResultView({ result }: { result: CallResult }) {
   if (!result.ok) {
     return (
-      <p className="mt-6 rounded-lg border border-rose-500/25 bg-rose-500/5 px-4 py-3 text-[0.9375rem] text-rose-300">
+      <p className="mt-6 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/5 px-4 py-3 text-[0.9375rem] text-[var(--danger)]">
         {result.error}
       </p>
     );

@@ -117,7 +117,7 @@ function SettingEditor({
           />
         </label>
         {error ? (
-          <p role="alert" className="mt-2 text-xs leading-5 text-rose-300">{error}</p>
+          <p role="alert" className="mt-2 text-xs leading-5 text-[var(--danger)]">{error}</p>
         ) : null}
         <div className="mt-3 flex justify-end">
           <button
@@ -158,7 +158,7 @@ export function SettingsManager({ settings }: { settings: SettingDto[] }) {
           }
         />
         {settings.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {settings.map((setting) => (
               <SettingEditor
                 key={`${setting.key}:${setting.updatedAt}`}

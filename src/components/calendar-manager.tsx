@@ -62,7 +62,7 @@ function EventCard({
   return (
     <article className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-4">
-        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-sky-400/15 bg-sky-400/[0.07] text-[var(--accent)]">
+        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-[var(--accent)]/15 bg-[var(--accent)]/[0.07] text-[var(--accent)]">
           <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
             {new Intl.DateTimeFormat("en-US", { month: "short" }).format(
               new Date(event.startsAt),
@@ -368,7 +368,7 @@ export function CalendarManager({
                   </label>
                   <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)] sm:col-span-2 lg:col-span-1">
                     <span>Calculated end time</span>
-                    <div className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/40 px-3.5 text-sm text-[var(--accent)]">
+                    <div className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/60 px-3.5 text-sm text-[var(--accent)]">
                       <Timer aria-hidden="true" className="h-4 w-4" />
                       {timedEndPreview
                         ? formatTime(timedEndPreview.toISOString())
@@ -380,12 +380,12 @@ export function CalendarManager({
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/50 px-4 text-sm text-[var(--text-primary)]">
+              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/50 px-4 text-sm text-[var(--text-primary)]">
                 <input
                   type="checkbox"
                   checked={allDay}
                   onChange={(event) => setAllDay(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-600 bg-[var(--panel)]"
+                  className="h-4 w-4 rounded border-[var(--panel-line)] bg-[var(--panel)]"
                 />
                 All-day event
               </label>
@@ -437,7 +437,7 @@ export function CalendarManager({
           }
         />
         {events.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {events.map((event) => (
               <EventCard
                 key={`${event.id}:${event.status}:${event.updatedAt}`}

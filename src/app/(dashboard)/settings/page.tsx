@@ -53,7 +53,7 @@ function ReadinessCard({
       <div className="mt-4 flex items-center gap-2 border-t border-[var(--panel-line)] pt-3 text-[0.8125rem] text-[var(--text-muted)]">
         <StatusIcon
           aria-hidden="true"
-          className={configured ? "h-3.5 w-3.5 text-emerald-300" : "h-3.5 w-3.5 text-[var(--text-muted)]"}
+          className={configured ? "h-3.5 w-3.5 text-[var(--success)]" : "h-3.5 w-3.5 text-[var(--text-muted)]"}
         />
         URL configured: {configured ? "yes" : "no"}
       </div>
@@ -119,7 +119,7 @@ export default async function SettingsPage() {
       </Panel>
 
       {restrictedSettingCount > 0 ? (
-        <div className="rounded-lg border border-amber-400/20 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-100">
+        <div className="rounded-lg border border-[var(--warning)]/20 bg-[var(--warning)]/[0.07] px-4 py-3 text-sm text-[var(--warning)]">
           {restrictedSettingCount} potentially sensitive {restrictedSettingCount === 1 ? "setting is" : "settings are"} withheld from the browser UI.
         </div>
       ) : null}

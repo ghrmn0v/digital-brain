@@ -14,7 +14,7 @@ export function cn( ...classes: Array<string | false | null | undefined> ): stri
 }
 
 export const inputClassName =
-  "min-h-12 w-full rounded-lg border border-[var(--panel-line)]/70 bg-[var(--panel)]/60 px-4 py-3 text-[0.9375rem] leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-sky-400/70 focus:ring-2 focus:ring-sky-400/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-12 w-full rounded-lg border border-[var(--panel-line)]/70 bg-[var(--panel)]/60 px-4 py-3 text-[0.9375rem] leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/70 focus:ring-2 focus:ring-[var(--accent)]/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const selectClassName = cn(
   inputClassName,
@@ -23,13 +23,13 @@ export const selectClassName = cn(
 );
 
 export const primaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-sky-300/20 bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-55";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-55";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-700 bg-[var(--panel)]/80 px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/80 px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export const dangerButtonClassName =
-  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-200 transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--danger)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PageHeader({
   eyebrow,
@@ -50,7 +50,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-3xl">
           {title}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
@@ -111,19 +111,19 @@ export function SectionHeading({
 type BadgeTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 const badgeToneClasses: Record<BadgeTone, string> = {
-  neutral: "border-slate-700 bg-[var(--panel-raised)] text-[var(--text-primary)]",
-  info: "border-sky-400/20 bg-sky-400/10 text-[var(--accent)]",
-  success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
-  warning: "border-amber-400/20 bg-amber-400/10 text-amber-200",
-  danger: "border-rose-400/20 bg-rose-400/10 text-rose-200",
+  neutral: "border-[var(--panel-line)] bg-[var(--panel-raised)] text-[var(--text-primary)]",
+  info: "border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]",
+  success: "border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success)]",
+  warning: "border-[var(--warning)]/20 bg-[var(--warning)]/10 text-[var(--warning)]",
+  danger: "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]",
 };
 
 const badgeDotClasses: Record<BadgeTone, string> = {
-  neutral: "bg-slate-400",
-  info: "bg-sky-300",
-  success: "bg-emerald-300",
-  warning: "bg-amber-300",
-  danger: "bg-rose-300",
+  neutral: "bg-[var(--text-muted)]",
+  info: "bg-[var(--accent)]",
+  success: "bg-[var(--success)]",
+  warning: "bg-[var(--warning)]",
+  danger: "bg-[var(--danger)]",
 };
 
 export function Badge({
@@ -204,7 +204,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center px-6 py-12">
-      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel-raised)] text-[var(--text-secondary)]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)] text-[var(--text-secondary)]">
         <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
       <h3 className="mt-4 text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
@@ -228,20 +228,20 @@ export function ErrorBanner({
   return (
     <div
       role="alert"
-      className="flex flex-col gap-3 rounded-lg border border-rose-400/25 bg-rose-500/[0.08] px-4 py-3 text-sm text-rose-100 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/[0.08] px-4 py-3 text-sm text-[var(--danger)] sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex min-w-0 items-start gap-3">
         <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
           <p className="font-semibold">{title}</p>
-          <p className="mt-0.5 break-words text-rose-200/80">{message}</p>
+          <p className="mt-0.5 break-words text-[var(--danger)]/80">{message}</p>
         </div>
       </div>
       {onRetry ? (
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 rounded-lg border border-rose-300/20 px-3 py-1.5 text-xs font-semibold text-rose-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300/50"
+          className="shrink-0 rounded-lg border border-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--danger)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50"
         >
           Try again
         </button>
@@ -254,7 +254,7 @@ export function SuccessBanner({ message }: { message: string }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-3 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-3 text-sm text-emerald-100"
+      className="flex items-start gap-3 rounded-lg border border-[var(--success)]/20 bg-[var(--success)]/[0.08] px-4 py-3 text-sm text-[var(--success)]"
     >
       <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
       <p>{message}</p>
@@ -272,7 +272,7 @@ export function InlineNotice({
   const Icon = tone === "warning" ? AlertTriangle : AlertCircle;
   return (
     <div
-      className={cn( "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm", tone === "warning" ? "border-amber-400/20 bg-amber-400/[0.07] text-amber-100" : "border-sky-400/20 bg-sky-400/[0.07] text-sky-100", )}
+      className={cn( "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm", tone === "warning" ? "border-[var(--warning)]/20 bg-[var(--warning)]/[0.07] text-[var(--warning)]" : "border-[var(--accent)]/20 bg-[var(--accent)]/[0.07] text-[var(--accent)]", )}
     >
       <Icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="leading-6">{children}</div>
@@ -303,7 +303,7 @@ export function MetricCard({
           <Icon aria-hidden="true" className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-5 text-3xl font-semibold tracking-tight text-white">{value}</p>
+      <p className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{value}</p>
       <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">{detail}</p>
     </>
   );
@@ -311,7 +311,7 @@ export function MetricCard({
   return (
     <Link
       href={href}
-      className="group rounded-lg border border-[var(--panel-line)]/90 bg-[var(--panel)]/55 p-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+      className="group rounded-lg border border-[var(--panel-line)]/90 bg-[var(--panel)]/55 p-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
     >
       {content}
     </Link>

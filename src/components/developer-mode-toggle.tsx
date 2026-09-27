@@ -74,7 +74,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
             </div>
           </div>
           <div className="flex gap-3">
-            <MonitorSmartphone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+            <MonitorSmartphone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
             <div>
               <p className="text-sm font-semibold text-[var(--text-primary)]">Shared information</p>
               <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
@@ -83,7 +83,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
             </div>
           </div>
           <div className="flex gap-3">
-            <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+            <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--warning)]" />
             <div>
               <p className="text-sm font-semibold text-[var(--text-primary)]">No auto-fix</p>
               <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">

@@ -76,7 +76,7 @@ function ConnectorCard({
   return (
     <article className="relative overflow-hidden p-5">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel-raised)]/75 text-[var(--text-primary)]">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/75 text-[var(--text-primary)]">
           <Icon aria-hidden="true" className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
@@ -120,7 +120,7 @@ function ConnectorCard({
           <dd
             className={
               connector.lastError
-                ? "mt-1.5 break-words leading-5 text-rose-300"
+                ? "mt-1.5 break-words leading-5 text-[var(--danger)]"
                 : "mt-1.5 text-[var(--text-secondary)]"
             }
           >
@@ -179,15 +179,15 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Seeded</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{connectors.length}</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{connectors.length}</p>
         </div>
         <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Enabled</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{enabled}</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{enabled}</p>
         </div>
         <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Healthy</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{healthy}</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{healthy}</p>
         </div>
       </div>
 

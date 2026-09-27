@@ -64,15 +64,15 @@ export function IntegrationBoundary({
       <Panel className="relative overflow-hidden">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-sky-400/[0.06] blur-3xl"
+          className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[var(--accent)]/[0.06] blur-3xl"
         />
         <div className="relative grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="max-w-3xl">
-            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-400/10 text-[var(--accent)]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]">
               <Icon aria-hidden="true" className="h-6 w-6" />
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+              <h2 className="text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
                 {configured
                   ? "Core Brain adapter not yet configured"
                   : "Core Brain not connected"}
@@ -89,14 +89,14 @@ export function IntegrationBoundary({
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/settings"
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-sky-300/20 bg-sky-300 px-4 py-2 text-sm font-semibold text-slate-950 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
               >
                 <Settings2 aria-hidden="true" className="h-4 w-4" />
                 Integration readiness
               </Link>
             </div>
           </div>
-          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-[var(--panel-line)] bg-[#1a1a1a]/70 text-[var(--text-muted)] lg:h-40 lg:w-40">
+          <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] border border-[var(--panel-line)] bg-[var(--background)] text-[var(--text-muted)] lg:h-40 lg:w-40">
             {configured ? (
               <Cable aria-hidden="true" className="h-12 w-12" />
             ) : (
@@ -116,10 +116,10 @@ export function IntegrationBoundary({
               These are implementation requirements, not assumed endpoints.
             </p>
           </div>
-          <ol className="divide-y divide-slate-800/80">
+          <ol className="divide-y divide-[var(--panel-line)]/80">
             {requiredContract.map((item, index) => (
               <li key={item.title} className="flex gap-4 px-5 py-5 sm:px-6">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-[var(--panel-raised)] text-[11px] font-semibold text-[var(--accent)]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--panel-line)] bg-[var(--panel-raised)] text-[11px] font-semibold text-[var(--accent)]">
                   {index + 1}
                 </span>
                 <div>
@@ -152,7 +152,7 @@ export function IntegrationBoundary({
             </ul>
             <Link
               href="/connectors"
-              className={cn( "mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50", )}
+              className={cn( "mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50", )}
             >
               Review connector state
               <ArrowRight aria-hidden="true" className="h-4 w-4" />

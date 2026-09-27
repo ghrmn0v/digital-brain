@@ -124,14 +124,14 @@ function AutomationCard({
             </div>
           </dl>
           {automation.lastError ? (
-            <p className="mt-4 rounded-lg border border-rose-400/20 bg-rose-400/[0.06] px-3 py-2 text-xs leading-5 text-rose-200">
+            <p className="mt-4 rounded-lg border border-[var(--danger)]/20 bg-[var(--danger)]/[0.06] px-3 py-2 text-xs leading-5 text-[var(--danger)]">
               {automation.lastError}
             </p>
           ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-700 bg-[var(--panel)] px-3">
+          <div className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-3">
             <Switch
               checked={automation.enabled}
               disabled={cardDisabled}
@@ -175,7 +175,7 @@ function AutomationCard({
       </div>
 
       <details className="group mt-5 border-t border-[var(--panel-line)]/70 pt-4">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-2 text-xs font-semibold text-[var(--text-secondary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50">
           <Braces aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
           Inspect configuration
         </summary>
@@ -395,8 +395,8 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/50 px-4 text-sm text-[var(--text-primary)]">
-                <input type="checkbox" name="enabled" defaultChecked className="h-4 w-4 rounded border-slate-600 bg-[var(--panel)]" />
+              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/50 px-4 text-sm text-[var(--text-primary)]">
+                <input type="checkbox" name="enabled" defaultChecked className="h-4 w-4 rounded border-[var(--panel-line)] bg-[var(--panel)]" />
                 <Power aria-hidden="true" className="h-4 w-4 text-[var(--accent)]" />
                 Enable after creation
               </label>
@@ -431,7 +431,7 @@ export function AutomationsManager({ automations }: { automations: AutomationDto
           }
         />
         {automations.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {automations.map((automation) => (
               <AutomationCard
                 key={`${automation.id}:${automation.enabled}:${automation.updatedAt}`}

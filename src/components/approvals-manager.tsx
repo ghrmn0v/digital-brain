@@ -67,7 +67,7 @@ function ApprovalCard({
             <Badge tone="warning" dot>Pending approval</Badge>
             <Badge>{action.permissionLevel ?? "Policy resolved"}</Badge>
           </div>
-          <h3 className="mt-3 break-all font-mono text-base font-semibold text-sky-100">
+          <h3 className="mt-3 break-all font-mono text-base font-semibold text-[var(--accent)]">
             {action.action}
           </h3>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--text-muted)]">
@@ -205,7 +205,7 @@ export function ApprovalsManager({ actions }: { actions: ActionExecutionDto[] })
           }
         />
         {visibleActions.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {visibleActions.map((action) => (
               <ApprovalCard
                 key={action.id}

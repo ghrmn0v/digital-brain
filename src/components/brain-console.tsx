@@ -200,7 +200,7 @@ export function BrainConsole({ status }: { status: BrainStatusDto }) {
           <SectionHeading
             title="Resolve a person"
             description="Resolve a name. Ambiguous names are never merged"
-            action={<UserRound aria-hidden="true" className="h-4 w-4 text-emerald-300" />}
+            action={<UserRound aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />}
           />
           <div className="space-y-4 p-5">
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -250,7 +250,7 @@ export function BrainConsole({ status }: { status: BrainStatusDto }) {
           }
         />
         {grouped.length > 0 ? (
-          <div className="divide-y divide-slate-800/70">
+          <div className="divide-y divide-[var(--panel-line)]/70">
             {grouped.map((section) => (
               <div key={section.group} className="px-5 py-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
@@ -260,7 +260,7 @@ export function BrainConsole({ status }: { status: BrainStatusDto }) {
                   {section.items.map((capability) => (
                     <li
                       key={capability.method}
-                      className="flex items-start gap-3 rounded-lg border border-[var(--panel-line)]/70 bg-[#1a1a1a]/40 px-3 py-2.5"
+                      className="flex items-start gap-3 rounded-lg border border-[var(--panel-line)]/70 bg-[var(--panel-raised)]/60 px-3 py-2.5"
                     >
                       <ChevronRight
                         aria-hidden="true"
@@ -300,10 +300,10 @@ export function BrainConsole({ status }: { status: BrainStatusDto }) {
 function BrainAnswer({ result }: { result: CallResult }) {
   if (!result.ok) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-rose-500/25 bg-rose-500/5 p-4">
-        <CircleAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" />
+      <div className="flex items-start gap-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/5 p-4">
+        <CircleAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--danger)]" />
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-rose-200">
+          <p className="text-sm font-semibold text-[var(--danger)]">
             {result.code ?? "error"}
           </p>
           <p className="mt-1 break-words text-sm text-[var(--text-secondary)]">{result.error}</p>
@@ -321,7 +321,7 @@ function BrainAnswer({ result }: { result: CallResult }) {
 
   if (answer) {
     return (
-      <div className="space-y-3 rounded-lg border border-sky-500/20 bg-sky-500/[0.04] p-4">
+      <div className="space-y-3 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/[0.04] p-4">
         <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
           <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
           {provider ? <span>provider: {provider}</span> : null}
@@ -341,7 +341,7 @@ function BrainAnswer({ result }: { result: CallResult }) {
         ) : null}
         {missing.length > 0 ? (
           <div className="border-t border-[var(--panel-line)] pt-3 text-xs text-[var(--text-muted)]">
-            <span className="font-semibold text-amber-300/90">Not in memory: </span>
+            <span className="font-semibold text-[var(--warning)]/90">Not in memory: </span>
             {missing.join(", ")}
           </div>
         ) : null}
@@ -350,11 +350,11 @@ function BrainAnswer({ result }: { result: CallResult }) {
   }
 
   return (
-    <div className="rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/40 p-3">
+    <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/60 p-3">
       {Array.isArray(data) ? (
         data.length === 0 ? (
           <p className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-            <Check aria-hidden="true" className="h-4 w-4 text-emerald-300" />
+            <Check aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />
             No matching records.
           </p>
         ) : (

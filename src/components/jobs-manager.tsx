@@ -110,7 +110,7 @@ function JobCard({
               {job.skills.slice(0, 8).map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-lg border border-slate-700 bg-[var(--panel-raised)] px-2 py-1 text-[11px] text-[var(--text-secondary)]"
+                  className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)] px-2 py-1 text-[11px] text-[var(--text-secondary)]"
                 >
                   {skill}
                 </span>
@@ -123,7 +123,7 @@ function JobCard({
             </div>
           ) : null}
           {relevanceReason ? (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-sky-400/15 bg-sky-400/[0.06] px-3 py-2.5 text-sm leading-6 text-sky-100/80">
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-[var(--accent)]/15 bg-[var(--accent)]/[0.06] px-3 py-2.5 text-sm leading-6 text-[var(--accent)]/80">
               <Sparkles aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
               <p>{relevanceReason}</p>
             </div>
@@ -158,7 +158,7 @@ function JobCard({
               aria-label={`${action.label} ${job.title} at ${job.company}`}
             >
               {active ? (
-                <Check aria-hidden="true" className="h-4 w-4 text-emerald-300" />
+                <Check aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />
               ) : (
                 <Icon aria-hidden="true" className="h-4 w-4" />
               )}
@@ -215,7 +215,7 @@ export function JobsManager({ jobs }: { jobs: JobDto[] }) {
           }
         />
         {jobs.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {jobs.map((job) => (
               <JobCard
                 key={`${job.id}:${job.status}:${job.updatedAt}`}

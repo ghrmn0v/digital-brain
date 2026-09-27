@@ -82,7 +82,7 @@ function PermissionRow({
             </p>
           ) : null}
           {error ? (
-            <p role="alert" className="mt-2 max-w-md text-xs leading-5 text-rose-300">
+            <p role="alert" className="mt-2 max-w-md text-xs leading-5 text-[var(--danger)]">
               {error}
             </p>
           ) : null}

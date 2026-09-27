@@ -82,7 +82,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
       role="dialog"
       aria-modal="true"
       aria-label="Go to"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-[12vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-[var(--scrim)] px-4 pt-[12vh]"
       onClick={onClose}
     >
       <div

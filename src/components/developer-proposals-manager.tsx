@@ -82,7 +82,7 @@ export function DeveloperProposalsManager({
           </div>
         ) : null}
         {proposals.length > 0 ? (
-          <div className="divide-y divide-slate-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {proposals.map((proposal) => {
               const pending = pendingId === proposal.id;
               return (
@@ -92,7 +92,7 @@ export function DeveloperProposalsManager({
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
                         AI proposal
                       </p>
-                      <h3 className="mt-1 text-base font-semibold text-white">
+                      <h3 className="mt-1 text-base font-semibold text-[var(--text-primary)]">
                         {proposal.title}
                       </h3>
                     </div>

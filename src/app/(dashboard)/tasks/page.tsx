@@ -38,7 +38,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
       <InlineNotice>
         AI does not need to use the task form. It sends actions such as
-        <code className="mx-1 font-mono text-sky-100">tasks.create_task</code>;
+        <code className="mx-1 font-mono text-[var(--accent)]">tasks.create_task</code>;
         Product applies AUTOMATIC, ASK_FIRST, or OFF policy before writing.
       </InlineNotice>
 

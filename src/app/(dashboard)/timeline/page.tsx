@@ -79,7 +79,7 @@ function TimelineRow({ item, now }: { item: TimelineItemDto; now: Date }) {
 
   return (
     <li className="relative pl-12 sm:pl-14">
-      <span className="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel)] text-[var(--text-secondary)]">
+      <span className="absolute left-0 top-1 flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-secondary)]">
         <Icon aria-hidden="true" className="h-4 w-4" />
       </span>
       <div className="pb-7">

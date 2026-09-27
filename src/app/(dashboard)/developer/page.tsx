@@ -52,7 +52,7 @@ export default async function DeveloperPage() {
           <Panel className="p-6">
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                   Developer Mode is off
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
@@ -110,14 +110,14 @@ export default async function DeveloperPage() {
                 </p>
               </Panel>
               <Panel className="p-5">
-                <GitBranch aria-hidden="true" className="h-4 w-4 text-amber-300" />
+                <GitBranch aria-hidden="true" className="h-4 w-4 text-[var(--warning)]" />
                 <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">Git port</p>
                 <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                   Interface prepared; no Git command or mutation is implemented.
                 </p>
               </Panel>
               <Panel className="p-5">
-                <Rocket aria-hidden="true" className="h-4 w-4 text-emerald-300" />
+                <Rocket aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />
                 <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
                   Test and deploy ports
                 </p>

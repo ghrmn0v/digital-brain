@@ -4,14 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  Bot,
   Bug,
   BriefcaseBusiness,
   CalendarDays,
   CheckCheck,
   ChevronRight,
-  CircleDot,
-  Clock3,
   Code2,
   History,
   LayoutDashboard,
@@ -23,12 +20,13 @@ import {
   PlugZap,
   Settings,
   ShieldCheck,
-  Sparkles,
   Users,
   X,
   Zap,
   type ProductIcon,
 } from "@/components/icons";
+import { CerebroLogo } from "@/components/brand/cerebro-logo";
+import { ThemeToggle } from "@/components/chat/theme-toggle";
 import { cn } from "@/components/ui";
 
 type NavigationItem = {
@@ -96,21 +94,10 @@ function Brand() {
   return (
     <Link
       href="/dashboard"
-      className="group flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
-      aria-label="Digital Brain Product dashboard"
+      className="group flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
+      aria-label="Cerebro Flow overview"
     >
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-sky-300/20 bg-sky-300/10 text-[var(--accent)]">
-        <Bot aria-hidden="true" className="h-5 w-5" />
-        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-slate-950 bg-emerald-300" />
-      </span>
-      <span>
-        <span className="block text-sm font-semibold tracking-tight text-white">
-          Digital Brain
-        </span>
-        <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--text-muted)]">
-          Product OS
-        </span>
-      </span>
+      <CerebroLogo />
     </Link>
   );
 }
@@ -152,12 +139,12 @@ function Navigation({
                       href={item.href}
                       onClick={onNavigate}
                       aria-current={active ? "page" : undefined}
-                      className={cn( "group relative flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50", active ? "bg-sky-300/[0.11] text-sky-100" : "text-[var(--text-secondary)] ", )}
+                      className={cn( "group relative flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50", active ? "bg-[var(--accent)]/[0.11] text-[var(--accent)]" : "text-[var(--text-secondary)] ", )}
                     >
                       {active ? (
                         <span
                           aria-hidden="true"
-                          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-sky-300"
+                          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--accent)]"
                         />
                       ) : null}
                       <Icon
@@ -180,22 +167,6 @@ function Navigation({
         ))}
       </div>
     </nav>
-  );
-}
-
-function SidebarFooter() {
-  return (
-    <div className="border-t border-[var(--panel-line)]/80 p-4">
-      <div className="rounded-lg border border-[var(--panel-line)] bg-[#1a1a1a]/45 p-3">
-        <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-primary)]">
-          <CircleDot aria-hidden="true" className="h-3.5 w-3.5 text-emerald-300" />
-          Local-first workspace
-        </div>
-        <p className="mt-1.5 text-[11px] leading-5 text-[var(--text-muted)]">
-          Product data stays in the local SQLite database.
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -241,39 +212,41 @@ export function DashboardShell({
   }, [mobileOpen]);
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-[var(--text-primary)]">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg border border-sky-300/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-sky-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-sky-400/60"
+        className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg border border-[var(--accent)]/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
       >
         Skip to content
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--panel-line)]/90 bg-[#1a1a1a]/95 backdrop-blur-xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--panel-line)] bg-[var(--panel)] lg:flex">
         <div className="flex h-20 items-center border-b border-[var(--panel-line)]/80 px-5">
           <Brand />
         </div>
         <Navigation developerModeEnabled={developerModeEnabled} />
-        <SidebarFooter />
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--panel-line)]/80 bg-[#1a1a1a]/85 px-4 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--panel-line)]/80 bg-[var(--background)]/85 px-4 backdrop-blur-xl lg:hidden">
         <Brand />
-        <button
-          ref={toggleRef}
-          type="button"
-          aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-navigation"
-          onClick={() => setMobileOpen((open) => !open)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-[var(--panel)] text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
-        >
-          {mobileOpen ? (
-            <X aria-hidden="true" className="h-5 w-5" />
-          ) : (
-            <Menu aria-hidden="true" className="h-5 w-5" />
-          )}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            ref={toggleRef}
+            type="button"
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
+          >
+            {mobileOpen ? (
+              <X aria-hidden="true" className="h-5 w-5" />
+            ) : (
+              <Menu aria-hidden="true" className="h-5 w-5" />
+            )}
+          </button>
+        </div>
       </header>
 
       {mobileOpen ? (
@@ -282,7 +255,7 @@ export function DashboardShell({
             type="button"
             aria-label="Close navigation overlay"
             onClick={() => setMobileOpen(false)}
-            className="absolute inset-0 bg-[#1a1a1a]/75 backdrop-blur-sm"
+            className="absolute inset-0 bg-[var(--scrim)] backdrop-blur-sm"
           />
           <aside
             id="mobile-navigation"
@@ -290,7 +263,7 @@ export function DashboardShell({
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--panel-line)] bg-[#1a1a1a]"
+            className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-[var(--panel-line)] bg-[var(--panel)]"
           >
             <div className="flex h-16 items-center justify-between border-b border-[var(--panel-line)] px-4">
               <Brand />
@@ -298,7 +271,7 @@ export function DashboardShell({
                 type="button"
                 aria-label="Close navigation"
                 onClick={() => setMobileOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-secondary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--text-secondary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>
@@ -307,21 +280,13 @@ export function DashboardShell({
               developerModeEnabled={developerModeEnabled}
               onNavigate={() => setMobileOpen(false)}
             />
-            <SidebarFooter />
           </aside>
         </div>
       ) : null}
 
       <div className="lg:pl-64">
-        <div className="hidden h-16 items-center justify-between border-b border-[var(--panel-line)]/70 bg-[#1a1a1a]/60 px-8 backdrop-blur lg:flex">
-          <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-muted)]">
-            <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
-            Personal product control plane
-          </div>
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-            <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
-            Fresh server data on every visit
-          </div>
+        <div className="hidden h-16 items-center justify-end border-b border-[var(--panel-line)]/70 bg-[var(--background)]/60 px-8 backdrop-blur lg:flex">
+          <ThemeToggle />
         </div>
         <main
           id="main-content"

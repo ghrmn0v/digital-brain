@@ -153,7 +153,7 @@ export function BrainChat({ status }: { status: BrainStatusDto }) {
       >
         {empty ? (
           <div className="flex h-full flex-col items-start justify-center gap-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-sky-400/25 bg-sky-400/10 text-[var(--accent)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--accent)]/25 bg-[var(--accent)]/10 text-[var(--accent)]">
               <Motor aria-hidden="true" className="h-5 w-5" />
             </div>
             <div>
@@ -248,7 +248,7 @@ function Message({ turn }: { turn: Turn }) {
   if (turn.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-lg bg-sky-400/10 px-4 py-3 text-[0.9375rem] leading-7 text-sky-50">
+        <div className="max-w-[85%] rounded-lg bg-[var(--accent)]/10 px-4 py-3 text-[0.9375rem] leading-7 text-[var(--accent)]">
           <p className="whitespace-pre-wrap">{turn.text}</p>
         </div>
       </div>
@@ -257,9 +257,9 @@ function Message({ turn }: { turn: Turn }) {
 
   return (
     <div className="flex gap-4">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-sky-400/20 bg-sky-400/10 text-[var(--accent)]">
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]">
         {turn.failed ? (
-          <CircleAlert aria-hidden="true" className="h-4 w-4 text-rose-300" />
+          <CircleAlert aria-hidden="true" className="h-4 w-4 text-[var(--danger)]" />
         ) : (
           <Motor aria-hidden="true" className="h-4 w-4" />
         )}
@@ -267,7 +267,7 @@ function Message({ turn }: { turn: Turn }) {
       <div className="min-w-0 flex-1 space-y-3">
         <p
           className={`whitespace-pre-wrap text-[0.9375rem] leading-8 ${
-            turn.failed ? "text-rose-200" : "text-[var(--text-primary)]"
+            turn.failed ? "text-[var(--danger)]" : "text-[var(--text-primary)]"
           }`}
         >
           {turn.text}
@@ -302,7 +302,7 @@ function MetaRow({ meta }: { meta: BrainMeta }) {
         </div>
       ) : null}
       {meta.missing.length > 0 ? (
-        <p className="text-[0.8125rem] leading-6 text-amber-300/80">
+        <p className="text-[0.8125rem] leading-6 text-[var(--warning)]/80">
           Not in memory: {meta.missing.join(", ")}
         </p>
       ) : null}
@@ -460,7 +460,7 @@ function Tool({
 function ToolResult({ result }: { result: CallResult }) {
   if (!result.ok) {
     return (
-      <p className="mt-5 rounded-lg border border-rose-400/25 bg-rose-400/5 px-4 py-3 text-[0.9375rem] text-rose-200">
+      <p className="mt-5 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/5 px-4 py-3 text-[0.9375rem] text-[var(--danger)]">
         {result.error}
       </p>
     );

@@ -109,7 +109,7 @@ export default async function BrainPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-[var(--panel-line)]/60">
               {SUPPORTED_SOURCE_EVENTS.map((rule) => (
                 <tr key={rule.type}>
                   <td className="px-6 py-4">
@@ -148,7 +148,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--panel-line)]/80 bg-[var(--panel)]/40 px-5 py-5">
       <p className="text-[0.8125rem] text-[var(--text-secondary)]">{label}</p>
-      <p className="mt-2 inline-flex rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[0.9375rem] font-medium text-[var(--accent)]">
+      <p className="mt-2 inline-flex rounded-full border border-[var(--accent)]/20 bg-[var(--accent)]/10 px-3 py-1 text-[0.9375rem] font-medium text-[var(--accent)]">
         {value}
       </p>
     </div>
