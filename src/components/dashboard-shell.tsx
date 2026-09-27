@@ -59,6 +59,7 @@ const navigation: NavigationSection[] = [
       { href: "/automations", label: "Automations", icon: Zap },
       { href: "/permissions", label: "Permissions", icon: ShieldCheck },
       { href: "/connectors", label: "Connectors", icon: PlugZap },
+      { href: "/settings", label: "Settings", icon: Settings },
       {
         href: "/developer",
         label: "Developer Mode",
@@ -81,7 +82,6 @@ const navigation: NavigationSection[] = [
         label: "Developer Updates",
         icon: Bug,
       },
-      { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];

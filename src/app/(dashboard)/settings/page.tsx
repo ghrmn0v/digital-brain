@@ -4,16 +4,10 @@ import {
   CheckCircle2,
   CircleOff,
   RadioTower,
-  Settings2,
 } from "@/components/icons";
 import { DeveloperModeToggle } from "@/components/developer-mode-toggle";
 import { SettingsManager } from "@/components/settings-manager";
-import {
-  Badge,
-  PageHeader,
-  Panel,
-  SectionHeading,
-} from "@/components/ui";
+import { PageHeader, Panel, SectionHeading } from "@/components/ui";
 import {
   DEVELOPER_MODE_SETTING_KEY,
   developerModeService,
@@ -36,13 +30,8 @@ function ReadinessCard({
   const StatusIcon = configured ? CheckCircle2 : CircleOff;
   return (
     <article className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)] p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-primary)]">
-          <Icon aria-hidden="true" className="h-5 w-5" />
-        </div>
-        <Badge tone={configured ? "success" : "neutral"} dot>
-          {configured ? "Configured" : "Not configured"}
-        </Badge>
+      <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-primary)]">
+        <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
       <h3 className="mt-5 text-[0.9375rem] font-semibold text-[var(--text-primary)]">
         {name}
@@ -111,10 +100,6 @@ export default async function SettingsPage() {
               icon={RadioTower}
             />
           </div>
-        </div>
-        <div className="hidden items-start gap-3 border-t border-[var(--panel-line)] px-5 py-4 text-[0.8125rem] leading-6 text-[var(--text-muted)] min-[900px]:flex">
-          <Settings2 aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
-          API tokens are never read, returned, or rendered by this interface.
         </div>
       </Panel>
 
