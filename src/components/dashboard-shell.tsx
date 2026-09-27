@@ -22,7 +22,6 @@ import {
   type ProductIcon,
 } from "@/components/icons";
 import { CerebroLogo } from "@/components/brand/cerebro-logo";
-import { ThemeToggle } from "@/components/chat/theme-toggle";
 import { cn } from "@/components/ui";
 
 type NavigationItem = {
@@ -216,24 +215,21 @@ export function DashboardShell({
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--panel-line)]/80 bg-[var(--background)]/85 px-4 backdrop-blur-xl lg:hidden">
         <Brand />
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <button
-            ref={toggleRef}
-            type="button"
-            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => setMobileOpen((open) => !open)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
-          >
-            {mobileOpen ? (
-              <X aria-hidden="true" className="h-5 w-5" />
-            ) : (
-              <Menu aria-hidden="true" className="h-5 w-5" />
-            )}
-          </button>
-        </div>
+        <button
+          ref={toggleRef}
+          type="button"
+          aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-navigation"
+          onClick={() => setMobileOpen((open) => !open)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
+        >
+          {mobileOpen ? (
+            <X aria-hidden="true" className="h-5 w-5" />
+          ) : (
+            <Menu aria-hidden="true" className="h-5 w-5" />
+          )}
+        </button>
       </header>
 
       {mobileOpen ? (
@@ -272,9 +268,6 @@ export function DashboardShell({
       ) : null}
 
       <div className="lg:pl-64">
-        <div className="hidden h-16 items-center justify-end border-b border-[var(--panel-line)]/70 bg-[var(--background)]/60 px-8 backdrop-blur lg:flex">
-          <ThemeToggle />
-        </div>
         <main
           id="main-content"
           className="mx-auto w-full max-w-[96rem] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10"

@@ -13,6 +13,7 @@ import { PermissionsManager } from "@/components/permissions-manager";
 import { SettingsManager } from "@/components/settings-manager";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSectionNav } from "@/components/settings/settings-section-nav";
+import { ThemeToggle } from "@/components/chat/theme-toggle";
 import { Panel, SectionHeading } from "@/components/ui";
 import { actionService } from "@/modules/actions";
 import { automationService } from "@/modules/automations";
@@ -128,6 +129,24 @@ export default async function SettingsPage() {
           ) : null}
 
           <SettingsManager settings={publicSettings} />
+
+          <Panel>
+            <SectionHeading
+              title="Appearance"
+              description="Applies across the whole product and is remembered on this device"
+            />
+            <div className="flex items-center justify-between gap-4 px-6 py-5">
+              <div className="min-w-0">
+                <p className="text-[0.9375rem] font-medium text-[var(--text-primary)]">
+                  Theme
+                </p>
+                <p className="mt-1 text-[0.8125rem] leading-6 text-[var(--text-secondary)]">
+                  Dark is the default surface. Light inverts the same tokens.
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+          </Panel>
         </div>
       </SettingsSection>
 
