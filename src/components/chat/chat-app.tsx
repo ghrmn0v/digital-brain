@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
+  BrainCircuit,
   Code2,
   MagnifyingGlass,
   Microphone,
@@ -14,6 +15,7 @@ import {
   Trash,
   UserCircle,
 } from "@/components/icons";
+import Link from "next/link";
 import { AppMenu } from "@/components/chat/app-menu";
 import { CerebroLogo, CerebroMark } from "@/components/brand/cerebro-logo";
 import { BrainIdleView } from "@/components/chat/brain-idle-view";
@@ -65,11 +67,18 @@ interface CallResult {
   code?: string | null;
 }
 
-type View = "chat" | "search" | "people" | "learning" | "developer" | "capabilities";
+type View = "chat" | "connectome" | "search" | "people" | "learning" | "developer" | "capabilities";
 
 /* One flat list. Grouping headers added noise without adding meaning. */
-const VIEWS: { id: View; label: string; icon: typeof Motor }[] = [
+/*
+ * An item is either a local panel in this shell or, when it carries an `href`,
+ * a link to a real route. The Connectome is the second kind: it is its own page,
+ * and treating it as a local view is how the product-UI merge left it with no
+ * navigation entry at all — reachable only by typing the URL.
+ */
+const VIEWS: { id: View; label: string; icon: typeof Motor; href?: string }[] = [
   { id: "chat", label: "Chat", icon: Motor },
+  { id: "connectome", label: "Connectome", icon: BrainCircuit, href: "/connectome" },
   { id: "search", label: "Search", icon: MagnifyingGlass },
   { id: "people", label: "People", icon: UserCircle },
   { id: "learning", label: "Learning", icon: Star },
@@ -230,41 +239,52 @@ export function ChatApp({ status }: { status: BrainStatusDto }) {
         </div>
 
         <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-          <p className="px-3 pb-1.5 pt-2 text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <p className="px-3 pb-1.5 pt-2 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Overview
           </p>
           <ul className="space-y-0.5">
             {VIEWS.map((item) => {
               const Icon = item.icon;
               const selected = view === item.id;
+              const className = cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[0.9375rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40",
+                selected
+                  ? "bg-[var(--panel-raised)] text-[var(--text-primary)]"
+                  : "text-[var(--text-secondary)]",
+              );
+              const glyph = (
+                <Icon
+                  aria-hidden="true"
+                  className={cn(
+                    "h-4 w-4 shrink-0",
+                    selected ? "text-[var(--accent)]" : "text-[var(--text-muted)]",
+                  )}
+                />
+              );
               return (
                 <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => go(item.id)}
-                    aria-current={selected ? "page" : undefined}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[0.875rem] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40",
-                      selected
-                        ? "bg-[var(--panel-raised)] text-[var(--text-primary)]"
-                        : "text-[var(--text-secondary)]",
-                    )}
-                  >
-                    <Icon
-                      aria-hidden="true"
-                      className={cn(
-                        "h-4 w-4 shrink-0",
-                        selected ? "text-[var(--accent)]" : "text-[var(--text-muted)]",
-                      )}
-                    />
-                    {item.label}
-                  </button>
+                  {item.href ? (
+                    <Link href={item.href} className={className}>
+                      {glyph}
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => go(item.id)}
+                      aria-current={selected ? "page" : undefined}
+                      className={className}
+                    >
+                      {glyph}
+                      {item.label}
+                    </button>
+                  )}
                 </li>
               );
             })}
           </ul>
 
-          <p className="px-3 pb-1.5 pt-5 text-[0.6875rem] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <p className="px-3 pb-1.5 pt-5 text-[0.75rem] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Chats
           </p>
           {conversations.length === 0 ? (

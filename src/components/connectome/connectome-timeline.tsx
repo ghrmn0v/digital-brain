@@ -89,7 +89,7 @@ export function ConnectomeTimeline({
 
   if (placements.length === 0) {
     return (
-      <div className="flex items-center gap-2.5 px-4 py-3 text-xs text-zinc-450">
+      <div className="flex items-center gap-2.5 px-4 py-3 text-xs text-[var(--text-secondary)]">
         <CalendarClock aria-hidden="true" className="h-3.5 w-3.5" />
           Your timeline will appear as Cerebro Flow receives events.
       </div>
@@ -99,10 +99,10 @@ export function ConnectomeTimeline({
   return (
     <div className="px-4 py-3">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-450">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
           Timeline
         </p>
-        <p className="text-[11px] text-zinc-550">
+        <p className="text-[11px] text-[var(--text-muted)]">
           {placements.length} event{placements.length === 1 ? "" : "s"} · {caption}
         </p>
       </div>
@@ -110,16 +110,16 @@ export function ConnectomeTimeline({
       <div className="relative h-14 select-none">
         <div
           aria-hidden="true"
-          className="absolute left-0 right-0 top-6 h-px bg-zinc-800"
+          className="absolute left-0 right-0 top-6 h-px bg-[var(--panel-line)]"
         />
         <div
           aria-hidden="true"
-          className="absolute top-2 h-3.5 w-px bg-zinc-700/60"
+          className="absolute top-2 h-3.5 w-px bg-[var(--panel-line)]/60"
           style={{ left: 0 }}
         />
         <div
           aria-hidden="true"
-          className="absolute right-0 top-2 h-3.5 w-px bg-zinc-700/60"
+          className="absolute right-0 top-2 h-3.5 w-px bg-[var(--panel-line)]/60"
         />
         <span
           aria-hidden="true"
@@ -144,13 +144,13 @@ export function ConnectomeTimeline({
                 className={`h-2 w-2 rounded-full border transition ${
                   selected
                     ? "scale-125 border-cyan-200 bg-cyan-300"
-                    : "border-zinc-600 bg-zinc-800 group-hover:border-zinc-400"
+                    : "border-[var(--text-muted)] bg-[var(--panel-line)] group-hover:border-[var(--text-secondary)]"
                 }`}
                 style={selected ? undefined : { borderColor: style.stroke }}
               />
               <span
                 className={`mt-1 h-1.5 w-px transition ${
-                  selected ? "bg-cyan-300/70" : "bg-zinc-800"
+                  selected ? "bg-cyan-300/70" : "bg-[var(--panel-line)]"
                 }`}
               />
               <span className="sr-only">
@@ -158,7 +158,7 @@ export function ConnectomeTimeline({
               </span>
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute bottom-full mb-1 hidden whitespace-nowrap rounded-md border border-zinc-700 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-200 group-hover:block group-focus-visible:block"
+                className="pointer-events-none absolute bottom-full mb-1 hidden whitespace-nowrap rounded-md border border-[var(--panel-line)] bg-[var(--background)] px-2 py-1 text-[10px] text-[var(--text-primary)] group-hover:block group-focus-visible:block"
               >
                 {node.label.length > 30 ? `${node.label.slice(0, 29)}…` : node.label}
               </span>

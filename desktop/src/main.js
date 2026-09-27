@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu, shell } from "electron";
-import fs from "node:fs";
+import fs, { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -36,6 +36,12 @@ import {
  */
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+// Packaged builds resolve assets from the app directory, so try the packaged
+// location first and fall back to the repository checkout for `npm start`.
+const iconPath = [
+  path.join(app.getAppPath(), "..", "public", "brand", "cerebro-flow-icon.png"),
+  path.join(here, "..", "..", "public", "brand", "cerebro-flow-icon.png"),
+].find((candidate) => existsSync(candidate)) ?? undefined;
 
 const config = {
   mode: resolveMode(process.env.CEREBRO_SHELL_MODE),
@@ -145,6 +151,10 @@ function createWindow() {
     minHeight: 640,
     show: false,
     title: "Cerebro Flow",
+    // Without this the taskbar, the window manager and the Alt-Tab switcher all
+    // fall back to Electron's default mark, so a launched app looks like a
+    // generic dev window rather than Cerebro Flow.
+    icon: iconPath,
     backgroundColor: "#09090b",
     // Frameless by default, with the platform's own window controls drawn over
     // the content. `native` is the escape hatch for compositors that do not

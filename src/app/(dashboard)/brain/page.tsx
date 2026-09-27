@@ -72,7 +72,7 @@ export default async function BrainPage() {
                     {capability.method}
                   </code>
                   {capability.interactive ? (
-                    <span className="rounded-full border border-[var(--panel-line)]/80 bg-[var(--panel-raised)] px-2 py-0.5 text-[0.6875rem] text-[var(--text-secondary)]">
+                    <span className="rounded-full border border-[var(--panel-line)]/80 bg-[var(--panel-raised)] px-2 py-0.5 text-[0.75rem] text-[var(--text-secondary)]">
                       Interactive
                     </span>
                   ) : null}

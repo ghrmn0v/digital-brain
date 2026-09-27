@@ -663,3 +663,62 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   `ui-check.mjs` reported `/` and `/chat` as rendering 0 characters — a false
   failure in my own checker, which assumed a `<main>` element the new
   full-screen chat layout does not have; it now falls back to the body.
+
+## Task 20 — theme, navigation and settings tabs after the product-UI merge
+
+- **Files:** `src/app/globals.css`,
+  `src/components/connectome/*.tsx` (8 files),
+  `src/components/connectome/theme.ts`,
+  `src/components/permissions-status.tsx`,
+  `src/components/chat/chat-app.tsx`,
+  `src/components/settings/settings-section-nav.tsx`,
+  `src/app/(dashboard)/settings/page.tsx`,
+  `desktop/src/main.js`, `public/brand/cerebro-flow-icon.png` (new)
+- **Result:** PASS
+- **Notes:** Four of the reported issues were real and are fixed; two were not
+  defects, and inventing a fix for those would have been worse than saying so.
+
+  **The Connectome was invisible in the new navigation.** The product-UI merge
+  replaced the old sidebar with the chat shell's own view list, and `/connectome`
+  was not carried across — the route still worked, so nothing failed, but the
+  only way to reach it was to type the URL. The nav list could not simply gain an
+  entry, because every item in it is a *local panel* and the Connectome is a
+  separate route; `go()` only calls `setView`. Items may now carry an `href` and
+  render as a real `Link`, which is what makes the distinction explicit.
+
+  **The Connectome and the permissions matrix were stuck in dark mode.** All 212
+  colour classes across the Connectome module and the permissions status were
+  hardcoded `zinc-*`, so they ignored the theme entirely. They now use the theme
+  variables. The opacity modifiers survive: Tailwind emits `color-mix` for
+  arbitrary values, and 198 such rules are in the built stylesheet.
+
+  Fixing the classes was not enough, and the screenshot is what caught it — the
+  page went light while the map stayed near-black. `theme.ts` is inline SVG and
+  cannot use Tailwind, so its surfaces carried literal hex from the old
+  dark-only theme. A `--graph-*` token set now exists for both themes and
+  `theme.ts` emits `var(...)`, which is the last hardcoded colour off the map.
+
+  **Settings stacked every section.** The nav was an IntersectionObserver
+  scroll-spy over one long page, so all five sections were always mounted and
+  choosing one only scrolled to it — no isolation, and nothing linkable. The
+  section now lives in `?section=`, the page renders exactly one, and the nav is
+  a row of links. Back/forward and reload now work, which a scroll-spy cannot do.
+  Verified by reading the rendered headings per section rather than by grepping
+  the HTML, which cannot tell a nav link from section content.
+
+  **Typography.** `text-xs` (12px) appeared 143 times, which is the "tiny text"
+  complaint. Rather than edit 143 call sites and flatten the type ramp, the root
+  font size moved 16px → 17.5px: every rem-based step lifts together, putting the
+  smallest step the UI uses at ~13.1px. The 11px outliers were lifted to 12px.
+
+  **Two reported issues were not real.** The chat payload is clean — proven, not
+  assumed: an echo Brain on a spare port captured the exact bytes the UI sent and
+  got `{"method":"chat","params":{"user_id":"usr_demo","message":"UNIQUE-MARKER-48271
+  tell me about llamas",…}}`, the typed text and nothing else, with zero console
+  errors. "What do you remember about my work?" is a suggestion chip and a
+  placeholder, not a payload. And the chat page already had a working hamburger
+  that opens the sidebar. Reporting those as fixed would have been a fiction.
+
+  The Electron window had no `icon`, so a launched app presented as a generic
+  Electron window in the taskbar and Alt-Tab. It now resolves the brand PNG,
+  generated from the existing logo SVG at 256px.

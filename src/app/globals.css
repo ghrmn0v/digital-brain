@@ -63,6 +63,34 @@
 
   /* Ink laid on top of a filled accent surface, and the modal scrim. */
   --accent-ink: #0d0e12;
+
+  /*
+   * Graph canvas tokens.
+   *
+   * The Connectome is inline SVG, so its surfaces cannot use Tailwind classes and
+   * used to carry literal hex from the old dark-only theme — which is why the
+   * map stayed near-black while the rest of the page went light. These are the
+   * same values the token layer defines, exposed per theme.
+   */
+  --graph-canvas: #0d0e12;
+  --graph-grid: rgba(161, 161, 170, 0.05);
+  --graph-axis: rgba(161, 161, 170, 0.18);
+  --graph-panel: rgba(22, 24, 29, 0.82);
+  --graph-hairline: rgba(63, 63, 46, 0.5);
+  --graph-fill-source: #101013;
+  --graph-fill-event: #0e0e11;
+  --graph-fill-thread: #0d0d10;
+  --graph-fill-consumer: #131316;
+  --graph-fill-proposal: #101014;
+  --graph-stroke-source: var(--accent);
+  --graph-stroke-event: #a1a1aa;
+  --graph-stroke-thread: #67e8f9;
+  --graph-stroke-consumer: #7e7e8a;
+  --graph-stroke-proposal: var(--accent);
+  --graph-text: var(--text-primary);
+  --graph-text-muted: var(--text-muted);
+  --graph-label: var(--text-secondary);
+
   --scrim: #05060899;
 
   color-scheme: dark;
@@ -90,6 +118,23 @@
   --danger: #be123c;
 
   --accent-ink: #ffffff;
+
+  --graph-canvas: #fbfbfd;
+  --graph-grid: rgba(24, 24, 27, 0.055);
+  --graph-axis: rgba(24, 24, 27, 0.16);
+  --graph-panel: rgba(255, 255, 255, 0.86);
+  --graph-hairline: rgba(24, 24, 27, 0.12);
+  --graph-fill-source: #ffffff;
+  --graph-fill-event: #f7f7f9;
+  --graph-fill-thread: #f2f9fb;
+  --graph-fill-consumer: #f4f4f6;
+  --graph-fill-proposal: #f6f6fa;
+  --graph-stroke-source: var(--accent);
+  --graph-stroke-event: #71717a;
+  --graph-stroke-thread: #0891b2;
+  --graph-stroke-consumer: #a1a1aa;
+  --graph-stroke-proposal: var(--accent);
+
   --scrim: #0d0e1266;
 }
 
@@ -124,6 +169,17 @@
 }
 
 html {
+  /*
+   * Raised from the browser default of 16px.
+   *
+   * Every size in the app is rem-based, so this is the one lever that lifts
+   * body copy, labels, buttons and inputs together instead of leaving 143
+   * `text-xs` call sites at 12px. 17.5px puts the smallest step the UI actually
+   * uses at ~13.1px, which is the difference between "comfortable" and
+   * "squint at it", and it keeps the existing scale intact rather than
+   * flattening a deliberate type ramp.
+   */
+  font-size: 17.5px;
   min-width: 320px;
   min-height: 100%;
   scroll-padding-top: 5rem;

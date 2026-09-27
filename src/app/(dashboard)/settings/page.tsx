@@ -24,6 +24,14 @@ import {
 import { permissionService } from "@/modules/permissions";
 import { settingsService } from "@/modules/settings";
 
+const SETTINGS_SECTIONS = [
+  { id: "general", label: "General" },
+  { id: "permissions", label: "Permissions" },
+  { id: "approvals", label: "Approvals" },
+  { id: "automations", label: "Automations" },
+  { id: "connectors", label: "Connectors" },
+] as const;
+
 export const metadata: Metadata = { title: "Settings" };
 
 /**
@@ -38,7 +46,22 @@ export const metadata: Metadata = { title: "Settings" };
  * The old routes still resolve, so bookmarks and external links keep
  * working, but in-app links go straight to the section.
  */
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string }>;
+}) {
+  /*
+   * Settings used to be one long page with an IntersectionObserver acting as a
+   * scroll-spy, so every section was always in the DOM and choosing one only
+   * scrolled to it. Selecting a category now renders just that category, and the
+   * choice lives in the URL so a section can be linked to and survives a reload.
+   */
+  const requested = (await searchParams).section;
+  const active = SETTINGS_SECTIONS.some((entry) => entry.id === requested)
+    ? (requested as (typeof SETTINGS_SECTIONS)[number]["id"])
+    : "general";
+
   const [
     settings,
     developerModeEnabled,
@@ -85,6 +108,7 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       <SettingsSectionNav />
 
+      {active === "general" ? (
       <SettingsSection
         id="general"
         eyebrow="System configuration"
@@ -130,7 +154,9 @@ export default async function SettingsPage() {
           <SettingsManager settings={publicSettings} />
         </div>
       </SettingsSection>
+      ) : null}
 
+      {active === "permissions" ? (
       <SettingsSection
         id="permissions"
         eyebrow="Action policy"
@@ -139,7 +165,9 @@ export default async function SettingsPage() {
       >
         <PermissionsManager permissions={permissions} />
       </SettingsSection>
+      ) : null}
 
+      {active === "approvals" ? (
       <SettingsSection
         id="approvals"
         eyebrow="Human-in-the-loop"
@@ -148,7 +176,9 @@ export default async function SettingsPage() {
       >
         <ApprovalsManager actions={pendingActions.items} />
       </SettingsSection>
+      ) : null}
 
+      {active === "automations" ? (
       <SettingsSection
         id="automations"
         eyebrow="Event workflows"
@@ -157,7 +187,9 @@ export default async function SettingsPage() {
       >
         <AutomationsManager automations={automations} />
       </SettingsSection>
+      ) : null}
 
+      {active === "connectors" ? (
       <SettingsSection
         id="connectors"
         eyebrow="Integration registry"
@@ -166,6 +198,7 @@ export default async function SettingsPage() {
       >
         <ConnectorsManager connectors={connectors} />
       </SettingsSection>
+      ) : null}
     </div>
   );
 }

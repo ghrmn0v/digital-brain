@@ -65,7 +65,7 @@ function GroupPanel({ group }: { group: GroupPanelProps }) {
           )
         }
       />
-      <ul className="divide-y divide-zinc-800/80 border-t border-zinc-800/80">
+      <ul className="divide-y divide-[var(--panel-line)]/80 border-t border-[var(--panel-line)]/80">
         {group.checks.map((check) => (
           <li
             key={check.id}
@@ -79,19 +79,19 @@ function GroupPanel({ group }: { group: GroupPanelProps }) {
                   ? "border-rose-400/30 bg-rose-400/10 text-rose-300"
                   : check.state === "warn"
                     ? "border-amber-400/30 bg-amber-400/10 text-amber-300"
-                    : "border-zinc-700 bg-zinc-800/70 text-zinc-400",
+                    : "border-[var(--panel-line)] bg-[var(--panel-line)]/70 text-[var(--text-secondary)]",
               )}
             >
               <Icon className="h-3.5 w-3.5" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-medium text-zinc-200">{check.label}</h3>
+                <h3 className="text-sm font-medium text-[var(--text-primary)]">{check.label}</h3>
                 <Badge tone={STATE_TONE[check.state]}>{STATE_LABEL[check.state]}</Badge>
               </div>
-              <p className="mt-1.5 text-xs leading-5 text-zinc-450">{check.detail}</p>
+              <p className="mt-1.5 text-xs leading-5 text-[var(--text-secondary)]">{check.detail}</p>
             </div>
-            <p className="shrink-0 font-mono text-xs text-zinc-400 sm:pt-0.5 sm:text-right">
+            <p className="shrink-0 font-mono text-xs text-[var(--text-secondary)] sm:pt-0.5 sm:text-right">
               {check.value}
             </p>
           </li>
@@ -110,19 +110,19 @@ export function PermissionsStatus({ status }: { status: AccessStatus }) {
     <section aria-label="Access status" className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-zinc-200">
+          <h2 className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
             Access status
           </h2>
-          <p className="mt-1 text-xs leading-5 text-zinc-450">
+          <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
             Observed live from this workspace. No credential is ever read or shown
             here — only whether one is configured and who holds it.
           </p>
         </div>
-        <p className="text-xs text-zinc-450">
-          <span className="font-semibold text-zinc-200">{status.ok}</span> of{" "}
+        <p className="text-xs text-[var(--text-secondary)]">
+          <span className="font-semibold text-[var(--text-primary)]">{status.ok}</span> of{" "}
           {status.total} checks passing
           {attention > 0 ? (
-            <span className="text-zinc-450"> · {attention} need attention</span>
+            <span className="text-[var(--text-secondary)]"> · {attention} need attention</span>
           ) : null}
         </p>
       </div>
