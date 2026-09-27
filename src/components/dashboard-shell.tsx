@@ -184,7 +184,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-[var(--background)] text-[var(--text-primary)]">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg border border-[var(--accent)]/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
+        className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg border border-[var(--accent)]/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--accent-strong)] transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/60"
       >
         Skip to content
       </a>

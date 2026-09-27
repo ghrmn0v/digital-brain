@@ -93,6 +93,13 @@ class ContextFact(BaseModel):
 
     kind: str = Field(min_length=1, max_length=32)
     text: str = Field(min_length=1, max_length=STATEMENT_LIMIT)
+    #: The same fact written for a person to read, used only on the path where
+    #: no model is available to interpret ``text``. ``text`` carries the stored
+    #: key alongside the value because a model can use that key and a person
+    #: cannot; leaving the slug in front of a human is what made the no-model
+    #: answer read like a database dump. Optional so a fact without a phrasing
+    #: simply falls back to ``text`` rather than losing itself.
+    statement: str | None = Field(default=None, max_length=STATEMENT_LIMIT)
     source: str = Field(default="unknown", max_length=32)
     memory_id: str | None = None
     person_id: str | None = None
@@ -203,10 +210,13 @@ class PersonalContextBuilder:
             facts.append(
                 ContextFact(
                     kind="preference",
-                    text=(
-                        f"{preference.name} = {preference.value}"
-                        f"{f' ({_domain_value(preference.domain)})' if preference.domain else ''}"
-                    )[:STATEMENT_LIMIT],
+                      text=(
+                          f"{preference.name} = {preference.value}"
+                          f"{f' ({_domain_value(preference.domain)})' if preference.domain else ''}"
+                      )[:STATEMENT_LIMIT],
+                      statement=_preference_statement(
+                          preference.name, preference.value
+                      ),
                     source="learned" if learned_flag else "explicit",
                     memory_id=preference.memory_id,
                     confidence=preference.confidence,
@@ -251,8 +261,13 @@ class PersonalContextBuilder:
                         f"{entry.name}: {entry.positive} positive / "
                         f"{entry.negative} negative"
                         + (f", positive rate {rate:.2f}" if rate is not None else "")
-                    )[:STATEMENT_LIMIT],
-                    source="learned",
+                      )[:STATEMENT_LIMIT],
+                      statement=(
+                          f"{_humanize(entry.name)}: {entry.positive} positive, "
+                          f"{entry.negative} negative"
+                          + (f" (positive rate {rate:.2f})" if rate is not None else "")
+                      ),
+                      source="learned",
                     confidence=entry.weight,
                 )
             )
@@ -330,6 +345,31 @@ def _domain_value(domain: object) -> str:
     """Render a preference domain as its stored value, not an enum repr."""
     value = getattr(domain, "value", domain)
     return str(value) if value is not None else ""
+
+
+def _humanize(name: str) -> str:
+    """``async_summary`` -> ``Async summary``, for a reader rather than a key."""
+    words = str(name or "").replace("_", " ").replace("-", " ").strip()
+    if not words:
+        return ""
+    return words[0].upper() + words[1:]
+
+
+def _preference_statement(name: str, value: str) -> str:
+    """A stored preference written so a person can read it as a sentence.
+
+    A preference value is usually already a sentence someone typed — "Prefer
+    async updates over live standups" — and prefixing the stored key onto it just
+    repeats what it says. A bare value like "TypeScript" carries no such
+    sentence, so there the key earns its place as a label.
+    """
+    stated = str(value or "").strip()
+    label = _humanize(name)
+    if not stated:
+        return label
+    if " " in stated:
+        return stated
+    return f"{label}: {stated}" if label else stated
 
 
 def _metadata_flag(preference: object, key: str) -> bool:

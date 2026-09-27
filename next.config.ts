@@ -10,9 +10,14 @@ const securityHeaders = [
   },
 ];
 
-const nextConfig: NextConfig = {
-  poweredByHeader: false,
-  async headers() {
+  const nextConfig: NextConfig = {
+    poweredByHeader: false,
+    // The desktop installer ships Product inside the app rather than asking the
+    // person to run a Node server themselves. Standalone emits a server and only
+    // the node_modules it actually reached, which is the difference between an
+    // installer of tens of megabytes and one of a gigabyte.
+    output: "standalone",
+    async headers() {
     return [
       {
         source: "/:path*",

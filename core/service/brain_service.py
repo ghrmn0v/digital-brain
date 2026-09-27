@@ -210,28 +210,51 @@ def _context_only_answer(context: PersonalContext) -> PersonalizedAnswer:
 
     Honest by construction: it reports only what the Brain already stored for
     this user and says the model was not consulted. It never invents a fact.
+
+    Readable for the same reason. This is the path a person reaches at exactly
+    the moment they are most likely to be watching — the provider is down, so
+    whatever appears is the whole answer. Printing stored keys beside their
+    values ("async_summary = async summary (explanation_detail)") made a
+    fallback look broken even when every fact in it was correct, so facts are
+    grouped by what they are and phrased with :attr:`ContextFact.statement`,
+    which says the same thing without the storage detail.
     """
     if context.is_empty:
         return PersonalizedAnswer(
             answer=(
-                "I have no stored context for this request, and no language "
-                "model was available to reason over it."
+                "I have nothing stored about this, and no language model was "
+                "available to reason over it. Try again once a provider is "
+                "reachable, or record something first and I can answer from that."
             ),
             confidence=0.0,
             used_context=False,
             missing_context=["stored user context"],
         )
-    lines = ["From your own stored context:"]
-    for fact in (
-        context.preferences + context.memories + context.people + context.learned
-    ):
-        lines.append(f"- [{fact.source}] {fact.text}")
+
+    sections: list[tuple[str, list[ContextFact]]] = [
+        ("What you have told me", context.preferences),
+        ("What your history supports", context.learned),
+        ("What you have stored", context.memories),
+        ("People in your context", context.people),
+    ]
+
+    lines = [
+        "No language model was available, so I cannot interpret this — here is "
+        "exactly what I have stored for you:"
+    ]
+    for heading, facts in sections:
+        rendered = [
+            f"- {fact.statement or fact.text}"
+            for fact in facts
+            if (fact.statement or fact.text).strip()
+        ]
+        if not rendered:
+            continue
+        lines.append("")
+        lines.append(f"{heading}:")
+        lines.extend(rendered)
     return PersonalizedAnswer(
-        answer=(
-            "\n".join(lines)
-            + "\n\n(no language model was available; this is your stored "
-            "context only)"
-        ),
+        answer="\n".join(lines),
         confidence=0.3,
         used_context=True,
     )

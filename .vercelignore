@@ -1,0 +1,43 @@
+# Nothing in here belongs in a web deployment.
+#
+# The desktop/ directory carries a full Electron build with its own runtime
+# payload — 1.4GB of it, including a 228MB Electron binary. Uploading that is
+# not slow, it fails: the deploy has to finish inside Vercel's upload budget.
+# The installer is published as a GitHub release, not served from here.
+
+desktop/
+.demo/
+logs/
+.git/
+.github/
+
+# Local venvs and Python caches
+.venv/
+**/__pycache__/
+**/*.pyc
+
+# State, not source. These are also the developer's own data: a deploy must
+# never carry someone's memories or a checkout's test databases.
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+data/
+
+# Build output and caches
+.next/
+out/
+tsconfig.tsbuildinfo
+node_modules/
+
+# Credentials. Local .env is the developer's, with real keys in it; production
+# secrets are set in Vercel's own environment, never uploaded.
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.DS_Store
+*.swp

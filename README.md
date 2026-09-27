@@ -1,3 +1,17 @@
+> ## LIVE HERE
+>
+> **https://parties-equivalent-proposition-gave.trycloudflare.com**
+>
+> **Please download the project instead — you need to change the `API_KEY`.**
+> The limit of our key is over, so the live demo runs on the local fallback
+> (context-only answers) rather than a real model. **It also works better in
+> local**: the desktop app starts its own Product and Brain, and the Fly 3D view
+> needs the Java adapter that is not deployed.
+>
+> Live link caveats: it is a temporary Cloudflare tunnel, so the URL changes on
+> restart, and it has no authentication — anyone with the link can use it.
+> See **Run it locally** below for the real thing.
+
 # Cerebro Flow
 
 A personal AI system that remembers what your digital life is about. External

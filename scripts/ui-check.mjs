@@ -28,10 +28,19 @@ const BASE = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 const MOBILE = { width: 390, height: 844, deviceScaleFactor: 1, mobile: true };
 const DESKTOP = { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false };
 
+/*
+ * Every page the app actually has.
+ *
+ * This list was written before the product-UI merge and had drifted: it covered
+ * 17 routes while the app served 18, and the two it missed were /brain — a
+ * primary page — and /connections. A harness that does not know about a route
+ * cannot tell you that route broke. Kept in step with the page.tsx files under src/app.
+ */
 const ROUTES = [
-  "/", "/dashboard", "/connectome", "/chat", "/timeline", "/tasks", "/calendar",
-  "/jobs", "/approvals", "/automations", "/permissions", "/connectors",
-  "/developer", "/developer-information", "/memory", "/people", "/settings",
+  "/", "/dashboard", "/connectome", "/chat", "/brain", "/permissions",
+  "/connections", "/settings", "/timeline", "/tasks", "/calendar", "/jobs",
+  "/approvals", "/automations", "/connectors", "/developer",
+  "/developer-information", "/memory", "/people",
 ];
 
 const DRAWERS = [

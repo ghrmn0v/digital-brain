@@ -13,12 +13,42 @@
     "check": "node --check src/main.js && node --check src/origin-policy.mjs",
     "test": "node --test test/",
     "validate": "npm run check && npm test",
-    "build": "npm run validate"
+    "build": "npm run validate",
+    "runtime": "node ../scripts/build-desktop-runtime.mjs",
+    "pack": "npm run runtime && electron-builder --linux dir",
+    "dist": "npm run runtime && electron-builder --linux AppImage",
+    "dist:all": "npm run runtime && electron-builder --linux AppImage deb"
   },
   "dependencies": {
     "three": "^0.169.0"
   },
   "devDependencies": {
-    "electron": "^44.4.5"
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "app.cerebro.flow",
+    "productName": "Cerebro Flow",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime"
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility",
+      "icon": "build/icon.png"
+    }
   }
 }

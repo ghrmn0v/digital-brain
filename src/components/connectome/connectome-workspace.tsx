@@ -139,7 +139,7 @@ export function ConnectomeWorkspace({
     <div className="flex h-dvh flex-col overflow-hidden bg-[var(--background)] text-[var(--text-primary)]">
       <a
         href="#connectome-graph"
-        className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-cyan-300/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-cyan-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+        className="fixed left-3 top-3 z-[130] -translate-y-20 rounded-lg border border-[var(--accent)]/30 bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--accent-strong)] transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
       >
         Skip to the graph
       </a>
@@ -165,10 +165,10 @@ export function ConnectomeWorkspace({
           href="/connectome"
           className="hidden shrink-0 items-center gap-2 rounded-lg pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 sm:flex"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-line)] text-[var(--accent-strong)]">
             <BrainCircuit aria-hidden="true" className="h-3.5 w-3.5" />
           </span>
-            <span className="text-[13px] font-semibold tracking-tight text-white">
+            <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
               Cerebro Flow
             </span>
         </Link>
@@ -285,7 +285,7 @@ export function ConnectomeWorkspace({
             className="absolute inset-y-0 left-0 flex w-[min(17rem,86vw)] flex-col border-r border-[var(--panel-line)] bg-[var(--background)] outline-none"
           >
             <div className="flex h-14 items-center justify-between border-b border-[var(--panel-line)] px-3">
-              <span className="text-[13px] font-semibold text-white">Context</span>
+              <span className="text-[13px] font-semibold text-[var(--text-primary)]">Context</span>
               <button
                 type="button"
                 onClick={() => setNavOpen(false)}
@@ -329,7 +329,7 @@ export function ConnectomeWorkspace({
             }`}
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--panel-line)] px-3">
-              <span className="text-[13px] font-semibold text-white">Intelligence</span>
+              <span className="text-[13px] font-semibold text-[var(--text-primary)]">Intelligence</span>
               <button
                 type="button"
                 onClick={() => setInspectorOpen(false)}

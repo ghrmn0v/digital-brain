@@ -86,3 +86,7 @@ yarn-error.log*
 data/
 
 
+# Desktop build/release artifacts
+desktop/release/
+desktop/runtime/
+desktop/release/

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, shell } from "electron";
+import { app, BrowserWindow, Menu, nativeTheme, shell } from "electron";
 import fs, { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,12 @@ import {
   safeOrigin,
   TargetError,
 } from "./origin-policy.mjs";
+import {
+  followPageTheme,
+  titleBarOverlayFor,
+  windowBackgroundFor,
+} from "./titlebar-theme.mjs";
+import { planServices, runtimeRoot, startServices } from "./services.mjs";
 
 /**
  * The Cerebro Flow desktop shell.
@@ -134,6 +140,9 @@ npx next start -p 3000</code>
 
 let mainWindow = null;
 
+/** Set only when this process actually started the bundled services. */
+let stopServices = null;
+
 /** Injected into the offline page only, so it has no preload and no Node. */
 function attachOfflineBridge(contents) {
   contents.executeJavaScript(`
@@ -155,25 +164,24 @@ function createWindow() {
     // fall back to Electron's default mark, so a launched app looks like a
     // generic dev window rather than Cerebro Flow.
     icon: iconPath,
-    backgroundColor: "#09090b",
-    // Frameless by default, with the platform's own window controls drawn over
-    // the content. `native` is the escape hatch for compositors that do not
-    // render the overlay, where a frameless window would have no way to close.
-    ...(config.frameless
-      ? {
-          frame: false,
-          titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
-          ...(process.platform === "darwin"
-            ? {}
-            : {
-                titleBarOverlay: {
-                  color: "#09090b",
-                  symbolColor: "#a1a1aa",
-                  height: 44,
-                },
-              }),
-        }
-      : {}),
+      backgroundColor: windowBackgroundFor(nativeTheme.shouldUseDarkColors),
+      // Frameless by default, with the platform's own window controls drawn over
+      // the content. `native` is the escape hatch for compositors that do not
+      // render the overlay, where a frameless window would have no way to close.
+      ...(config.frameless
+        ? {
+            frame: false,
+            titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+            ...(process.platform === "darwin"
+              ? {}
+              : {
+                  // Transparent, so the controls sit on the app's own themed
+                  // background instead of a rectangle the app cannot see.
+                  // See titlebar-theme.mjs.
+                  titleBarOverlay: titleBarOverlayFor(nativeTheme.shouldUseDarkColors),
+                }),
+          }
+        : {}),
     webPreferences: {
       // The Fly page needs its preload bridge. The web app needs no Node access
       // at all, so it gets none — the smaller the bridge, the less there is to
@@ -189,6 +197,18 @@ function createWindow() {
   });
 
   mainWindow = win;
+
+  // The overlay's colours are only read when the window is constructed, so a
+  // theme change after launch needs an explicit re-apply. The app's own
+  // `data-theme` is the truth here — not the OS preference, which this session
+  // already has set to dark while the app renders light. Held so it can be torn
+  // down with the window rather than outliving it.
+  const stopTitleBarSync = followPageTheme({
+    window: win,
+    frameless: config.frameless,
+    nativeTheme,
+    platform: process.platform,
+  });
 
   // Nothing in this app needs a device permission, and a local page should not
   // be able to ask. Denying by default also removes a class of origin-confusion
@@ -240,12 +260,26 @@ function createWindow() {
 
   win.on("close", () => rememberBounds(win));
   win.on("closed", () => {
+    stopTitleBarSync();
     if (mainWindow === win) mainWindow = null;
   });
 
   if (flyMode) {
     win.loadFile(path.join(here, "index.html"));
   } else {
+    // The window is created as soon as the services have answered, but a server
+    // that is still binding, or a machine waking up, will refuse the first load.
+    // One retry turns a blank window into a window, and the second attempt is
+    // the last so a genuinely absent server still shows the error page.
+    win.webContents.on("did-fail-load", (_event, code, description, url, isMainFrame) => {
+      if (!isMainFrame || win.__cerebroRetried) return;
+      win.__cerebroRetried = true;
+      console.log(`Cerebro Flow: ${description} (${code}); retrying ${url}`);
+      setTimeout(() => {
+        if (!win.isDestroyed()) win.loadURL(url).catch(() => {});
+      }, 1500);
+    });
+
     win.loadURL(origin);
   }
 
@@ -425,17 +459,62 @@ if (config.smoke || app.requestSingleInstanceLock()) {
     });
   }
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     console.log(`Cerebro Flow shell starting; target ${describeTarget()}`);
+
+    // Installed, this app is the only thing that can start the services its
+    // window points at, so it starts them and waits before the window loads the
+    // URL. In development they are already running, and `planServices` finds
+    // nothing to launch. Fly mode loads a local file instead of the Product, so
+    // it needs none of this.
+    const runtime = runtimeRoot();
+    if (flyMode) {
+      console.log(`Cerebro Flow services: not needed in fly mode (runtime ${runtime})`);
+    } else if (existsSync(path.join(runtime, "product", "server.js"))) {
+      const plan = planServices({
+        runtime,
+        dataDir: app.getPath("userData"),
+        productPort: config.ports[0] ?? DEFAULT_PORT,
+        brainPort: Number(process.env.CEREBRO_BRAIN_PORT ?? 8765),
+        flyPort: Number(process.env.CEREBRO_FLY_PORT ?? 8601),
+        brainEnvFile: process.env.CEREBRO_BRAIN_ENV,
+      });
+      try {
+        const supervised = await startServices(plan, {
+          log: (line) => console.log(`Cerebro Flow services: ${line}`),
+        });
+        stopServices = supervised.stop;
+        console.log("Cerebro Flow services: ready");
+      } catch (error) {
+        // The window still opens. An unreachable service is the Product's own
+        // honest status to report, and a window that explains itself beats a
+        // launcher that silently does nothing.
+        console.error(`Cerebro Flow services: ${error.message}`);
+      }
+    } else {
+      console.log(`Cerebro Flow services: none bundled at ${runtime}; expecting a running server`);
+    }
+
     createWindow();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
   });
 
-    app.on("window-all-closed", () => {
-      if (process.platform !== "darwin") app.quit();
-    });
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
+  });
+
+  app.on("before-quit", async (event) => {
+    if (!stopServices) return;
+    // Hold the quit just long enough to stop what we started: a Node server and
+    // a Python server outliving the window are processes nobody asked for.
+    event.preventDefault();
+    const stop = stopServices;
+    stopServices = null;
+    await stop();
+    app.quit();
+  });
 } else {
   // Say so rather than exiting silently, so "nothing happened" is never a
   // mystery: the window is already open and has just been raised.

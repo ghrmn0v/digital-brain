@@ -190,7 +190,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/tasks"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
               >
                 All tasks
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/calendar"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
               >
                 Open calendar
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -310,7 +310,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/jobs"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
               >
                 Job inbox
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -351,7 +351,7 @@ export default async function DashboardPage() {
             action={
               <Link
                 href="/approvals"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
               >
                 Decision queue
                 <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
@@ -395,7 +395,7 @@ export default async function DashboardPage() {
           action={
             <Link
               href="/connectors"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-strong)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
             >
               Manage connectors
               <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />

@@ -136,21 +136,21 @@ function NavList({
               className={cn(
                 "group relative flex min-h-9 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40",
                 active
-                  ? "bg-cyan-300/[0.09] text-cyan-100"
+                  ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                   : "text-[var(--text-secondary)] hover:bg-[var(--panel-line)]/50 hover:text-[var(--text-primary)]",
               )}
             >
               {active ? (
                 <span
                   aria-hidden="true"
-                  className="absolute inset-y-1.5 left-0 w-px rounded-full bg-cyan-300"
+                  className="absolute inset-y-1.5 left-0 w-px rounded-full bg-[var(--accent)]"
                 />
               ) : null}
               <Icon
                 aria-hidden="true"
                 className={cn(
                   "h-3.5 w-3.5 shrink-0",
-                  active ? "text-cyan-300" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]",
+                  active ? "text-[var(--accent-strong)]" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]",
                 )}
               />
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -215,7 +215,7 @@ export function ContextNav({
             className={cn(
               "flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40",
               activeSource === null
-                ? "bg-cyan-300/[0.09] text-cyan-100"
+                ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                 : "text-[var(--text-secondary)] hover:bg-[var(--panel-line)]/50 hover:text-[var(--text-primary)]",
             )}
           >
@@ -223,7 +223,7 @@ export function ContextNav({
               aria-hidden="true"
               className={cn(
                 "h-3.5 w-3.5 shrink-0",
-                activeSource === null ? "text-cyan-300" : "text-[var(--text-muted)]",
+                activeSource === null ? "text-[var(--accent-strong)]" : "text-[var(--text-muted)]",
               )}
             />
             <span className="min-w-0 flex-1 truncate">All sources</span>
@@ -250,7 +250,7 @@ export function ContextNav({
                       className={cn(
                         "flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40",
                         active
-                          ? "bg-cyan-300/[0.09] text-cyan-100"
+                          ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                           : "text-[var(--text-secondary)] hover:bg-[var(--panel-line)]/50 hover:text-[var(--text-primary)]",
                       )}
                     >
@@ -258,7 +258,7 @@ export function ContextNav({
                         aria-hidden="true"
                         className={cn(
                           "h-3.5 w-3.5 shrink-0",
-                          active ? "text-cyan-300" : "text-[var(--text-muted)]",
+                          active ? "text-[var(--accent-strong)]" : "text-[var(--text-muted)]",
                         )}
                       />
                       <span className="min-w-0 flex-1 truncate">

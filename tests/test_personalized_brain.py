@@ -312,7 +312,52 @@ class PersonalizedInsightTests(unittest.TestCase):
         self.assertTrue(insight.fallback_used)
         self.assertEqual(insight.provider, "context-only")
         self.assertIn("TypeScript", insight.answer)
-        self.assertIn("no language model", insight.answer)
+        # The disclosure is the whole point of this path, so it is asserted on
+        # content rather than casing: a person must never read a no-model answer
+        # as if a model had produced it.
+        self.assertIn("no language model", insight.answer.lower())
+
+    def test_the_fallback_reads_as_prose_not_as_stored_keys(self) -> None:
+        """A fallback is what a person sees when the provider is down.
+
+        It has to be readable, or a correct answer reads as a broken one. The
+        stored key and the machine domain are for the model's benefit; on this
+        path they are noise in front of the fact itself.
+        """
+        self.service.record_preference(
+            "usr_a", name="backend_language", value="TypeScript", domain="language"
+        )
+        self.service.record_preference(
+            "usr_a",
+            name="async_summary",
+            value="Prefer a written summary",
+            domain="explanation_detail",
+        )
+        _, insight = self.ask("not json either")
+
+        self.assertIn("Backend language: TypeScript", insight.answer)
+        # A value that is already a sentence is not prefixed with its own key.
+        self.assertIn("- Prefer a written summary", insight.answer)
+        self.assertNotIn("async_summary", insight.answer)
+        self.assertNotIn("explanation_detail", insight.answer)
+        self.assertNotIn("[explicit]", insight.answer)
+
+    def test_the_fallback_groups_facts_instead_of_dumping_them(self) -> None:
+        self.service.record_preference(
+            "usr_a", name="backend_language", value="TypeScript", domain="language"
+        )
+        _, insight = self.ask("still not json")
+        self.assertIn("What you have told me:", insight.answer)
+        # One section, one fact: no empty headings left behind.
+        self.assertNotIn("What your history supports:", insight.answer)
+        self.assertEqual(insight.answer.count("\n\n"), 1)
+
+    def test_an_empty_fallback_still_admits_there_is_nothing_and_no_model(self) -> None:
+        _, insight = self.ask("not json", question="anything at all?")
+        self.assertTrue(insight.fallback_used)
+        self.assertEqual(insight.answer.count("no language model"), 1)
+        self.assertFalse(insight.used_context)
+        self.assertEqual(insight.confidence, 0.0)
 
     def test_provider_failure_falls_back_without_raising(self) -> None:
         self.service.record_preference(

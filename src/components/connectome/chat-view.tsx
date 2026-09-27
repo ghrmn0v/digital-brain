@@ -33,10 +33,10 @@ export function ChatView() {
       </a>
 
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--panel-line)]/70 bg-[var(--background)]/92 px-3 backdrop-blur-xl sm:px-4">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-line)] text-[var(--accent-strong)]">
           <BrainCircuit aria-hidden="true" className="h-3.5 w-3.5" />
         </span>
-        <span className="text-[13px] font-semibold tracking-tight text-white">
+        <span className="text-[13px] font-semibold tracking-tight text-[var(--text-primary)]">
           Cerebro Flow
         </span>
         <div className="ml-auto flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
