@@ -295,3 +295,38 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   was released. The Connectome drawer was re-checked the same way after the
   refactor (20 tabbables, 23 presses, no escape) to confirm the extraction did
   not regress the shell that already worked.
+
+## Task 12 — a UI check that can actually fail
+
+- **File:** `scripts/ui-check.mjs` (new)
+- **Result:** PASS
+- **Notes:** The suite runs in a node environment with no jsdom, so nothing in it
+  can see whether a page renders, whether a client fetch fails, or whether a
+  drawer holds focus. Those are the failures that matter in a UI and the ones a
+  type checker will never mention. Every interactive check so far this session
+  was a hand-driven throwaway, which is exactly the kind of verification that
+  quietly stops being run.
+
+  The script drives a real Chrome over the DevTools Protocol using Node's
+  built-in global `WebSocket`, so it needs no new dependency and no browser
+  automation library. It checks all 17 routes for console errors, uncaught
+  exceptions and failed requests, and asserts each one renders real content
+  rather than an empty shell; then it opens both mobile drawers and presses Tab
+  and Shift+Tab through them, checking focus never leaves, Escape closes, the
+  body scroll lock is released and focus lands back on the toggle. It exits
+  non-zero on failure so it can be used as a gate.
+
+  Two things had to be got right for the results to mean anything. Failures are
+  recorded only after the page has gone idle: requests still in flight when the
+  next navigation starts are aborted *by* that navigation, and an early version
+  reported sixteen healthy routes as broken with `net::ERR_ABORTED` — a fault in
+  the harness, not the app. And a check that cannot fail is not a check, so the
+  trap was deliberately broken (`const target = null`) and the script re-run: it
+  failed with `focus escaped on Tab #17` on the dashboard and `#19` on the
+  Connectome, exit 1. Restored, rebuilt, green again.
+
+  The route sweep also produced the first full-page baseline for the product, and
+  it is clean: 17 routes, no console errors, no exceptions, no failed requests.
+  Two harness bugs were found and fixed while writing it, both my own — parsing
+  a value that `returnByValue` had already turned into an object, and only
+  patching two of five identical call sites.
