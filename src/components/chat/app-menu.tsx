@@ -20,7 +20,7 @@ const GROUPS: { title: string; items: Destination[] }[] = [
       { href: "/calendar", label: "Calendar", hint: "Events and schedule" },
       { href: "/tasks", label: "Tasks", hint: "What needs doing" },
       { href: "/jobs", label: "Jobs", hint: "Roles and applications" },
-      { href: "/approvals", label: "Approvals", hint: "Actions waiting on you" },
+      { href: "/settings#approvals", label: "Approvals", hint: "Actions waiting on you" },
     ],
   },
   {
@@ -41,9 +41,9 @@ const GROUPS: { title: string; items: Destination[] }[] = [
   {
     title: "System",
     items: [
-      { href: "/connectors", label: "Connectors", hint: "LinkedIn and feeds" },
-      { href: "/automations", label: "Automations", hint: "Event-driven rules" },
-      { href: "/permissions", label: "Permissions", hint: "What Product may do" },
+      { href: "/settings#connectors", label: "Connectors", hint: "LinkedIn and feeds" },
+      { href: "/settings#automations", label: "Automations", hint: "Event-driven rules" },
+      { href: "/settings#permissions", label: "Permissions", hint: "What Product may do" },
       { href: "/settings", label: "Settings", hint: "Preferences and readiness" },
     ],
   },

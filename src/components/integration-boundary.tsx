@@ -151,7 +151,7 @@ export function IntegrationBoundary({
               <li>Only configured booleans are exposed on integration screens.</li>
             </ul>
             <Link
-              href="/connectors"
+              href="/settings#connectors"
               className={cn( "mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50", )}
             >
               Review connector state

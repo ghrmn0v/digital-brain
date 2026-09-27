@@ -1,25 +1,16 @@
 import type { Metadata } from "next";
-import { ApprovalsManager } from "@/components/approvals-manager";
-import { PageHeader } from "@/components/ui";
-import { actionService } from "@/modules/actions";
+import { redirect } from "next/navigation";
+
+/*
+ * Approvals is now a section of /settings, not a page of its own.
+ *
+ * The route stays so that bookmarks, shared links and anything already
+ * pointing here still lands somewhere useful: the redirect carries the
+ * section, so the reader arrives on the queue rather than at the top of
+ * the settings page.
+ */
 
 export const metadata: Metadata = { title: "Approvals" };
-
-export default async function ApprovalsPage() {
-  const result = await actionService.list(
-    { status: "pending_approval" },
-    1,
-    100,
-  );
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Human-in-the-loop"
-        title="AI actions requiring you"
-        description="AUTOMATIC actions execute without interrupting you. This queue contains only ASK_FIRST proposals, with structured payloads and a durable decision reason."
-      />
-      <ApprovalsManager actions={result.items} />
-    </div>
-  );
+export default function ApprovalsPage() {
+  redirect("/settings#approvals");
 }

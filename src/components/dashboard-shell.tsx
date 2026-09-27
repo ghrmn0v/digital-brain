@@ -55,11 +55,11 @@ const navigation: NavigationSection[] = [
   {
     label: "Control plane",
     items: [
-      { href: "/approvals", label: "Approvals", icon: CheckCheck },
-      { href: "/automations", label: "Automations", icon: Zap },
-      { href: "/permissions", label: "Permissions", icon: ShieldCheck },
-      { href: "/connectors", label: "Connectors", icon: PlugZap },
       { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/settings#permissions", label: "Permissions", icon: ShieldCheck },
+      { href: "/settings#approvals", label: "Approvals", icon: CheckCheck },
+      { href: "/settings#automations", label: "Automations", icon: Zap },
+      { href: "/settings#connectors", label: "Connectors", icon: PlugZap },
       {
         href: "/developer",
         label: "Developer Mode",
