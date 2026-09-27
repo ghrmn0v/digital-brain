@@ -24,6 +24,15 @@ from contracts.feedback.feedback import (
 from core import build_brain_service
 from core.service.exceptions import BrainServiceValidationError
 from core.understanding import DeveloperContext
+from core.understanding.exceptions import (
+    LLMProviderError,
+    LLMTimeoutError,
+)
+from core.service.brain_service import (
+    _SLUG_DETAIL_LIMIT,
+    _fallback_slug,
+    _shorten_detail,
+)
 
 from .ingestion_support import make_event
 from .test_reasoning import make_context
@@ -64,6 +73,84 @@ def _dev_context() -> DeveloperContext:
              "message": "Expected user object but received null"},
         ],
     )
+
+
+class FallbackSlugTests(unittest.TestCase):
+    """The slug is read by a person in a log, a response and the chat UI.
+
+    A slug cut mid-word is the failure mode worth preventing: "does not support
+    oper" reads like a bug in the message rather than a bound that was applied on
+    purpose.
+    """
+
+    def test_short_detail_is_returned_whole(self) -> None:
+        self.assertEqual(_shorten_detail("gemini rate limit reached"), "gemini rate limit reached")
+
+    def test_long_detail_is_cut_on_a_word_boundary(self) -> None:
+        out = _shorten_detail("heuristic provider does not support operations here")
+        self.assertTrue(out.endswith("…"))
+        self.assertLessEqual(len(out), _SLUG_DETAIL_LIMIT + 1)
+        # Nothing is left dangling: the last thing before the ellipsis is a word.
+        self.assertNotIn("oper…", out)
+        self.assertIn("heuristic provider does not support", out)
+
+    def test_a_cut_is_marked_so_it_is_not_mistaken_for_the_whole_reason(self) -> None:
+        out = _shorten_detail("gemini quota exhausted for the free tier request window")
+        self.assertIn("…", out)
+        self.assertNotIn("…", _shorten_detail("gemini quota exhausted"))
+
+    def test_whitespace_is_collapsed_before_measuring(self) -> None:
+        self.assertEqual(_shorten_detail("gemini\n\n  rate   limit"), "gemini rate limit")
+
+    def test_a_long_first_word_is_cut_rather_than_dropped(self) -> None:
+        # No usable space near the limit: returning almost nothing would be worse
+        # than a ragged string, so the budget is spent and the cut is marked.
+        out = _shorten_detail("x" * 80)
+        self.assertTrue(out.endswith("…"))
+        self.assertGreater(len(out), _SLUG_DETAIL_LIMIT // 2)
+
+    def test_the_slug_never_ends_mid_word(self) -> None:
+        """The cut must land on a boundary, not inside a word.
+
+        Checked against the source string rather than by pattern-matching a
+        fragment, because "operations" contains "oper" — a substring assertion
+        would fail on correct output and pass on the very bug it targets.
+        """
+        reason = "heuristic provider does not support operations for this request"
+        detail = _shorten_detail(reason)
+        self.assertTrue(detail.endswith("…"))
+        kept = detail.removesuffix("…")
+        # Whatever follows the kept text in the source must be a space, which is
+        # exactly what "cut on a word boundary" means.
+        self.assertEqual(reason[len(kept):][:1], " ")
+        self.assertEqual(
+            _fallback_slug(LLMProviderError(reason)), f"provider_unavailable:{detail}"
+        )
+
+    def test_timeout_and_unknown_failures_are_unchanged(self) -> None:
+        self.assertEqual(_fallback_slug(LLMTimeoutError("slow")), "provider_timeout")
+        self.assertEqual(_fallback_slug(RuntimeError("boom")), "provider_error")
+
+    def test_every_reason_core_produces_survives_whole(self) -> None:
+        """The bound must not truncate Core's own vocabulary.
+
+        Each of these is a real message the Gemini provider raises. If the limit
+        clipped one, the detail that distinguishes the failure would be the
+        first thing lost.
+        """
+        for reason in (
+            "gemini rate limit reached",
+            "gemini quota exhausted (per-minute limit)",
+            "gemini quota exhausted (daily limit)",
+            "gemini server error (HTTP 503)",
+            "gemini authentication failed",
+            "gemini request rejected (HTTP 400)",
+        ):
+            with self.subTest(reason=reason):
+                self.assertEqual(
+                    _fallback_slug(LLMProviderError(reason)),
+                    f"provider_unavailable:{reason}",
+                )
 
 
 class BrainServiceIngestTests(unittest.TestCase):

@@ -273,6 +273,107 @@ class GeminiFailureTests(unittest.TestCase):
             provider.complete(REQUEST)
         self.assertIn("rate limit", str(caught.exception))
 
+    def test_quota_exhaustion_is_distinguished_from_a_rate_limit(self) -> None:
+        """A spent quota and a burst limit share a 429 and need different words.
+
+        Telling an operator "rate limit reached" when the free tier is simply
+        capped sends them looking for a transient problem that clears by itself.
+        It does not: only billing or a slower request rate does.
+        """
+        body = json.dumps({
+            "error": {
+                "code": 429,
+                "status": "RESOURCE_EXHAUSTED",
+                "message": "You exceeded your current quota.",
+                "details": [{
+                    "@type": "type.googleapis.com/google.rpc.QuotaFailure",
+                    "violations": [{
+                        "quotaMetric": (
+                            "generativelanguage.googleapis.com/"
+                            "generate_content_free_tier_requests"
+                        ),
+                        "quotaId": (
+                            "GenerateRequestsPerMinutePerProjectPerModel-FreeTier"
+                        ),
+                    }],
+                }],
+            }
+        }).encode("utf-8")
+        error = urllib.error.HTTPError(
+            "u", 429, "Too Many Requests", {}, io.BytesIO(body)
+        )
+        provider, _ = provider_with({}, error=error)
+        with self.assertRaises(LLMProviderError) as caught:
+            provider.complete(REQUEST)
+        message = str(caught.exception)
+        self.assertIn("quota exhausted", message)
+        self.assertIn("per-minute limit", message)
+        self.assertNotIn("rate limit", message)
+
+    def test_a_daily_quota_is_named_differently_from_a_minute_one(self) -> None:
+        body = json.dumps({
+            "error": {
+                "status": "RESOURCE_EXHAUSTED",
+                "details": [{
+                    "violations": [
+                        {"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}
+                    ]
+                }],
+            }
+        }).encode("utf-8")
+        error = urllib.error.HTTPError("u", 429, "Too Many Requests", {}, io.BytesIO(body))
+        provider, _ = provider_with({}, error=error)
+        with self.assertRaises(LLMProviderError) as caught:
+            provider.complete(REQUEST)
+        self.assertIn("daily limit", str(caught.exception))
+
+    def test_a_429_without_a_quota_body_stays_a_rate_limit(self) -> None:
+        """The differentiation must not swallow the transient case."""
+        for body in (b"", b"not json", b"{}", b'{"error":"slow down"}'):
+            with self.subTest(body=body):
+                error = urllib.error.HTTPError(
+                    "u", 429, "Too Many Requests", {}, io.BytesIO(body)
+                )
+                provider, _ = provider_with({}, error=error)
+                with self.assertRaises(LLMProviderError) as caught:
+                    provider.complete(REQUEST)
+                self.assertIn("rate limit", str(caught.exception))
+
+    def test_an_unreadable_error_body_still_produces_a_typed_error(self) -> None:
+        class Exploding(io.BytesIO):
+            def read(self, *args: object) -> bytes:
+                raise OSError("body unavailable")
+
+        error = urllib.error.HTTPError(
+            "u", 429, "Too Many Requests", {}, Exploding(b"")
+        )
+        provider, _ = provider_with({}, error=error)
+        with self.assertRaises(LLMProviderError) as caught:
+            provider.complete(REQUEST)
+        self.assertIn("rate limit", str(caught.exception))
+
+    def test_quota_detail_never_reaches_the_message(self) -> None:
+        """The body can echo the request, so only the window name may escape."""
+        secret = "sensitive-user-question-text"
+        body = json.dumps({
+            "error": {
+                "status": "RESOURCE_EXHAUSTED",
+                "message": f"quota exceeded while asking about {secret}",
+                "details": [{
+                    "violations": [{
+                        "quotaId": "GenerateRequestsPerMinutePerProject",
+                        "reason": secret,
+                    }]
+                }],
+            }
+        }).encode("utf-8")
+        error = urllib.error.HTTPError("u", 429, "Too Many Requests", {}, io.BytesIO(body))
+        provider, _ = provider_with({}, error=error)
+        with self.assertRaises(LLMProviderError) as caught:
+            provider.complete(REQUEST)
+        self.assertNotIn(secret, str(caught.exception))
+        self.assertNotIn(secret, str(provider.usage.last_error))
+
     def test_auth_failure_does_not_leak_provider_payload(self) -> None:
         error = urllib.error.HTTPError(
             "u", 401, "Unauthorized", {}, io.BytesIO(b'{"error":{"message":"bad key abc"}}')

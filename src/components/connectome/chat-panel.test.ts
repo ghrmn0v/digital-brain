@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
-import { ChatPanel, renderInlineMarkdown } from "@/components/connectome/chat-panel";
+import {
+  ChatPanel,
+  describeFallbackReason,
+  renderInlineMarkdown,
+} from "@/components/connectome/chat-panel";
 
 /**
  * The Brain answers in Markdown, and the panel renders part of it. That is
@@ -94,5 +98,62 @@ describe("inline markdown rendering", () => {
         createElement("div", null, renderInlineMarkdown(input)),
       )).not.toThrow();
     }
+  });
+});
+
+describe("describeFallbackReason", () => {
+  it("translates the quota slug, which is the one worth being specific about", () => {
+    // Quota is checked before the generic rate limit on purpose: a quota slug
+    // also contains "limit", and "your quota is used up" is a different fact
+    // from "slow down".
+    expect(
+      describeFallbackReason("provider_unavailable:gemini quota exhausted (per-minute limit)"),
+    ).toMatch(/quota/i);
+    expect(
+      describeFallbackReason("provider_unavailable:gemini quota exhausted (per-minute limit)"),
+    ).not.toMatch(/rate limit/i);
+  });
+
+  it("translates every slug the Brain actually emits", () => {
+    const slugs = [
+      "provider_unavailable:gemini rate limit reached",
+      "provider_unavailable:gemini quota exhausted (per-minute limit)",
+      "provider_unavailable:gemini quota exhausted (daily limit)",
+      "provider_unavailable:gemini server error (HTTP 503)",
+      "provider_unavailable:gemini authentication failed",
+      "provider_unavailable:heuristic provider does not support operations…",
+      "provider_timeout",
+      "provider_error",
+    ];
+    for (const slug of slugs) {
+      const message = describeFallbackReason(slug);
+      expect(message, slug).toBeTruthy();
+      // A translation must never be the slug wearing different punctuation.
+      expect(message, slug).not.toContain("provider_unavailable");
+      expect(message, slug).not.toContain("_");
+      expect(message, slug).toMatch(/\.$/);
+    }
+  });
+
+  it("never leaks the raw slug into the sentence shown to a reader", () => {
+    for (const slug of [
+      "provider_unavailable:gemini quota exhausted (per-minute limit)",
+      "provider_unavailable:gemini server error (HTTP 503)",
+      "provider_unavailable:heuristic provider does not support operations…",
+    ]) {
+      const message = describeFallbackReason(slug)!;
+      for (const token of slug.split(/[:()…]/).map((t) => t.trim()).filter(Boolean)) {
+        // Provider words may legitimately reappear in prose; a slug-shaped
+        // fragment may not.
+        expect(message.toLowerCase(), `${slug} -> ${message}`).not.toContain(token.toLowerCase().replace(/…$/, ""));
+      }
+    }
+  });
+
+  it("returns null for a missing or unrecognised reason rather than guessing", () => {
+    // Inventing a cause is worse than omitting one.
+    expect(describeFallbackReason(null)).toBeNull();
+    expect(describeFallbackReason("")).toBeNull();
+    expect(describeFallbackReason("something_new:who knows")).toBeNull();
   });
 });

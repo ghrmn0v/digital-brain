@@ -154,6 +154,43 @@ class PersonalInsight(BaseModel):
     recorded_candidates: list[RecordedCandidate] = Field(default_factory=list)
 
 
+#: Longest provider detail kept in a fallback slug. The slug travels into a log
+#: line, an API response and a chat UI, so it is bounded rather than complete.
+#:
+#: 48 rather than a rounder number because the bound exists to stop *arbitrary*
+#: provider text running away, not to squeeze Core's own vocabulary. The longest
+#: reason the Gemini provider produces is "gemini quota exhausted (per-minute
+#: limit)" at 41 characters, and truncating that would cut away the one detail
+#: that says which quota window was hit — which is the entire reason the
+#: provider distinguishes them.
+_SLUG_DETAIL_LIMIT = 48
+
+#: Appended when :func:`_shorten_detail` had to cut. Without it a clipped string
+#: is indistinguishable from a complete one, and "…provider does not support
+#: oper" reads like a bug rather than a bound.
+_ELLIPSIS = "…"
+
+
+def _shorten_detail(text: str, limit: int = _SLUG_DETAIL_LIMIT) -> str:
+    """Collapse whitespace and cut to ``limit`` on a word boundary.
+
+    Cutting mid-word is the thing worth avoiding: a slug is read by a person, and
+    ``does not support oper`` invites the reader to go looking for a bug in the
+    message. When there is no usable space near the limit the text is cut hard
+    and marked, because a slightly ragged short string beats an empty one.
+    """
+    collapsed = " ".join(text.split())
+    if len(collapsed) <= limit:
+        return collapsed
+    clipped = collapsed[:limit]
+    boundary = clipped.rfind(" ")
+    # Only honour the boundary if it keeps most of the budget; otherwise the
+    # slug would lose its meaning to keep one word whole.
+    if boundary >= limit // 2:
+        clipped = clipped[:boundary]
+    return clipped.rstrip(" ,;:.-") + _ELLIPSIS
+
+
 def _fallback_slug(exc: LLMGatewayError) -> str:
     """Reduce a gateway failure to a short, quotable slug.
 
@@ -164,7 +201,7 @@ def _fallback_slug(exc: LLMGatewayError) -> str:
     if isinstance(exc, LLMTimeoutError):
         return "provider_timeout"
     if isinstance(exc, LLMProviderError):
-        return f"provider_unavailable:{' '.join(str(exc).split())[:40]}"
+        return f"provider_unavailable:{_shorten_detail(str(exc))}"
     return "provider_error"
 
 

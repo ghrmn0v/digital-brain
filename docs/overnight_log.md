@@ -435,3 +435,57 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
 
   `npm start` pins `--ozone-platform=x11` because Chromium's Vulkan backend is
   incompatible with the Wayland Ozone hint on this desktop. 44 tests pass.
+
+## Task 15 — tell a spent quota apart from a rate limit, and stop showing slugs
+
+- **Files:** `core/understanding/gemini.py`,
+  `core/service/brain_service.py`,
+  `src/components/connectome/chat-panel.tsx`,
+  `tests/test_gemini_provider.py`, `tests/test_brain_service.py`,
+  `src/components/connectome/chat-panel.test.ts`
+- **Result:** PASS
+- **Notes:** Measured against the provider rather than inferred from the log: the
+  key is valid, and the free tier allows **5 requests per minute** for
+  `gemini-3.8-flash`, after which Google answers `429 RESOURCE_EXHAUSTED` with
+  `quotaId: GenerateRequestsPerMinutePerProjectPerModel-FreeTier` and an
+  explicit `retryAfter: 57s`. Five probes returned 200 and the next three were
+  429 — exactly the cap.
+
+  Every 429 was being reported as `gemini rate limit reached`, which sends an
+  operator looking for a transient problem that clears by itself. This one does
+  not clear: only billing or a slower request rate does. `_http_error` now reads
+  the 429 body and names the window from a fixed table, so the reason reads
+  `gemini quota exhausted (per-minute limit)`. Only a window *name* is lifted out
+  of the payload — never body text, which can echo the request back — and a test
+  asserts a secret planted in the body cannot reach the message or the usage log.
+
+  Writing that test uncovered a second bug that would have made the feature
+  pointless. A 429 is retryable, so `_post` raises the *same* `HTTPError` object
+  twice, and an `HTTPError` is a one-shot stream: the second attempt read an empty
+  body and downgraded the precise diagnosis straight back to "rate limit". Since
+  every 429 is retried, the specific message would never have survived to the
+  caller. The window is now memoised on the exception, which makes the function
+  idempotent and is not merely an optimisation.
+
+  `_fallback_slug` cut the provider detail at a hard `[:40]`, producing
+  `…does not support oper` — mid-word, with nothing marking it as cut, so it read
+  like a bug in the message. It now collapses whitespace, cuts on a word
+  boundary and appends `…`. The limit moved from 40 to **48** for a reason worth
+  recording: the longest reason the Gemini provider produces is `gemini quota
+  exhausted (per-minute limit)` at 41 characters, so a limit of 40 truncated away
+  the one detail that says *which* window was hit. The bound exists to stop
+  arbitrary provider text running away, not to squeeze Core's own vocabulary, and
+  a test pins every reason the provider can raise.
+
+  The chat panel was appending the raw slug to the visible sentence. Telemetry
+  is not prose, so `describeFallbackReason` now translates it and the slug is kept
+  as a `title` tooltip — available to someone debugging, invisible to everyone
+  else. Patterns are matched against the whole slug because the detail after the
+  colon is provider text, quota is matched before the generic rate limit because a
+  quota slug also contains the word "limit", and an unrecognised slug returns
+  `null` so the panel says nothing rather than inventing a cause.
+
+  Verified in a real browser with the quota deliberately exhausted: the banner
+  reads "The AI provider's quota for this model is used up.", `provider_unavailable`
+  does not appear anywhere in the rendered text, and the span's `title` holds the
+  full slug.

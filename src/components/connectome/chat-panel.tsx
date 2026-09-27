@@ -32,6 +32,68 @@ interface Grounding {
   score: number;
 }
 
+/**
+ * Turns the Brain's `fallback_reason` slug into something worth reading.
+ *
+ * The slug is telemetry: `provider_unavailable:gemini quota exhausted
+ * (per-minute limit)` is written for a log, and putting it in front of a person
+ * either means nothing to them or looks like a stack trace. So the reason is
+ * translated, and the slug is kept — as a tooltip, where it is available to
+ * someone debugging and invisible to everyone else.
+ *
+ * The patterns are matched against the whole slug rather than an exact string,
+ * because the detail after the colon is provider text and Core does not control
+ * its wording. Order matters: quota is checked before the generic rate limit
+ * because a quota slug also contains the word "limit", and the specific answer is
+ * the more useful one.
+ *
+ * Returns `null` when the slug is unrecognised. The caller then says nothing
+ * extra rather than inventing a cause, because a wrong explanation of why an
+ * answer degraded is worse than no explanation.
+ */
+const FALLBACK_MESSAGES: ReadonlyArray<{ match: RegExp; message: string }> = [
+  {
+    match: /quota\s+exhausted/i,
+    message: "The AI provider's quota for this model is used up.",
+  },
+  {
+    match: /rate\s+limit/i,
+    message: "The AI provider is rate limiting requests right now.",
+  },
+  {
+    match: /(server error|service unavailable)/i,
+    message: "The AI provider is temporarily unavailable.",
+  },
+  {
+    match: /(authentication|unauthorized|forbidden|api key)/i,
+    message: "The AI provider rejected its credentials.",
+  },
+  {
+    match: /(timed? out|timeout)/i,
+    message: "The AI provider took too long to answer.",
+  },
+  {
+    match: /heuristic/i,
+    message: "No language model is configured for the Brain.",
+  },
+  {
+    match: /(network|connection|unreachable|failed)/i,
+    message: "The AI provider could not be contacted.",
+  },
+  {
+    // Core's own catch-all slug. Worth a sentence rather than silence, because
+    // the alternative is a fallback notice that explains nothing at all.
+    match: /^provider_error$/,
+    message: "The AI provider failed without reporting a specific reason.",
+  },
+];
+
+export function describeFallbackReason(slug: string | null): string | null {
+  if (!slug) return null;
+  const match = FALLBACK_MESSAGES.find((entry) => entry.match.test(slug));
+  return match ? match.message : null;
+}
+
 interface ChatResult {
   answer: string;
   message: string;
@@ -361,6 +423,7 @@ function TurnCard({ turn }: { turn: Turn }) {
 
 function AnswerPanel({ result }: { result: ChatResult }) {
   const grounding = result.grounded_in ?? [];
+  const friendlyFallback = describeFallbackReason(result.fallback_reason);
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -390,10 +453,17 @@ function AnswerPanel({ result }: { result: ChatResult }) {
         {result.fallback_used ? (
           <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.07] px-3 py-2 text-[11px] leading-5 text-amber-100">
             <AlertTriangle aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            <span>
-              No model answered this — the Brain replied from its own memory
-              only.
-              {result.fallback_reason ? ` (${result.fallback_reason})` : ""}
+            {/*
+              The raw slug stays reachable as a tooltip and never as body text:
+              it is how a developer identifies the failure, and it is noise to
+              anyone else. The sentence stands on its own if the slug is missing
+              or unrecognised.
+            */}
+            <span title={result.fallback_reason ?? undefined}>
+              No model answered this — the Brain replied from its own memory only.
+              {friendlyFallback
+                ? ` ${friendlyFallback} The answer above comes from stored memory, not from a model.`
+                : ""}
             </span>
           </p>
         ) : null}

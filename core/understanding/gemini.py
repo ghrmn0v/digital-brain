@@ -359,6 +359,18 @@ class GeminiProvider:
     def _http_error(self, exc: urllib.error.HTTPError) -> LLMProviderError:
         status = int(getattr(exc, "code", 0) or 0)
         if status == 429:
+            # A 429 is two different problems wearing the same status code.
+            # Google's own body separates them: a spent quota is
+            # ``RESOURCE_EXHAUSTED`` with a ``quotaId`` naming the window, while
+            # a burst limit is a plain rejection that clears in seconds. Both
+            # mean "not now", but only one of them clears on its own, and an
+            # operator told "rate limit reached" will wait a moment and then
+            # conclude the provider is broken when the real answer is that the
+            # free tier is capped. Only the window name is lifted out of the
+            # body — never the body text, which can echo the request.
+            window = _quota_window(exc)
+            if window is not None:
+                return self._fail(f"gemini quota exhausted ({window})")
             return self._fail("gemini rate limit reached")
         if status in (401, 403):
             # Never surface provider auth payloads: they can echo credentials.
@@ -417,6 +429,89 @@ def _redact(message: str, api_key: str) -> str:
     if api_key and api_key in message:
         return message.replace(api_key, _REDACTED)
     return message
+
+
+#: Maps the ``quotaId`` Google reports onto the window a human would name. A
+#: value that is not in here is deliberately not guessed at: an unrecognised
+#: quota is treated as a transient limit rather than described wrongly.
+_QUOTA_WINDOWS = (
+    ("perminute", "per-minute limit"),
+    ("perday", "daily limit"),
+    ("perhour", "hourly limit"),
+)
+
+
+#: Distinguishes "computed and there is no quota" from "not computed yet", since
+#: ``None`` is a real answer here.
+_QUOTA_WINDOW_UNSET = object()
+
+
+def _quota_window(exc: urllib.error.HTTPError) -> str | None:
+    """Name the quota window from a 429 body, or ``None`` if it is not a quota.
+
+    The answer is memoised on the exception, and that is not an optimisation. A
+    429 is retryable, so ``_post`` raises the *same* ``HTTPError`` object twice —
+    and an ``HTTPError`` is a one-shot stream. Reading it on the first attempt
+    leaves the second attempt with an empty body, which reads as "no quota here"
+    and silently downgrades a precise diagnosis to "rate limit reached". Since
+    every 429 is retried, without this the specific message would never survive
+    to the caller.
+
+    The body is read once and only a window name looked up in a fixed table is
+    returned; nothing from the payload becomes part of a message, because that
+    payload can echo the request. Any failure to read or parse it is treated as
+    "not a quota", which loses one word of detail rather than failing a request.
+    """
+    cached = getattr(exc, "_cerbro_quota_window", _QUOTA_WINDOW_UNSET)
+    if cached is not _QUOTA_WINDOW_UNSET:
+        return cached  # type: ignore[return-value]
+
+    window = _read_quota_window(exc)
+    try:
+        setattr(exc, "_cerbro_quota_window", window)
+    except Exception:  # pragma: no cover - defensive
+        pass
+    return window
+
+
+def _read_quota_window(exc: urllib.error.HTTPError) -> str | None:
+    try:
+        raw = exc.read()
+    except Exception:  # pragma: no cover - defensive
+        return None
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw.decode("utf-8", errors="replace"))
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+
+    error = data.get("error")
+    if not isinstance(error, dict) or error.get("status") != "RESOURCE_EXHAUSTED":
+        return None
+
+    quota_ids: list[str] = []
+    for detail in error.get("details") or []:
+        if not isinstance(detail, dict):
+            continue
+        quota_id = detail.get("quotaId")
+        if isinstance(quota_id, str):
+            quota_ids.append(quota_id)
+        for violation in detail.get("violations") or []:
+            if isinstance(violation, dict) and isinstance(
+                violation.get("quotaId"), str
+            ):
+                quota_ids.append(violation["quotaId"])
+
+    lowered = " ".join(quota_ids).lower()
+    for needle, window in _QUOTA_WINDOWS:
+        if needle in lowered:
+            return window
+    # Exhausted, but the window is one this build does not name. Saying so is
+    # still more useful than calling it a rate limit.
+    return "quota exhausted" if quota_ids else None
 
 
 def _gemini_factory() -> LLMProvider:
