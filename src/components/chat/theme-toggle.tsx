@@ -28,7 +28,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={theme === "light" ? "Use dark theme" : "Use light theme"}
       title={theme === "light" ? "Dark" : "Light"}
-      className="rounded-lg p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--panel-raised)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+      className="rounded-lg p-2 text-[var(--text-secondary)] transition hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
     >
       {theme === "light" ? (
         <Moon aria-hidden="true" className="h-4 w-4" />

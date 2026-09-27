@@ -121,14 +121,14 @@ export default async function DashboardPage() {
           <>
             <Link
               href="/tasks?status=todo"
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+              className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
             >
               <ListTodo aria-hidden="true" className="h-4 w-4" />
               Review tasks
             </Link>
             <Link
               href="/approvals"
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+              className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
             >
               <CheckCheck aria-hidden="true" className="h-4 w-4" />
               Review approvals
@@ -148,7 +148,7 @@ export default async function DashboardPage() {
         <MetricCard
           label="Active tasks"
           value={activeTaskCount}
-          detail={`${todo.pagination.total} todo · ${inProgress.pagination.total} in progress`}
+          detail={`${todo.pagination.total} todo Â· ${inProgress.pagination.total} in progress`}
           icon={ListTodo}
           href="/tasks"
         />
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
                           ) : (
                             "No due date"
                           )}
-                          <span aria-hidden="true"> · </span>
+                          <span aria-hidden="true"> Â· </span>
                           {task.source}
                         </p>
                       </div>
@@ -282,7 +282,7 @@ export default async function DashboardPage() {
                       <time dateTime={event.startsAt} title={formatDateTime(event.startsAt)}>
                         {formatDateTime(event.startsAt)}
                       </time>
-                      {event.allDay ? " · All day" : ` – ${formatDateTime(event.endsAt).split(", ").at(-1)}`}
+                      {event.allDay ? " Â· All day" : ` â€“ ${formatDateTime(event.endsAt).split(", ").at(-1)}`}
                     </p>
                   </div>
                   <StatusBadge status={event.status} />
@@ -328,7 +328,7 @@ export default async function DashboardPage() {
                     <h3 className="truncate text-sm font-medium text-[var(--text-primary)]">{job.title}</h3>
                     <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
                       {job.company}
-                      {job.location ? ` · ${job.location}` : ""}
+                      {job.location ? ` Â· ${job.location}` : ""}
                     </p>
                   </div>
                   <StatusBadge status={job.status} />
@@ -368,7 +368,7 @@ export default async function DashboardPage() {
                         {action.action}
                       </h3>
                       <p className="mt-1.5 text-xs text-[var(--text-muted)]">
-                        {action.source} · requested {formatRelativeTime(action.requestedAt, now)}
+                        {action.source} Â· requested {formatRelativeTime(action.requestedAt, now)}
                       </p>
                     </div>
                     <Badge tone="warning" dot>

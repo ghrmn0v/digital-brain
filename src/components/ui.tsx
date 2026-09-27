@@ -23,13 +23,13 @@ export const selectClassName = cn(
 );
 
 export const primaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-55";
+  "control-button inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-55";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/80 px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
+  "control-button inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/80 px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export const dangerButtonClassName =
-  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--danger)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
+  "control-button inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--danger)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PageHeader({
   eyebrow,

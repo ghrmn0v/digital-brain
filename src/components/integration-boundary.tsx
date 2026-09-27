@@ -89,7 +89,7 @@ export function IntegrationBoundary({
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/settings"
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+                className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
               >
                 <Settings2 aria-hidden="true" className="h-4 w-4" />
                 Integration readiness

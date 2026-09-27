@@ -162,10 +162,8 @@ textarea,
 }
 
 /*
- * A button that does something must say so before it is pressed, so the
- * pointer follows it. This is the one piece of hover feedback the system
- * allows: the cursor changes, nothing on screen does. Disabled buttons opt
- * out, and links are left alone because browsers already point at them.
+ * A button that does something must say so before it is pressed. The
+ * pointer names it, and the surface lifts to confirm the target.
  */
 button:not(:disabled) {
   cursor: pointer;
@@ -173,6 +171,54 @@ button:not(:disabled) {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+/*
+ * The lift, in one rule.
+ *
+ * Covers <button> and, through .control-button, the anchors that are drawn
+ * as buttons. Navigation links and inline text links are deliberately not
+ * included: a filled surface on those would fight their own active state.
+ *
+ * A gradient layer rather than a background-color, because a button's own
+ * background is set by its variant (a filled accent, a panel, a danger
+ * tint) and one shared rule has to work on all of them without knowing
+ * which. The veil paints over the background and under the label, so it
+ * reads as the surface catching light instead of a colour swap.
+ *
+ * White lifts a dark surface; black lifts a light one. Declaring the veil
+ * as a registered custom property is what lets it animate, since an
+ * untyped custom property would jump.
+ */
+@property --veil {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgb(255 255 255 / 0);
+}
+
+button:not(:disabled),
+.control-button:not([aria-disabled="true"]) {
+  background-image: linear-gradient(var(--veil), var(--veil));
+  transition-property: --veil;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  .control-button:not([aria-disabled="true"]):hover {
+    --veil: rgb(255 255 255 / 0.09);
+  }
+}
+
+[data-theme="light"] button:not(:disabled),
+[data-theme="light"] .control-button:not([aria-disabled="true"]) {
+  --veil: rgb(0 0 0 / 0);
+}
+
+[data-theme="light"] button:not(:disabled):hover,
+[data-theme="light"] .control-button:not([aria-disabled="true"]):hover {
+  --veil: rgb(24 24 27 / 0.07);
 }
 
 input[type="date"],
@@ -220,9 +266,9 @@ input[type="checkbox"] {
 }
 
 /*
- * A soft neon halo. It marks a focal element and is never triggered by
- * pointer hover: hovering changes the cursor and nothing else, so emphasis
- * stays explicit.
+ * A soft neon halo. It marks a focal element and is never switched on or
+ * off by hover: the halo is a permanent statement about what the element
+ * is, not a reaction to the pointer.
  */
 .halo {
   position: relative;

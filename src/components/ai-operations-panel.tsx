@@ -46,14 +46,14 @@ export function AiOperationsPanel({
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
               href="/approvals"
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
+              className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
             >
               Review AI decisions
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Link>
             <Link
               href="/permissions"
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
+              className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
             >
               Control permissions
             </Link>
@@ -77,7 +77,7 @@ export function AiOperationsPanel({
               {permissionSummary.automatic}
             </p>
             <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
-              Automatic · {permissionSummary.askFirst} ask · {permissionSummary.off} off
+              Automatic Â· {permissionSummary.askFirst} ask Â· {permissionSummary.off} off
             </p>
           </div>
         </div>
