@@ -1,20 +1,24 @@
 {
-  "name": "fly-desktop",
+  "name": "cerebro-flow-desktop",
   "version": "0.1.0",
-  "description": "Fly / Connectome visual layer (Electron + Three.js)",
+  "description": "Cerebro Flow PC desktop shell (Electron)",
   "main": "src/main.js",
   "type": "module",
   "scripts": {
-    "start": "electron .",
-    "test": "node --test test/"
+    "start": "electron . --ozone-platform=x11",
+    "start:wayland": "electron . --ozone-platform=wayland",
+    "start:fly": "CEREBRO_SHELL_MODE=fly electron . --ozone-platform=x11",
+    "devtools": "CEREBRO_DEVTOOLS=1 electron . --ozone-platform=x11",
+    "smoke": "CEREBRO_SMOKE=1 electron . --ozone-platform=x11",
+    "check": "node --check src/main.js && node --check src/origin-policy.mjs",
+    "test": "node --test test/",
+    "validate": "npm run check && npm test",
+    "build": "npm run validate"
   },
   "dependencies": {
     "three": "^0.169.0"
   },
   "devDependencies": {
-    "electron": "^33.0.2"
-  },
-  "allowScripts": {
-    "electron@33.4.11": true
+    "electron": "^44.4.5"
   }
 }

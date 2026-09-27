@@ -380,3 +380,58 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   lines. Three cards across is kept below `lg`, where the column is the full page
   width and a row is all they can be. The three cards are now one `stats` array
   instead of three hand-copied blocks, so they cannot drift apart again.
+
+## Task 14 — the Electron PC shell, pointed at the product
+
+- **Files:** `desktop/src/main.js`, `desktop/src/origin-policy.mjs` (new),
+  `desktop/test/origin-policy.test.mjs` (new),
+  `desktop/test/security.test.mjs`, `desktop/package.json`,
+  `desktop/package-lock.json`, `desktop/README.md` (new)
+- **Result:** PASS
+- **Notes:** The shell existed but had never run here, and two things stopped it
+  dead. `desktop/node_modules` did not exist, and once installed the Electron
+  *binary* was still missing: the postinstall extracted exactly one file and
+  stopped. The cause is a genuine bug in Electron's installer — a download
+  rejection whose error object has an empty `.stack` is passed to
+  `console.error(err.stack)`, so it prints two blank lines and exits `0`. Anyone
+  trusting the exit code would conclude the install worked. `electron --version`
+  is the only honest check, and the README now says so. The archive itself was
+  fine, so it was extracted with the system `unzip` rather than by adding a
+  dependency to work around a broken extractor.
+
+  Electron 33.4.11 then had to go: `npm audit` reported **35 high-severity
+  advisories**, including a context-isolation bypass, an HTTP-redirect-followed
+  -into-local-file bug, and a service-worker spoof of `executeJavaScript` IPC
+  replies. Those matter far more once the renderer is showing web content
+  instead of a local file, so this was raised to 44.4.5, which audits clean.
+
+  The main change is that the shell now loads `http://localhost:3000`, which
+  invalidates a security invariant the suite asserted: `the shell only loads a
+  local file and never a remote URL` forbade any `loadURL("http…")`. Deleting
+  that assertion would have quietly removed a real guarantee, so it is restated
+  as something stronger — the loaded target must be a loopback host on an allowed
+  port, and a hardcoded remote origin is still fatal. The allowlist itself lives
+  in `origin-policy.mjs` as a pure function with 14 tests, including that a host
+  which merely *resolves* to `127.0.0.1` is refused, because that answer can
+  change between the check and the request. A second old assertion pinned one
+  exact arrow shape for the `window.open` denial; it now asserts the denial
+  itself, since the handler legitimately grew a parameter.
+
+  The web app is loaded with **no preload and no Node access at all**. The Fly
+  page keeps its bridge, but a renderer showing web content has no reason to hold
+  one, and the smallest bridge is the one with least to get wrong. Device
+  permissions are denied outright, and off-origin links open in the real browser
+  instead of turning the window into one.
+
+  Verified by launching, not by reading the diff. Smoke mode reported
+  `SMOKE_LOADED http://localhost:3000/dashboard` — the `/` → `/dashboard`
+  redirect is in-app routing, so its being allowed rather than blocked is direct
+  evidence the origin policy permits navigation while refusing to leave the
+  origin. A `grim` capture of the real Hyprland desktop confirmed the frameless
+  window draws working minimise/maximise/close overlay controls, which was the
+  real risk in choosing frameless: a compositor that ignored `titleBarOverlay`
+  would leave no way to close the window. `CEREBRO_WINDOW_CHROME=native` is the
+  documented escape hatch.
+
+  `npm start` pins `--ozone-platform=x11` because Chromium's Vulkan backend is
+  incompatible with the Wayland Ozone hint on this desktop. 44 tests pass.

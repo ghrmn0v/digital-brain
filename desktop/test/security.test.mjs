@@ -67,7 +67,11 @@ test("message bodies and sender names are never written as HTML", () => {
 });
 
 test("the shell denies navigation and window opens", () => {
-  assert.match(main, /setWindowOpenHandler\(\(\)\s*=>\s*\(\{\s*action:\s*"deny"\s*\}\)\)/);
+  // Asserted as behaviour rather than as one exact arrow shape: the handler
+  // now also forwards http(s) targets to the system browser, so it takes a
+  // parameter, but it still must end in a deny.
+  assert.match(main, /setWindowOpenHandler\(/);
+  assert.match(main, /return\s*\{\s*action:\s*"deny"\s*\}/);
   assert.match(main, /on\("will-navigate"/);
   assert.match(main, /on\("will-attach-webview"/);
 });
@@ -79,7 +83,42 @@ test("the shell keeps the core web guarantees explicit", () => {
   assert.match(main, /allowRunningInsecureContent:\s*false/);
 });
 
-test("the shell only loads a local file and never a remote URL", () => {
-  assert.ok(!/loadURL\(\s*["']https?:/.test(main), "shell must not load remote content");
+test("the shell only loads a loopback origin and never a remote host", () => {
+  // This used to assert that the shell never loads an http URL at all. The
+  // shell now loads the product's own web interface on this machine, so the
+  // invariant is restated rather than dropped: the loaded target must be a
+  // loopback host on an allowed port. A hardcoded remote origin is still fatal.
+  assert.ok(
+    !/loadURL\(\s*["']https?:\/\/(?!localhost|127\.0\.0\.1|\[::1\])/.test(main),
+    "shell must not hardcode a remote origin",
+  );
+  assert.match(main, /loadURL\(\s*origin\s*\)/);
+  // The allowlist itself is asserted behaviourally in origin-policy.test.mjs.
+  assert.match(main, /isAllowedUrl\(\s*url\s*,\s*origin\s*\)/);
+  assert.match(main, /import \{[^}]*isAllowedUrl[^}]*\} from "\.\/origin-policy\.mjs"/s);
+  // The local Fly page is still reachable, but only as an explicit opt-in.
   assert.match(main, /loadFile\(/);
+  assert.match(main, /CEREBRO_SHELL_MODE/);
+});
+
+test("the web app is loaded with no Node bridge at all", () => {
+  // Loading a web origin means the renderer is no longer a local file, so the
+  // preload bridge must not be attached to it. The Fly page keeps its preload;
+  // the web app gets none.
+  assert.match(main, /flyMode\s*\?\s*\{\s*preload:/);
+  assert.match(main, /sandbox:\s*true/);
+});
+
+test("device permissions are denied by default", () => {
+  // A local page should not be able to ask for a camera or a microphone, and
+  // denying removes the nested-frame origin-confusion cases as well.
+  assert.match(main, /setPermissionRequestHandler/);
+  assert.match(main, /callback\(false\)/);
+  assert.match(main, /setPermissionCheckHandler\(\(\)\s*=>\s*false\)/);
+});
+
+test("the shell degrades with an explanation when the web server is down", () => {
+  assert.match(main, /on\("did-fail-load"/);
+  assert.match(main, /offlineDocument/);
+  assert.match(main, /CEREBRO_SMOKE_OK/);
 });
