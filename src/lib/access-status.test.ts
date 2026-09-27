@@ -7,6 +7,16 @@ import {
 
 const healthy: AccessStatusInput = {
   database: { configured: true, reachable: true, recordCount: 312 },
+  services: {
+    fly: {
+      reachable: true,
+      service: "fly-python-behavior",
+      neurons: 2414,
+      flightMode: true,
+      error: null,
+    },
+    desktopShell: { detected: true, agent: "Electron/44.4.5" },
+  },
   gemini: {
     heldBy: "brain",
     brainEnvFileConfigured: true,
@@ -50,13 +60,46 @@ const withPermissions = (patch: Partial<AccessStatusInput["permissions"]>) =>
   deriveAccessStatus({ ...healthy, permissions: { ...healthy.permissions, ...patch } });
 
 describe("deriveAccessStatus", () => {
-  it("returns the four groups the page renders, in order", () => {
+  it("returns every group the page renders, in order", () => {
     expect(deriveAccessStatus(healthy).groups.map((g) => g.id)).toEqual([
       "storage",
       "gemini",
+      "services",
       "brain",
       "workspace",
     ]);
+  });
+
+  it("reports the Fly engine as optional, not broken, when it is down", () => {
+    // The map, chat and Brain all work without Fly. Rendering an unreachable
+    // optional service as a failure would train people to ignore the row.
+    const check = find(
+      deriveAccessStatus({
+        ...healthy,
+        services: {
+          ...healthy.services,
+          fly: { reachable: false, service: null, neurons: null, flightMode: null, error: "no response" },
+        },
+      }).checks,
+      "fly-engine",
+    );
+    expect(check.state).toBe("warn");
+    expect(check.value).toBe("Not running");
+  });
+
+  it("distinguishes the desktop shell from a browser without calling either broken", () => {
+    const fromShell = find(deriveAccessStatus(healthy).checks, "desktop-shell");
+    const fromBrowser = find(
+      deriveAccessStatus({
+        ...healthy,
+        services: { ...healthy.services, desktopShell: { detected: false, agent: null } },
+      }).checks,
+      "desktop-shell",
+    );
+    expect(fromShell.state).toBe("ok");
+    expect(fromShell.value).toBe("Electron");
+    expect(fromBrowser.state).toBe("unknown");
+    expect(fromBrowser.value).toBe("Browser");
   });
 
   it("counts every check once, with no duplicates across groups", () => {

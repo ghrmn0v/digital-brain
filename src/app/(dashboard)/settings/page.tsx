@@ -13,6 +13,8 @@ import { PermissionsManager } from "@/components/permissions-manager";
 import { SettingsManager } from "@/components/settings-manager";
 import { SettingsSection } from "@/components/settings/settings-section";
 import { SettingsSectionNav } from "@/components/settings/settings-section-nav";
+import { FlyEngineControl } from "@/components/settings/fly-engine-control";
+import { flyStatus } from "@/lib/fly-service";
 import { Panel, SectionHeading } from "@/components/ui";
 import { actionService } from "@/modules/actions";
 import { automationService } from "@/modules/automations";
@@ -63,6 +65,7 @@ export default async function SettingsPage({
     : "general";
 
   const [
+    fly,
     settings,
     developerModeEnabled,
     pendingActions,
@@ -70,6 +73,7 @@ export default async function SettingsPage({
     permissions,
     connectorRecords,
   ] = await Promise.all([
+    flyStatus(),
     settingsService.list(),
     developerModeService.isEnabled(),
     actionService.list({ status: "pending_approval" }, 1, 100),
@@ -109,12 +113,15 @@ export default async function SettingsPage({
       <SettingsSectionNav />
 
       {active === "general" ? (
-      <SettingsSection
+        <SettingsSection
         id="general"
         eyebrow="System configuration"
         title="General"
         description="Product settings and platform capabilities. Environment secrets and remote service URLs never reach this page."
       >
+        {/* Fly is a separate local process, so the app can show its real
+            status and start or stop it rather than leaving that to a terminal. */}
+        <FlyEngineControl initial={fly} />
         <div className="space-y-4">
           <div className="hidden min-[900px]:block">
             <DeveloperModeToggle enabled={developerModeEnabled} />

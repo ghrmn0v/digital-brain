@@ -722,3 +722,61 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   The Electron window had no `icon`, so a launched app presented as a generic
   Electron window in the taskbar and Alt-Tab. It now resolves the brand PNG,
   generated from the existing logo SVG at 256px.
+
+## Task 21 — hub-and-spoke map, Fly control, label contrast, connections
+
+- **Files:** `src/components/connectome/hierarchy.ts` (new),
+  `hierarchy.test.ts` (new), `connectome-canvas.tsx`,
+  `connectome-workspace.tsx`, `src/lib/fly-service.ts` (new),
+  `src/app/api/fly/control/route.ts` (new),
+  `src/components/settings/fly-engine-control.tsx` (new),
+  `src/app/(dashboard)/settings/page.tsx`,
+  `src/lib/access-status.ts` + test,
+  `src/app/(dashboard)/permissions/page.tsx`,
+  `src/app/(dashboard)/connections/page.tsx` (new)
+- **Result:** PASS
+- **Notes:** Four of the five items are done. The de-cluttering pass is not, and
+  the log says so rather than the commit implying otherwise.
+
+  **The map had no structure.** The force layout produced one undifferentiated
+  cloud, so the shape of the data was invisible — you could not see that four of
+  five records were people data and one was a calendar entry. `buildHierarchy`
+  now hangs everything off a single "Main Brain" root through three category
+  hubs. The categories are derived from the `source` each event actually came
+  from, read from the provenance signal the service already attaches, so nothing
+  is invented at render time; an unrecognised source lands in a residual
+  category rather than being dropped, and a test asserts every input node
+  appears exactly once and hangs off exactly one hub. Summarising must not lose
+  records.
+
+  A connected root is not a centred one: the simulation treats every node alike,
+  so the root drifted among its neighbours and the map still read as a cloud.
+  The settled layout is now translated so the root lands in the middle of the
+  frame. Only a translation — the distances the simulation chose are left alone,
+  so nothing overlaps and no edge is stretched. Verified by screenshot.
+
+  **Fly is now controllable from the app.** It is a separate process that Product
+  does not start, so the only honest thing to offer was a real status and a real
+  control, and the status has to be a health probe rather than a config check:
+  "the URL is configured" and "the service is up" are different claims. Start and
+  stop are deliberately narrow — loopback only, a fixed argv so nothing from a
+  request reaches a shell, the Brain's own environment file so Fly inherits the
+  same provider config, and no credential read or returned. Verified end to end:
+  stop killed the pid and freed the port, start relaunched it healthy with 2414
+  neurons, and the validator returns 400 for an unknown verb *and* for an extra
+  field.
+
+  **Label contrast was not the token.** `--graph-text-muted` passes 4.5:1 on the
+  light canvas on its own. What made "Core Brain" and "Fly" unreadable was
+  `opacity={dimmed ? 0.4}` multiplying an already-passing fill down to nothing.
+  Dimming is 0.62 now, the size is rem so the labels sit in the same type ramp as
+  everything else, and the canvas draws the length the label placer actually
+  measured instead of re-cutting to a flat 25 characters.
+
+  `/connections` 404'd. It now redirects to `/permissions`, which is the single
+  source of truth, and a "Local services" group reports the Fly engine and the
+  desktop shell alongside storage, the Brain transport and the policy mix. Fly
+  being down is a `warn`, not a failure: the map, Chat and the Brain all work
+  without it, and rendering an optional service as broken would teach people to
+  ignore the row. The desktop shell is detected from the request's user agent,
+  which is the only evidence a server has about a client it did not launch.

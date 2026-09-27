@@ -9,6 +9,7 @@ import type {
 } from "@/modules/connectome";
 import { CommandBar, CommandSettingsLink, type CommandTarget } from "@/components/connectome/command-bar";
 import { ConnectomeCanvas } from "@/components/connectome/connectome-canvas";
+import { buildHierarchy } from "@/components/connectome/hierarchy";
 import { filterBySource } from "@/components/connectome/graph-filter";
 import { ConnectomeInspector } from "@/components/connectome/connectome-inspector";
 import { ConnectomeTimeline } from "@/components/connectome/connectome-timeline";
@@ -73,6 +74,18 @@ export function ConnectomeWorkspace({
     () => filterBySource(nodes, edges, activeSource),
     [nodes, edges, activeSource],
   );
+
+    /*
+     * The map is drawn as a hub-and-spoke: one Main Brain root, a category
+     * hub per kind of source, and the real records hanging off their hub.
+     * Without this the force layout produced one undifferentiated cloud, so
+     * the shape of the data was invisible.
+     */
+    const graph = useMemo(
+      () => buildHierarchy(visible.nodes, visible.edges),
+      [visible.nodes, visible.edges],
+    );
+
   const selectedId = selection === undefined ? initialNodeId : selection;
   const selected = visible.nodes.find((node) => node.id === selectedId) ?? null;
 
@@ -213,8 +226,8 @@ export function ConnectomeWorkspace({
           <div id="connectome-graph" className="relative min-h-0 flex-1">
             <ConnectomeCanvas
               className="absolute inset-0"
-              nodes={visible.nodes}
-              edges={visible.edges}
+              nodes={graph.nodes}
+              edges={graph.edges}
               selectedId={selectedId}
               onSelect={select}
               focusId={frameId}

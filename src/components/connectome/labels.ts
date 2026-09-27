@@ -25,7 +25,7 @@ export interface LabelBox {
   offsetY: number;
 }
 
-const CHARACTER_WIDTH = 6.1;
+export const CHARACTER_WIDTH = 6.1;
 const LABEL_HEIGHT = 13;
 const PADDING = 3;
 /**

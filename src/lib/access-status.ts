@@ -75,6 +75,23 @@ export interface BrainFacts {
   error?: string;
 }
 
+export interface ServicesFacts {
+  /** The Fly 3D behaviour engine, probed rather than assumed. */
+  fly: {
+    reachable: boolean;
+    service: string | null;
+    neurons: number | null;
+    flightMode: boolean | null;
+    error: string | null;
+  };
+  /**
+   * Whether this request came from the Electron shell. Read from the user agent
+   * because that is the only signal the server has: the desktop app is a client
+   * of Product, not a process it launches, so there is nothing to inspect.
+   */
+  desktopShell: { detected: boolean; agent: string | null };
+}
+
 export interface PermissionFacts {
   total: number;
   enabled: number;
@@ -86,6 +103,7 @@ export interface PermissionFacts {
 
 export interface AccessStatusInput {
   database: DatabaseFacts;
+  services: ServicesFacts;
   gemini: GeminiFacts;
   brain: BrainFacts;
   permissions: PermissionFacts;
@@ -230,6 +248,34 @@ function brainChecks(input: AccessStatusInput): AccessCheck[] {
   ];
 }
 
+function servicesChecks(input: AccessStatusInput): AccessCheck[] {
+  const { fly, desktopShell } = input.services;
+  return [
+    {
+      id: "fly-engine",
+      label: "Fly 3D engine",
+      state: fly.reachable ? "ok" : "warn",
+      detail: fly.reachable
+        ? `The Fly behaviour engine answered its health probe${
+            fly.neurons ? ` with ${fly.neurons.toLocaleString("en-US")} neurons` : ""
+          }${fly.flightMode ? " and flight mode on" : ""}.`
+        : `The Fly engine did not answer on port 8601${
+            fly.error ? `: ${fly.error}` : ""
+          }. The map and chat do not need it; the 3D view does.`,
+      value: fly.reachable ? (fly.service ?? "Running") : "Not running",
+    },
+    {
+      id: "desktop-shell",
+      label: "Desktop shell",
+      state: desktopShell.detected ? "ok" : "unknown",
+      detail: desktopShell.detected
+        ? "This request came from the Electron desktop shell, which is loading the same interface in a native window."
+        : "This request came from a browser. The desktop shell is optional and serves the same routes.",
+      value: desktopShell.detected ? "Electron" : "Browser",
+    },
+  ];
+}
+
 function permissionChecks(input: AccessStatusInput): AccessCheck[] {
   const { permissions } = input;
   const enforced = permissions.automatic + permissions.askFirst;
@@ -278,6 +324,12 @@ export function deriveAccessStatus(input: AccessStatusInput): AccessStatus {
       title: "Gemini environment",
       description: "Who holds the model credential, without revealing it",
       checks: geminiChecks(input),
+    },
+    {
+      id: "services",
+      title: "Local services",
+      description: "The optional processes this workspace can talk to",
+      checks: servicesChecks(input),
     },
     {
       id: "brain",

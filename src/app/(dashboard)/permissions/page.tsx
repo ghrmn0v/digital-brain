@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/ui";
 import { deriveAccessStatus } from "@/lib/access-status";
 import { permissionService } from "@/modules/permissions";
 import { taskService } from "@/modules/tasks";
+import { flyStatus } from "@/lib/fly-service";
+import { headers } from "next/headers";
 
 export const metadata: Metadata = { title: "Permissions" };
 
@@ -95,17 +97,33 @@ async function probeBrain() {
 }
 
 export default async function PermissionsPage() {
-  const [permissions, database, brain] = await Promise.all([
+  const [permissions, database, brain, fly] = await Promise.all([
     permissionService.list({}),
     probeDatabase(),
     probeBrain(),
+    flyStatus(),
   ]);
+
+  // The desktop shell is a client of this server, so the only evidence it is
+  // driving the app is the user agent on the request that rendered the page.
+  const agent = (await headers()).get("user-agent") ?? null;
+  const desktopShell = { detected: /Electron/i.test(agent ?? ""), agent };
 
   const sources = new Set(permissions.map((permission) => permission.source));
   const enabled = permissions.filter((permission) => permission.enabled);
 
   const status = deriveAccessStatus({
     database,
+    services: {
+      fly: {
+        reachable: fly.reachable,
+        service: fly.service,
+        neurons: fly.neurons,
+        flightMode: fly.flightMode,
+        error: fly.error,
+      },
+      desktopShell,
+    },
     gemini: {
       // Presence only, never the value. The credential belongs to the Brain and
       // this page deliberately does not open its environment file to find out

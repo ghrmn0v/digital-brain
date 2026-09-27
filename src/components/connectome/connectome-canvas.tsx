@@ -18,7 +18,12 @@ import {
   radiusFor,
   type SimulationNode,
 } from "@/components/connectome/force";
-import { placeLabels } from "@/components/connectome/labels";
+import { ROOT_ID } from "@/components/connectome/hierarchy";
+import {
+  CHARACTER_WIDTH,
+  placeLabels,
+  shortenTo,
+} from "@/components/connectome/labels";
 import {
   edgeStyles,
   nodeStyles,
@@ -119,9 +124,29 @@ export function ConnectomeCanvas({
     [nodes, edges, size.width, size.height],
   );
 
+  /*
+   * Pin the hub root to the middle of the frame.
+   *
+   * The simulation treats every node alike, so a root that is merely well
+   * connected still drifts off-centre among its neighbours and the map reads as
+   * one more cloud. Translating the settled layout so the root lands in the
+   * centre is what makes the hierarchy legible at a glance: the root is where the
+   * eye starts, the category hubs sit around it, and the records fan outward.
+   * Only a translation is applied — the relative distances the simulation chose
+   * are left alone, so nothing overlaps and no edge is stretched.
+   */
+  const centred = useMemo<SimulationNode[]>(() => {
+    const root = placed.find((node) => node.id === ROOT_ID);
+    if (!root) return placed;
+    const dx = size.width / 2 - root.x;
+    const dy = size.height / 2 - root.y;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return placed;
+    return placed.map((node) => ({ ...node, x: node.x + dx, y: node.y + dy }));
+  }, [placed, size.width, size.height]);
+
   const byId = useMemo(
-    () => new Map(placed.map((node) => [node.id, node])),
-    [placed],
+    () => new Map(centred.map((node) => [node.id, node])),
+    [centred],
   );
   const nodeById = useMemo(
     () => new Map(nodes.map((node) => [node.id, node])),
@@ -448,17 +473,22 @@ export function ConnectomeCanvas({
             const style = nodeStyles[node.kind];
             const dimmed =
               focus !== null && !highlighted?.has(node.id) && focus !== node.id;
-            const text =
-              node.label.length > 26 ? `${node.label.slice(0, 25)}…` : node.label;
+            /*
+             * The placer already chose a length that fits its slot, walking a
+             * ladder that keeps the full label when there is room. Re-cutting to
+             * a flat 25 characters here threw that away and drew text narrower
+             * than the box it had been measured against.
+             */
+            const text = shortenTo(node.label, box.width / CHARACTER_WIDTH);
             return (
               <text
                 key={`label-${node.id}`}
                 x={(box.x + box.width / 2) * viewport.zoom + viewport.offsetX}
                 y={(box.y + box.height - 3) * viewport.zoom + viewport.offsetY}
                 textAnchor="middle"
-                fontSize={11}
+                fontSize="0.75rem"
                 fill={style.text}
-                opacity={dimmed ? 0.4 : 0.95}
+                opacity={dimmed ? 0.62 : 0.95}
                 style={{ pointerEvents: "none", userSelect: "none" }}
               >
                 {text}
