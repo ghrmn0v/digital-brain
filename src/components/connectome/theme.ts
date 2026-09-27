@@ -118,10 +118,10 @@ export const nodeStyles: Record<
   thread: {
     label: "Thread",
     short: "THR",
-    fill: "#0C1416",
+    fill: "#0D0D10",
     stroke: palette.accentMuted,
-    halo: "rgba(103, 232, 249, 0.28)",
-    text: "#CFFAFE",
+    halo: "rgba(103, 232, 249, 0.26)",
+    text: palette.text,
     muted: palette.accentMuted,
     description: "Events that share one correlation id.",
   },
@@ -138,11 +138,11 @@ export const nodeStyles: Record<
   proposal: {
     label: "Proposal",
     short: "PRP",
-    fill: "#14141A",
-    stroke: "#A5B4FC",
-    halo: "rgba(165, 180, 252, 0.24)",
-    text: "#E0E7FF",
-    muted: "#A5B4FC",
+    fill: "#101014",
+    stroke: palette.accent,
+    halo: "rgba(34, 211, 238, 0.20)",
+    text: palette.text,
+    muted: palette.accentMuted,
     description: "Something the Brain proposed for a decision.",
   },
 };
@@ -154,7 +154,7 @@ export const edgeStyles: Record<
   emitted: { stroke: "rgba(161, 161, 170, 0.30)", width: 1 },
   threaded: { stroke: "rgba(103, 232, 249, 0.36)", width: 1.25 },
   delivered: { stroke: "rgba(34, 211, 238, 0.28)", width: 1 },
-  proposed: { stroke: "rgba(165, 180, 252, 0.30)", width: 1.25, dash: "3 3" },
+  proposed: { stroke: "rgba(34, 211, 238, 0.26)", width: 1.25, dash: "3 3" },
 };
 
 export const edgeLabels: Record<

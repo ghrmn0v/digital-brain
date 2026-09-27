@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ConnectomeNodeDto } from "@/modules/connectome";
-import { measureLabel, placeLabels } from "@/components/connectome/labels";
+import { measureLabel, placeLabels, shortenTo } from "@/components/connectome/labels";
 
 /**
  * Unreadable text is worse than no text, so these tests pin the property that
@@ -124,6 +124,72 @@ describe("connectome label placement", () => {
       bounds: { width: 400, height: 400 },
     });
     expect(placed.has("mid")).toBe(true);
+  });
+
+  it("keeps a long label whole when the room is there", () => {
+    // The map used to cut every label at 25 characters, so a node sitting in
+    // open space still read "Ayxan will bring the hack…" beside 300px of empty
+    // canvas. Length is now the room's decision, not a global constant.
+    const long = "Ayxan will bring the hackathon demo hardware on Thursday";
+    expect(long.length).toBeGreaterThan(26);
+    const placed = placeLabels({
+      nodes: [node("solo", long)],
+      positions: new Map([["solo", { x: 200, y: 200 }]]),
+      radiusOf,
+      emphasis: new Set(),
+      bounds: { width: 900, height: 600 },
+    });
+    expect(placed.has("solo")).toBe(true);
+    expect(placed.get("solo")!.width).toBe(measureLabel(long).width);
+  });
+
+  it("still shortens a label rather than overflowing the frame", () => {
+    const placed = placeLabels({
+      nodes: [node("edge", "Ayxan will bring the hackathon demo hardware on Thursday")],
+      positions: new Map([["edge", { x: 4, y: 200 }]]),
+      radiusOf,
+      emphasis: new Set(),
+      bounds: { width: 260, height: 400 },
+    });
+    for (const box of placed.values()) {
+      expect(box.x + box.width).toBeLessThanOrEqual(260);
+    }
+  });
+
+  it("never leaves a label ending in a half-written word", () => {
+    // When the source has a space to cut on, the cut must use it.
+    const sentences = [
+      "Ayxan will bring the hackathon demo hardware on Thursday afternoon",
+      "Principal Engineer, hackathon platform at Northwind Labs",
+      "Possible null reference on the connectome timeline renderer",
+    ];
+    for (const text of sentences) {
+      for (const limit of [44, 34, 26]) {
+        const out = shortenTo(text, limit);
+        if (out === text) continue;
+        expect(out.endsWith("…"), `${limit}: ${out}`).toBe(true);
+        const body = out.slice(0, -1);
+        expect(text.startsWith(body), `${limit}: ${out}`).toBe(true);
+        // The cut lands on a boundary and trailing punctuation is then tidied
+        // away, so what follows is a space *or* the punctuation that was
+        // stripped — "Principal Engineer," shortens to "Principal Engineer…".
+        expect(/[\s,;:.-]/.test(text[body.length] ?? ""), `${limit}: ${out}`).toBe(true);
+      }
+    }
+  });
+
+  it("marks the cut when a label is one unbroken token with nowhere to break", () => {
+    // There is no word boundary inside a 53-character token, so the cut is hard.
+    // What matters is that it is marked, so it cannot be read as complete.
+    const monster = "supercalifragilisticexpialidociousandthensomemorewords";
+    const out = shortenTo(monster, 26);
+    expect(out.endsWith("…")).toBe(true);
+    expect(monster.startsWith(out.slice(0, -1))).toBe(true);
+  });
+
+  it("returns short labels untouched", () => {
+    expect(shortenTo("Core Brain", Number.POSITIVE_INFINITY)).toBe("Core Brain");
+    expect(shortenTo("Core Brain", 26)).toBe("Core Brain");
   });
 
   it("measures a label wide enough to read and truncates very long ones", () => {

@@ -28,6 +28,29 @@ export interface LabelBox {
 const CHARACTER_WIDTH = 6.1;
 const LABEL_HEIGHT = 13;
 const PADDING = 3;
+/**
+ * Longest-first ladder of label lengths.
+ *
+ * The map used to cut every label at 25 characters regardless of how much room
+ * the node actually had, so a node on the edge of a wide frame read
+ * "Ayxan will bring the hack…" next to 300px of empty canvas. A node in the
+ * middle of a dense cluster needed the cut; most did not. Trying the full label
+ * first and shortening only when a candidate slot is genuinely blocked lets the
+ * room decide, which is the difference between a map you can read at a glance
+ * and one you have to lean into.
+ */
+const LENGTH_LADDER = [Number.POSITIVE_INFINITY, 44, 34, 26] as const;
+
+/** Trim to a length, cutting on a word boundary so no word is halved. */
+export function shortenTo(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+  const clipped = text.slice(0, limit);
+  const boundary = clipped.lastIndexOf(" ");
+  // Only honour the boundary when it keeps most of the budget, or short labels
+  // lose their meaning to keep one word whole.
+  const cut = boundary >= limit * 0.6 ? clipped.slice(0, boundary) : clipped;
+  return `${cut.replace(/[\s,;:.-]+$/, "")}…`;
+}
 
 export function measureLabel(text: string): { width: number; height: number } {
   return {
@@ -98,54 +121,61 @@ export function placeLabels(options: {
     if (!point) continue;
     void radiusOf(node);
 
-    const text = node.label.length > 26 ? `${node.label.slice(0, 25)}…` : node.label;
-    const { width, height } = measureLabel(text);
     const radius = radiusOf(node);
 
-    // Try below the node first, then above, then to each side. A label that
-    // cannot find a free slot anywhere is simply not drawn.
-    const candidates = [
-      { dx: 0, dy: radius + 13 },
-      { dx: 0, dy: -(radius + 13 + height) },
-      { dx: radius + 8, dy: -height / 2 },
-      { dx: -(radius + 8 + width), dy: -height / 2 },
-    ];
+    // Longest first, then progressively shorter. The first variant that finds a
+    // free slot wins, so a label is only cut when the room genuinely is not
+    // there. The ladder is walked per placement rather than decided once for the
+    // whole map, because how much room a node has depends on where the force
+    // layout put it.
+    for (const limit of LENGTH_LADDER) {
+      const size = measureLabel(shortenTo(node.label, limit));
+      // Try below the node, then above, then to each side. A label that cannot
+      // find a free slot anywhere is simply not drawn.
+      const candidates = [
+        { dx: 0, dy: radius + 13 },
+        { dx: 0, dy: -(radius + 13 + size.height) },
+        { dx: radius + 8, dy: -size.height / 2 },
+        { dx: -(radius + 8 + size.width), dy: -size.height / 2 },
+      ];
 
-    for (const candidate of candidates) {
-      const box: LabelBox = {
-        id: node.id,
-        x: point.x + candidate.dx - (candidate.dx < 0 ? 0 : width / 2),
-        y: point.y + candidate.dy,
-        width,
-        height,
-        anchor: point,
-        offsetY: candidate.dy,
-      };
-      if (bounds) {
-        const margin = 4;
-        if (
-          box.x < margin ||
-          box.y < margin ||
-          box.x + box.width > bounds.width - margin ||
-          box.y + box.height > bounds.height - margin
-        ) {
-          continue;
+      for (const candidate of candidates) {
+        const box: LabelBox = {
+          id: node.id,
+          x: point.x + candidate.dx - (candidate.dx < 0 ? 0 : size.width / 2),
+          y: point.y + candidate.dy,
+          width: size.width,
+          height: size.height,
+          anchor: point,
+          offsetY: candidate.dy,
+        };
+        if (bounds) {
+          const margin = 4;
+          if (
+            box.x < margin ||
+            box.y < margin ||
+            box.x + box.width > bounds.width - margin ||
+            box.y + box.height > bounds.height - margin
+          ) {
+            continue;
+          }
         }
+        if ([...placed.values()].some((other) => overlaps(box, other))) continue;
+        // A label that runs across a node circle is just as unreadable as one
+        // that runs across another label, so the discs count as obstacles too.
+        const crossesNode = nodes.some((other) => {
+          const centre = positions.get(other.id);
+          if (!centre) return false;
+          const otherRadius = radiusOf(other);
+          const nearestX = Math.max(box.x, Math.min(centre.x, box.x + box.width));
+          const nearestY = Math.max(box.y, Math.min(centre.y, box.y + box.height));
+          return Math.hypot(centre.x - nearestX, centre.y - nearestY) < otherRadius + 1;
+        });
+        if (crossesNode) continue;
+        placed.set(node.id, box);
+        break;
       }
-      if ([...placed.values()].some((other) => overlaps(box, other))) continue;
-      // A label that runs across a node circle is just as unreadable as one
-      // that runs across another label, so the discs count as obstacles too.
-      const crossesNode = nodes.some((other) => {
-        const centre = positions.get(other.id);
-        if (!centre) return false;
-        const otherRadius = radiusOf(other);
-        const nearestX = Math.max(box.x, Math.min(centre.x, box.x + box.width));
-        const nearestY = Math.max(box.y, Math.min(centre.y, box.y + box.height));
-        return Math.hypot(centre.x - nearestX, centre.y - nearestY) < otherRadius + 1;
-      });
-      if (crossesNode) continue;
-      placed.set(node.id, box);
-      break;
+      if (placed.has(node.id)) break;
     }
   }
 

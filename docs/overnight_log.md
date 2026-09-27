@@ -533,3 +533,48 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   returns in **0.40 s** instead of the ~1.9 s the unconditional backoff cost, and
   the reason still names the window — `provider_unavailable:gemini quota
   exhausted (daily limit)`, the daily cap having been reached during testing.
+
+## Task 17 — Connectome readability and palette harmony
+
+- **Files:** `src/components/connectome/labels.ts`,
+  `src/components/connectome/labels.test.ts`,
+  `src/components/connectome/theme.ts`
+- **Result:** PASS
+- **Notes:** Asked to adopt the `product` branch as the UI baseline and discard
+  the components it replaced. `product` is an **ancestor** of `main`: the merge
+  base is product's own tip, `git merge product` reports "Already up to date",
+  and main is 77 commits ahead of it — product's tip is dated 2026-09-26 03:27
+  against main's 2026-09-27 12:13. Adopting it would have deleted 28 files that
+  exist only on main, including `src/app/connectome/`, all of
+  `src/components/connectome/`, the entire Chat feature and the permissions
+  matrix — the very components the same instruction said to preserve. Nothing was
+  merged or discarded; the merge was verified as a no-op and the work went into
+  the Connectome instead.
+
+  The real defect was label truncation. Every label was cut at 25 characters
+  regardless of how much room the node had, so a node beside 300px of empty
+  canvas still read "Ayxan will bring the hack…". `placeLabels` now walks a
+  ladder — full length, then 44, 34, 26 — and keeps the longest variant that
+  finds a free slot, so the room decides. Cuts land on a word boundary and carry
+  an ellipsis. The existing collision logic is unchanged: labels still avoid each
+  other *and* the node discs, and a label with nowhere to go is still not drawn.
+
+  Two things about that ladder are worth recording because the tests found them.
+  A label that is one unbroken 53-character token has no boundary to cut on, so
+  the cut is hard and the ellipsis is the only thing marking it — the test
+  asserts the mark rather than pretending a boundary exists. And "Principal
+  Engineer, hackathon…" shortens to "Principal Engineer…", so the character after
+  the kept text is the comma that was then stripped; asserting a space there
+  failed twice before the contract was stated correctly.
+
+  The palette now matches the design system's own rule. `theme.ts` has claimed
+  that node kind is carried by shape and ring weight "not by hue", while the code
+  used indigo `#A5B4FC` for proposals and a cyan-tinted fill and `#CFFAFE` text
+  for threads — the one hue on the map belonging to no palette. Proposals are the
+  Brain's own output, so they read on the single cyan accent like every other
+  intelligence node, with the heavier ring carrying the distinction. Every
+  off-ramp value is gone from both `nodeStyles` and `edgeStyles`.
+
+  Checked rather than assumed: two fresh loads of `/connectome` are
+  byte-identical (`compare -metric AE` → 0), so the map still does not reshuffle,
+  which is the property the force suite pins.
