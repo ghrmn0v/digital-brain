@@ -1,27 +1,122 @@
 @import "tailwindcss";
 
+/*
+ * Kariciiniv — self-hosted.
+ *
+ * Drop the licensed font files into `public/fonts/` and they are picked up
+ * automatically. If a file is absent the browser falls through to the next
+ * family in the stack, so a missing font can never break the build.
+ */
+@font-face {
+  font-family: "Kariciiniv";
+  src:
+    url("/fonts/kariciiniv.woff2") format("woff2"),
+    url("/fonts/kariciiniv.woff") format("woff"),
+    url("/fonts/kariciiniv.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  /*
+   * One radius for the whole product, and it is generous: softer corners read
+   * as friendlier. Fully circular shapes (status dots, switch tracks) stay
+   * round because they are functional, not decorative.
+   */
+  --radius-ui: 0.75rem;
+
+  /* Type scale. Body copy is never allowed to drop below 0.875rem. */
+  --text-caption: 0.75rem;
+  --text-body: 0.9375rem;
+  --text-lead: 1.0625rem;
+  --text-title: 1.5rem;
+  --text-display: 1.875rem;
+
+  /*
+   * Dark is the product's real surface. Linear / Vercel family values:
+   * a near-black base, one card layer, one inner-card layer, one hairline.
+   */
+  --background: #0d0e12;
+  --foreground: #f3f4f6;
+  --panel: #16181d;
+  --panel-raised: #1c1f26;
+  --panel-line: #2e333d;
+  --accent: #22d3ee;
+  --accent-strong: #0ea5e9;
+  --accent-soft: #164e63;
+
+  /* Text scale, so switching the theme repaints every screen at once. */
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #8b8f98;
+
+  /*
+   * Status colours are tuned for contrast against --panel, so they are
+   * declared per theme rather than taken from a fixed palette. In dark mode
+   * they are the light tints; in light mode they are the deep shades, because
+   * a 200-weight tint is unreadable on white.
+   */
+  --success: #6ee7b7;
+  --warning: #fcd34d;
+  --danger: #fda4af;
+
+  /* Ink laid on top of a filled accent surface, and the modal scrim. */
+  --accent-ink: #0d0e12;
+  --scrim: #05060899;
+
   color-scheme: dark;
 }
+
+/* Light theme: the same layers, inverted. Toggled by data-theme on <html>. */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --background: #ffffff;
+  --foreground: #18181b;
+  --panel: #fafafa;
+  --panel-raised: #f4f4f5;
+  --panel-line: #e4e4e7;
+  --accent: #0070f3;
+  --accent-strong: #0369d6;
+  --accent-soft: #dbeafe;
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #be123c;
+
+  --accent-ink: #ffffff;
+  --scrim: #0d0e1266;
+}
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
 
-  /*
-   * Two extra steps in the neutral ramp. Tailwind's own zinc-500 and zinc-600
-   * measure 4.0:1 and 2.5:1 against this app's near-black grounds, which fails
-   * WCAG AA for body text, and they were carrying every caption and section
-   * label. There is no passing step between zinc-400 and zinc-500, so the
-   * dimmest legible tier is inserted here rather than flattening the ramp and
-   * losing the distinction between body text and a caption.
-   */
-  --color-zinc-450: #8e8e99;
-  --color-zinc-550: #7e7e8a;
+/*
+ * One corner radius for the whole product.
+ *
+ * Every Tailwind radius scale entry resolves to the same value, so a card, a
+ * button, an input and a chip all share one radius. It is generous on purpose:
+ * softer corners read as friendlier. `rounded-full` is untouched and stays
+ * circular for genuinely round controls.
+ */
+@theme {
+  --radius-xs: 0.75rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 0.75rem;
 }
 
 * {
@@ -38,12 +133,15 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at 78% -10%, rgb(8 145 178 / 0.09), transparent 34rem),
-    radial-gradient(circle at 8% 38%, rgb(76 29 149 / 0.06), transparent 30rem),
-    var(--background);
+  /* Flat surface. No decorative blobs, no purple, no gradient. */
+  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family:
+    "Kariciiniv",
+    var(--font-geist-sans),
+    Arial,
+    Helvetica,
+    sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -63,6 +161,66 @@ textarea,
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * A button that does something must say so before it is pressed. The
+ * pointer names it, and the surface lifts to confirm the target.
+ */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/*
+ * The lift, in one rule.
+ *
+ * Covers <button> and, through .control-button, the anchors that are drawn
+ * as buttons. Navigation links and inline text links are deliberately not
+ * included: a filled surface on those would fight their own active state.
+ *
+ * A gradient layer rather than a background-color, because a button's own
+ * background is set by its variant (a filled accent, a panel, a danger
+ * tint) and one shared rule has to work on all of them without knowing
+ * which. The veil paints over the background and under the label, so it
+ * reads as the surface catching light instead of a colour swap.
+ *
+ * White lifts a dark surface; black lifts a light one. Declaring the veil
+ * as a registered custom property is what lets it animate, since an
+ * untyped custom property would jump.
+ */
+@property --veil {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgb(255 255 255 / 0);
+}
+
+button:not(:disabled),
+.control-button:not([aria-disabled="true"]) {
+  background-image: linear-gradient(var(--veil), var(--veil));
+  transition-property: --veil;
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+@media (hover: hover) {
+  button:not(:disabled):hover,
+  .control-button:not([aria-disabled="true"]):hover {
+    --veil: rgb(255 255 255 / 0.09);
+  }
+}
+
+[data-theme="light"] button:not(:disabled),
+[data-theme="light"] .control-button:not([aria-disabled="true"]) {
+  --veil: rgb(0 0 0 / 0);
+}
+
+[data-theme="light"] button:not(:disabled):hover,
+[data-theme="light"] .control-button:not([aria-disabled="true"]):hover {
+  --veil: rgb(24 24 27 / 0.07);
+}
+
 input[type="date"],
 input[type="datetime-local"],
 input[type="time"] {
@@ -70,7 +228,7 @@ input[type="time"] {
 }
 
 input[type="checkbox"] {
-  accent-color: #22d3ee;
+  accent-color: var(--accent);
 }
 
 ::selection {
@@ -84,17 +242,34 @@ input[type="checkbox"] {
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: var(--background);
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid #09090b;
+  border: 3px solid var(--background);
   border-radius: 999px;
-  background: #3f3f46;
+  background: var(--panel-line);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: var(--text-muted);
+}
+
+/*
+ * A strip that scrolls but has no business showing a bar.
+ *
+ * The section tabs are five short labels, so a horizontal scrollbar along
+ * the bottom of the row is pure noise. Overflow stays, because on a narrow
+ * screen the row still has to reach. Firefox needs its own property, which
+ * scrollbar-width has no webkit equivalent for.
+ */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -106,4 +281,37 @@ input[type="checkbox"] {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * A soft neon halo. It marks a focal element and is never switched on or
+ * off by hover: the halo is a permanent statement about what the element
+ * is, not a reaction to the pointer.
+ */
+.halo {
+  position: relative;
+  isolation: isolate;
+}
+
+.halo::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -1.75rem -2.25rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at center,
+    rgb(34 211 238 / 0.15) 0%,
+    rgb(34 211 238 / 0.06) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/*
+ * The composer is the page's single focus, so it carries a permanent accent
+ * edge. The edge is a plain border, not a shadow: the system uses no shadows.
+ */
+.halo-composer {
+  border-color: rgb(34 211 238 / 0.28);
 }

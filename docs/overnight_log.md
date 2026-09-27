@@ -608,3 +608,58 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   Two regression guards added to the desktop suite, since this is the kind of
   failure no assertion would otherwise notice: the smoke path must bypass the
   lock, and a refused launch must say something.
+
+## Task 19 — merge the friend's product UI (origin/product moved)
+
+- **Files:** 55 changed (21 added, 33 modified, 1 excluded), plus
+  `src/lib/brain-client/http.ts`, `src/components/dashboard-shell.tsx`,
+  `scripts/ui-check.mjs`, `package.json`, `package-lock.json`
+- **Result:** PASS
+- **Notes:** `origin/product` genuinely moved this time — `96bb7a7..0521766`,
+  15 commits — and the branches have really diverged (merge base `96bb7a7f`;
+  15 theirs, 79 ours). The earlier "already up to date" no longer applies, so
+  this was a real merge with 28 conflicts, resolved toward their side per the
+  instruction that their UI becomes the baseline.
+
+  Their branch has no `src/app/connectome/` and no `src/app/api/chat/route.ts`,
+  so a **merge** was essential rather than a file copy: copying their `src/`
+  wholesale would have deleted the Connectome route, the whole Connectome
+  module and the Brain proxy — the exact things the instruction said to
+  preserve. All four verified present after the merge.
+
+  What came in: a new chat shell (`chat/chat-app.tsx`, `brain-idle-view`,
+  `app-menu`), a light/dark theme system (`lib/theme.ts`, `sidebar-theme`,
+  `theme-toggle`), a restructured settings page, an icon barrel, a `/brain`
+  console with `/api/brain/call` and `/api/brain/status`, and fonts. The whole
+  visual language changed — the app is now light-first rather than the
+  monochrome zinc of the last several tasks.
+
+  Two integration bugs had to be fixed for the merge to be sound rather than
+  merely complete.
+
+  **The Brain binding was broken and the UI said so.** Their `HttpBrainClient`
+  appends `/v1/brain` to `baseUrl`, but `CORE_BRAIN_URL` already holds the method
+  endpoint, so every call requested `/v1/brain/v1/brain`, got a 404, and the
+  client reported "endpoint is not a Brain API endpoint" — which reads like a
+  wrong address rather than a doubled path. `/api/brain/status` returned
+  `reachable: false` and the new sidebar showed **"Brain offline"**. The client
+  now normalises the base URL and keeps the method endpoint separately, so both
+  conventions work and the path can never be doubled. Status is now
+  `reachable: true, service: digital-brain, api v1, 19 methods`, and the sidebar
+  reads "Core Brain".
+
+  **The merge silently regressed the drawer.** Their `dashboard-shell.tsx` is
+  the pre-refactor file: a local effect with no Tab trap, `toggleRef.current`
+  read inside the cleanup (the exact bug the shared `useDrawer` hook exists to
+  prevent), and no `tabIndex` on the panel, so `aria-modal` again promised a
+  containment the keyboard did not deliver. The shared hook and the tab stop were
+  restored on top of their new theme-variable markup.
+
+  Two smaller notes. Their `package.json` swaps `lucide-react` for
+  `@phosphor-icons/react`; the latter is already in their committed lockfile, so
+  installing materialised it, but the Connectome and the permissions matrix
+  import lucide directly and exist only on this branch, so `lucide-react` was
+  kept alongside rather than dropping the route we were told to preserve. And
+  `ui-check.mjs` reported `/` and `/chat` as rendering 0 characters — a false
+  failure in my own checker, which assumed a `<main>` element the new
+  full-screen chat layout does not have; it now falls back to the body.

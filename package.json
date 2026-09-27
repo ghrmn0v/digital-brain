@@ -28,11 +28,12 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
     "dotenv": "^18.0.3",
     "eventemitter2": "^6.4.9",
-    "lucide-react": "^1.48.0",
+    "lucide-react": "1.48.0",
     "next": "16.3.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -65,5 +66,5 @@
     "deepmerge-ts": "8.0.2",
     "mysql2": "3.24.4"
   },
-    "description": "Local-first Product surface for Cerebro Flow: tasks, calendar, jobs, approvals, automations and connectors, backed by Core Brain memory."
+  "description": "Local-first Product surface for Cerebro Flow: tasks, calendar, jobs, approvals, automations and connectors, backed by Core Brain memory."
 }

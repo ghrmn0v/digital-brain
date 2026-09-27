@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Code2, MonitorSmartphone, ShieldCheck } from "lucide-react";
+import { Code2, MonitorSmartphone, ShieldCheck } from "@/components/icons";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import {
   ButtonSpinner,
@@ -53,7 +53,7 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
       <Panel>
         <SectionHeading
           title="Developer Mode"
-          description="Desktop capability for repository context, developer proposals, permissions, and Fly workflow"
+          description="Desktop workspace for developer context and proposals"
           action={
             <Switch
               checked={active}
@@ -65,35 +65,35 @@ export function DeveloperModeToggle({ enabled }: { enabled: boolean }) {
         />
         <div className="grid gap-4 p-5 md:grid-cols-3">
           <div className="flex gap-3">
-            <Code2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+            <Code2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
             <div>
-              <p className="text-sm font-semibold text-zinc-200">Desktop only</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-450">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Desktop only</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                 The full workspace and developer actions never appear on mobile.
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <MonitorSmartphone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+            <MonitorSmartphone aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
             <div>
-              <p className="text-sm font-semibold text-zinc-200">Shared information</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-450">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">Shared information</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                 Mobile keeps read-only access to Core Brain developer updates.
               </p>
             </div>
           </div>
           <div className="flex gap-3">
-            <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+            <ShieldCheck aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--warning)]" />
             <div>
-              <p className="text-sm font-semibold text-zinc-200">No auto-fix</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-450">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">No auto-fix</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                 Approval records a proposal only; no Git, test, or deployment action runs.
               </p>
             </div>
           </div>
         </div>
         {pending ? (
-          <div className="flex items-center gap-2 border-t border-zinc-800 px-5 py-3 text-xs text-cyan-200">
+          <div className="flex items-center gap-2 border-t border-[var(--panel-line)] px-5 py-3 text-xs text-[var(--accent)]">
             <ButtonSpinner /> Saving desktop capability
           </div>
         ) : null}

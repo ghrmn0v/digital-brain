@@ -12,7 +12,7 @@ import {
   MapPin,
   Send,
   Sparkles,
-} from "lucide-react";
+} from "@/components/icons";
 import type { JobDto, JobStatus } from "@/modules/jobs/contracts";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import { formatDate, formatDateTime } from "@/lib/client/format";
@@ -80,16 +80,16 @@ function JobCard({
             <Badge tone="info">{job.source}</Badge>
             <StatusBadge status={job.status} />
             {job.publishedAt ? (
-              <span className="text-xs text-zinc-450">
+              <span className="text-xs text-[var(--text-muted)]">
                 Published {formatDate(job.publishedAt)}
               </span>
             ) : null}
           </div>
-          <h3 className="mt-3 break-words text-base font-semibold text-zinc-100">
+          <h3 className="mt-3 break-words text-base font-semibold text-[var(--text-primary)]">
             {job.title}
           </h3>
-          <p className="mt-1 text-sm font-medium text-zinc-400">{job.company}</p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-450">
+          <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">{job.company}</p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--text-muted)]">
             {job.location ? (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
@@ -110,21 +110,21 @@ function JobCard({
               {job.skills.slice(0, 8).map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-2 py-1 text-[11px] text-zinc-400"
+                  className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)] px-2 py-1 text-[11px] text-[var(--text-secondary)]"
                 >
                   {skill}
                 </span>
               ))}
               {job.skills.length > 8 ? (
-                <span className="px-1 py-1 text-[11px] text-zinc-550">
+                <span className="px-1 py-1 text-[11px] text-[var(--text-muted)]">
                   +{job.skills.length - 8} more
                 </span>
               ) : null}
             </div>
           ) : null}
           {relevanceReason ? (
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-cyan-400/15 bg-cyan-400/[0.06] px-3 py-2.5 text-sm leading-6 text-cyan-100/80">
-              <Sparkles aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-[var(--accent)]/15 bg-[var(--accent)]/[0.06] px-3 py-2.5 text-sm leading-6 text-[var(--accent)]/80">
+              <Sparkles aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
               <p>{relevanceReason}</p>
             </div>
           ) : null}
@@ -144,7 +144,7 @@ function JobCard({
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-zinc-800/70 pt-4">
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--panel-line)]/70 pt-4">
         {jobActions.map((action) => {
           const Icon = action.icon;
           const active = job.status === action.status;
@@ -158,7 +158,7 @@ function JobCard({
               aria-label={`${action.label} ${job.title} at ${job.company}`}
             >
               {active ? (
-                <Check aria-hidden="true" className="h-4 w-4 text-emerald-300" />
+                <Check aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />
               ) : (
                 <Icon aria-hidden="true" className="h-4 w-4" />
               )}
@@ -205,17 +205,17 @@ export function JobsManager({ jobs }: { jobs: JobDto[] }) {
       <Panel>
         <SectionHeading
           title="Job inbox"
-          description="Review source records, open the original posting, and keep local workflow state"
+          description="Review records and open the original posting"
           action={
             pendingId ? (
-              <span className="inline-flex items-center gap-2 text-xs text-cyan-200">
+              <span className="inline-flex items-center gap-2 text-xs text-[var(--accent)]">
                 <ButtonSpinner /> Updating
               </span>
             ) : null
           }
         />
         {jobs.length > 0 ? (
-          <div className="divide-y divide-zinc-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {jobs.map((job) => (
               <JobCard
                 key={`${job.id}:${job.status}:${job.updatedAt}`}
@@ -229,7 +229,7 @@ export function JobsManager({ jobs }: { jobs: JobDto[] }) {
           <EmptyState
             icon={BriefcaseBusiness}
             title="No jobs match this view"
-            description="No local job records match these filters. Change the source or status, or wait for a connector to ingest a real posting."
+            description="No jobs match. Change a filter, or ingest a posting."
           />
         )}
       </Panel>

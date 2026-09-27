@@ -1,4 +1,4 @@
-import { AlertTriangle, Bug, Code2, FileCode2, RadioTower } from "lucide-react";
+import { AlertTriangle, Bug, Code2, FileCode2, RadioTower } from "@/components/icons";
 import { JsonViewer } from "@/components/json-viewer";
 import {
   Badge,
@@ -26,28 +26,28 @@ export function DeveloperInformationFeed({
         title="Developer information"
         description="Read-only Core Brain updates shared with desktop and mobile"
         action={
-          <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
-            <RadioTower aria-hidden="true" className="h-3.5 w-3.5 text-cyan-300" />
+          <span className="inline-flex items-center gap-2 text-xs text-[var(--text-muted)]">
+            <RadioTower aria-hidden="true" className="h-3.5 w-3.5 text-[var(--accent)]" />
             {items.length} update{items.length === 1 ? "" : "s"}
           </span>
         }
       />
       {items.length > 0 ? (
-        <div className="divide-y divide-zinc-800/80">
+        <div className="divide-y divide-[var(--panel-line)]/80">
           {items.map((item) => {
             const proposal = item.proposal;
             return (
               <article key={item.eventId} className="space-y-4 p-5 sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex min-w-0 gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-300/20 bg-amber-300/10 text-amber-200">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--warning)]/20 bg-[var(--warning)]/10 text-[var(--warning)]">
                       <Bug aria-hidden="true" className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-450">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
                         {item.type}
                       </p>
-                      <h3 className="mt-1 break-words text-base font-semibold text-white">
+                      <h3 className="mt-1 break-words text-base font-semibold text-[var(--text-primary)]">
                         {proposal?.title ?? "Developer event"}
                       </h3>
                     </div>
@@ -64,13 +64,13 @@ export function DeveloperInformationFeed({
 
                 {proposal ? (
                   <>
-                    <div className="grid gap-3 rounded-xl border border-zinc-800 bg-zinc-950/45 p-4 text-sm sm:grid-cols-2">
-                      <div className="flex items-center gap-2 text-zinc-400">
-                        <Code2 aria-hidden="true" className="h-4 w-4 text-zinc-550" />
+                    <div className="grid gap-3 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/60 p-4 text-sm sm:grid-cols-2">
+                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                        <Code2 aria-hidden="true" className="h-4 w-4 text-[var(--text-muted)]" />
                         <span className="min-w-0 break-words">{proposal.repository}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-zinc-400">
-                        <FileCode2 aria-hidden="true" className="h-4 w-4 text-zinc-550" />
+                      <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                        <FileCode2 aria-hidden="true" className="h-4 w-4 text-[var(--text-muted)]" />
                         <span className="min-w-0 break-words font-mono text-xs">
                           {proposal.file}
                           {proposal.line === null
@@ -81,10 +81,10 @@ export function DeveloperInformationFeed({
                         </span>
                       </div>
                     </div>
-                    <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-[var(--text-primary)]">
                       {proposal.message}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-zinc-450">
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                       <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
                       Explanation and title are displayed exactly as supplied by Core Brain.
                     </div>
@@ -100,7 +100,7 @@ export function DeveloperInformationFeed({
         <EmptyState
           icon={Bug}
           title="No developer information yet"
-          description="Core Brain developer events will appear here without exposing local analysis to the client."
+          description="Core Brain developer events appear here"
         />
       )}
     </Panel>

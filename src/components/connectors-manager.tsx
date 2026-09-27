@@ -10,7 +10,7 @@ import {
   MessageCircle,
   PlugZap,
   Send,
-} from "lucide-react";
+} from "@/components/icons";
 import type { ConnectorDto } from "@/modules/connectors/contracts";
 import { Switch } from "@/components/switch";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
@@ -76,18 +76,18 @@ function ConnectorCard({
   return (
     <article className="relative overflow-hidden p-5">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800/75 text-zinc-300">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/75 text-[var(--text-primary)]">
           <Icon aria-hidden="true" className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-sm font-semibold text-zinc-100">
+            <h3 className="break-words text-sm font-semibold text-[var(--text-primary)]">
               {connector.name}
             </h3>
             <StatusBadge status={connector.status} />
             {enabled ? <Badge tone="success">Enabled</Badge> : <Badge>Inactive</Badge>}
           </div>
-          <p className="mt-1.5 font-mono text-xs text-zinc-450">
+          <p className="mt-1.5 font-mono text-xs text-[var(--text-muted)]">
             {connector.type} · v{connector.version}
           </p>
         </div>
@@ -102,10 +102,10 @@ function ConnectorCard({
         </div>
       </div>
 
-      <dl className="mt-5 grid gap-4 border-t border-zinc-800/70 pt-4 text-xs sm:grid-cols-2">
+      <dl className="mt-5 grid gap-4 border-t border-[var(--panel-line)]/70 pt-4 text-xs sm:grid-cols-2">
         <div>
-          <dt className="font-medium text-zinc-550">Last sync</dt>
-          <dd className="mt-1.5 text-zinc-300">
+          <dt className="font-medium text-[var(--text-muted)]">Last sync</dt>
+          <dd className="mt-1.5 text-[var(--text-primary)]">
             {connector.lastSyncAt ? (
               <time dateTime={connector.lastSyncAt} title={formatDateTime(connector.lastSyncAt)}>
                 {formatDateTime(connector.lastSyncAt)}
@@ -116,12 +116,12 @@ function ConnectorCard({
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-zinc-550">Last error</dt>
+          <dt className="font-medium text-[var(--text-muted)]">Last error</dt>
           <dd
             className={
               connector.lastError
-                ? "mt-1.5 break-words leading-5 text-rose-300"
-                : "mt-1.5 text-zinc-400"
+                ? "mt-1.5 break-words leading-5 text-[var(--danger)]"
+                : "mt-1.5 text-[var(--text-secondary)]"
             }
           >
             {connector.lastError || "No connector error recorded"}
@@ -177,17 +177,17 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
       {success ? <SuccessBanner message={success} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Seeded</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{connectors.length}</p>
+        <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Seeded</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{connectors.length}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Enabled</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{enabled}</p>
+        <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Enabled</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{enabled}</p>
         </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/55 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-550">Healthy</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{healthy}</p>
+        <div className="rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/55 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">Healthy</p>
+          <p className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{healthy}</p>
         </div>
       </div>
 
@@ -196,14 +196,14 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
           title="Connector registry"
           description="Real connector records from the local database"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
+            <span className="inline-flex items-center gap-2 text-xs text-[var(--text-muted)]">
               <LockKeyhole aria-hidden="true" className="h-3.5 w-3.5" />
               Secrets hidden
             </span>
           }
         />
         {connectors.length > 0 ? (
-          <div className="grid gap-px bg-zinc-800 lg:grid-cols-2">
+          <div className="grid gap-px bg-[var(--panel-raised)] lg:grid-cols-2">
             {connectors.map((connector) => (
               <ConnectorCard
                 key={`${connector.id}:${connector.enabled}:${connector.updatedAt}`}
@@ -217,7 +217,7 @@ export function ConnectorsManager({ connectors }: { connectors: ConnectorView[] 
           <EmptyState
             icon={PlugZap}
             title="No connectors available"
-            description="The local database has no connector records. Seed the registry before enabling integrations."
+            description="No connector records. Seed the registry first."
           />
         )}
       </Panel>

@@ -10,7 +10,7 @@ import {
   Timer,
   Trash2,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 import type { CalendarEventDto } from "@/modules/calendar/contracts";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import {
@@ -62,8 +62,8 @@ function EventCard({
   return (
     <article className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex min-w-0 gap-4">
-        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-cyan-400/15 bg-cyan-400/[0.07] text-cyan-200">
-          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-450">
+        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border border-[var(--accent)]/15 bg-[var(--accent)]/[0.07] text-[var(--accent)]">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
             {new Intl.DateTimeFormat("en-US", { month: "short" }).format(
               new Date(event.startsAt),
             )}
@@ -76,18 +76,18 @@ function EventCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-sm font-semibold text-zinc-100">
+            <h3 className="break-words text-sm font-semibold text-[var(--text-primary)]">
               {event.title}
             </h3>
             <StatusBadge status={event.status} />
             {event.allDay ? <StatusBadge status="all day" /> : null}
           </div>
           {event.description ? (
-            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-zinc-450">
+            <p className="mt-2 line-clamp-3 max-w-3xl text-sm leading-6 text-[var(--text-muted)]">
               {event.description}
             </p>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-450">
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--text-muted)]">
             <span className="inline-flex items-center gap-1.5">
               <Clock3 aria-hidden="true" className="h-3.5 w-3.5" />
               {event.allDay ? (
@@ -265,7 +265,7 @@ export function CalendarManager({
       <Panel>
         <SectionHeading
           title="Add an event"
-          description="Choose a start time and duration; the end time is calculated reliably in this browser’s IANA time zone"
+          description="Pick a start time and duration; end is calculated"
           action={
             <button
               type="button"
@@ -289,7 +289,7 @@ export function CalendarManager({
             className="space-y-5 p-5"
           >
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+              <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
                 <span>Title</span>
                 <input
                   name="title"
@@ -300,8 +300,8 @@ export function CalendarManager({
                   className={inputClassName}
                 />
               </label>
-              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
-                <span>Description <span className="text-zinc-550">optional</span></span>
+              <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
+                <span>Description <span className="text-[var(--text-muted)]">optional</span></span>
                 <input
                   name="description"
                   type="text"
@@ -313,7 +313,7 @@ export function CalendarManager({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+              <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
                 <span>Start date</span>
                 <input
                   name="startDate"
@@ -325,7 +325,7 @@ export function CalendarManager({
                 />
               </label>
               {allDay ? (
-                <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+                <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
                   <span>End date (exclusive)</span>
                   <input
                     name="endDate"
@@ -338,7 +338,7 @@ export function CalendarManager({
                 </label>
               ) : (
                 <>
-                  <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+                  <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
                     <span>Start time</span>
                     <input
                       name="startTime"
@@ -350,7 +350,7 @@ export function CalendarManager({
                       className={inputClassName}
                     />
                   </label>
-                  <label className="space-y-1.5 text-xs font-medium text-zinc-400">
+                  <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
                     <span>Duration</span>
                     <select
                       value={durationMinutes}
@@ -366,9 +366,9 @@ export function CalendarManager({
                       ))}
                     </select>
                   </label>
-                  <label className="space-y-1.5 text-xs font-medium text-zinc-400 sm:col-span-2 lg:col-span-1">
+                  <label className="space-y-1.5 text-xs font-medium text-[var(--text-secondary)] sm:col-span-2 lg:col-span-1">
                     <span>Calculated end time</span>
-                    <div className="flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950/40 px-3.5 text-sm text-cyan-200">
+                    <div className="flex min-h-11 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/60 px-3.5 text-sm text-[var(--accent)]">
                       <Timer aria-hidden="true" className="h-4 w-4" />
                       {timedEndPreview
                         ? formatTime(timedEndPreview.toISOString())
@@ -380,17 +380,17 @@ export function CalendarManager({
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 text-sm text-zinc-300">
+              <label className="inline-flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)]/50 px-4 text-sm text-[var(--text-primary)]">
                 <input
                   type="checkbox"
                   checked={allDay}
                   onChange={(event) => setAllDay(event.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
+                  className="h-4 w-4 rounded border-[var(--panel-line)] bg-[var(--panel)]"
                 />
                 All-day event
               </label>
               <div className="flex flex-col items-stretch gap-2 sm:items-end">
-                <p className="text-xs text-zinc-450">
+                <p className="text-xs text-[var(--text-muted)]">
                   {allDay
                     ? "The end date is exclusive; the same date creates a one-day event."
                     : `Ends at ${
@@ -430,14 +430,14 @@ export function CalendarManager({
           }
           action={
             pendingAction && pendingAction !== "create" ? (
-              <span className="inline-flex items-center gap-2 text-xs text-cyan-200">
+              <span className="inline-flex items-center gap-2 text-xs text-[var(--accent)]">
                 <ButtonSpinner /> Updating
               </span>
             ) : null
           }
         />
         {events.length > 0 ? (
-          <div className="divide-y divide-zinc-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {events.map((event) => (
               <EventCard
                 key={`${event.id}:${event.status}:${event.updatedAt}`}
@@ -451,7 +451,7 @@ export function CalendarManager({
           <EmptyState
             icon={CalendarPlus}
             title="No events match this view"
-            description="Create a new event above or clear the filters to see the complete local calendar."
+            description="Create an event above to see it here"
           />
         )}
       </Panel>

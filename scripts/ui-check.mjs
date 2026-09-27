@@ -142,7 +142,11 @@ async function checkRoutes(cdp, failures) {
     const rendered = JSON.parse(
       await cdp.evaluate(`JSON.stringify({
         h1: (document.querySelector('h1')?.textContent ?? document.title ?? '').trim().slice(0, 60),
-        chars: (document.querySelector('main')?.innerText ?? '').trim().length,
+        // Fall back to the body when a layout has no <main>. The full-screen
+        // chat shell is one, and measuring <main> alone reported a page that
+        // was rendering perfectly as "0 characters" — a false failure caused
+        // by the checker's assumption rather than by the page.
+        chars: (document.querySelector('main')?.innerText ?? document.body.innerText ?? '').trim().length,
       })`),
     );
     const issues = [

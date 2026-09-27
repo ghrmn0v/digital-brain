@@ -1,36 +1,35 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import type { ProductIcon } from "@/components/icons";
 import {
   AlertCircle,
   AlertTriangle,
   CheckCircle2,
   Inbox,
   LoaderCircle,
-} from "lucide-react";
+} from "@/components/icons";
 
-export function cn(
-  ...classes: Array<string | false | null | undefined>
-): string {
+export function cn( ...classes: Array<string | false | null | undefined> ): string {
   return classes.filter(Boolean).join(" ");
 }
 
 export const inputClassName =
-  "min-h-11 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-550 hover:border-zinc-600 focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-12 w-full rounded-lg border border-[var(--panel-line)]/70 bg-[var(--panel)]/60 px-4 py-3 text-[0.9375rem] leading-6 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/70 focus:ring-2 focus:ring-[var(--accent)]/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const selectClassName = cn(
   inputClassName,
-  "appearance-none bg-[linear-gradient(45deg,transparent_50%,#a1a1aa_50%),linear-gradient(135deg,#a1a1aa_50%,transparent_50%)] bg-[length:5px_5px,5px_5px] bg-[position:calc(100%-16px)_50%,calc(100%-11px)_50%] bg-no-repeat pr-9",
+  // Chevron drawn as an inline SVG data URI, so no gradient is involved.
+  "bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%221.5%22%3E%3Cpath%20d%3D%22M4%206l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[position:right_0.75rem_center] bg-no-repeat pr-9",
 );
 
 export const primaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-55";
+  "control-button inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-55";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/80 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "control-button inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)]/80 px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export const dangerButtonClassName =
-  "inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-200 transition hover:border-rose-400/40 hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:cursor-not-allowed disabled:opacity-50";
+  "control-button inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--danger)] transition   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PageHeader({
   eyebrow,
@@ -44,17 +43,17 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-5 border-b border-zinc-800/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-5 border-b border-[var(--panel-line)]/80 pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow ? (
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-3xl">
           {title}
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
           {description}
         </p>
       </div>
@@ -74,8 +73,7 @@ export function Panel({
 }) {
   return (
     <Component
-      className={cn(
-        "rounded-xl border border-zinc-800/90 bg-zinc-900/55",
+      className={cn( "rounded-lg border border-[var(--panel-line)]/90 bg-[var(--panel)]/55 backdrop-blur-sm",
         className,
       )}
     >
@@ -94,11 +92,15 @@ export function SectionHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-zinc-800/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
+    <div className="flex flex-col gap-4 border-b border-[var(--panel-line)]/70 px-6 py-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+      <div className="min-w-0">
+        <h2 className="text-[1.0625rem] font-semibold leading-7 text-[var(--text-primary)]">
+          {title}
+        </h2>
         {description ? (
-          <p className="mt-1 text-xs leading-5 text-zinc-450">{description}</p>
+          <p className="mt-1.5 max-w-prose text-[0.9375rem] leading-7 text-[var(--text-secondary)]">
+            {description}
+          </p>
         ) : null}
       </div>
       {action}
@@ -109,19 +111,19 @@ export function SectionHeading({
 type BadgeTone = "neutral" | "info" | "success" | "warning" | "danger";
 
 const badgeToneClasses: Record<BadgeTone, string> = {
-  neutral: "border-zinc-700 bg-zinc-800/70 text-zinc-300",
-  info: "border-cyan-400/20 bg-cyan-400/10 text-cyan-200",
-  success: "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
-  warning: "border-amber-400/20 bg-amber-400/10 text-amber-200",
-  danger: "border-rose-400/20 bg-rose-400/10 text-rose-200",
+  neutral: "border-[var(--panel-line)] bg-[var(--panel-raised)] text-[var(--text-primary)]",
+  info: "border-[var(--accent)]/20 bg-[var(--accent)]/10 text-[var(--accent)]",
+  success: "border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success)]",
+  warning: "border-[var(--warning)]/20 bg-[var(--warning)]/10 text-[var(--warning)]",
+  danger: "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]",
 };
 
 const badgeDotClasses: Record<BadgeTone, string> = {
-  neutral: "bg-zinc-400",
-  info: "bg-cyan-300",
-  success: "bg-emerald-300",
-  warning: "bg-amber-300",
-  danger: "bg-rose-300",
+  neutral: "bg-[var(--text-muted)]",
+  info: "bg-[var(--accent)]",
+  success: "bg-[var(--success)]",
+  warning: "bg-[var(--warning)]",
+  danger: "bg-[var(--danger)]",
 };
 
 export function Badge({
@@ -135,10 +137,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={cn(
-        "inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide",
-        badgeToneClasses[tone],
-      )}
+      className={cn( "inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-wide", badgeToneClasses[tone], )}
     >
       {dot ? (
         <span
@@ -200,16 +199,16 @@ export function EmptyState({
 }: {
   title: string;
   description: string;
-  icon?: LucideIcon;
+  icon?: ProductIcon;
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center px-6 py-12 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-800/60 text-zinc-400">
+    <div className="flex flex-col items-center px-6 py-12">
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-[var(--panel-line)] bg-[var(--panel-raised)] text-[var(--text-secondary)]">
         <Icon aria-hidden="true" className="h-5 w-5" />
       </div>
-      <h3 className="mt-4 text-sm font-semibold text-zinc-200">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-450">
+      <h3 className="mt-4 text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+      <p className="mt-1 max-w-sm text-sm leading-6 text-[var(--text-muted)]">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}
@@ -229,20 +228,20 @@ export function ErrorBanner({
   return (
     <div
       role="alert"
-      className="flex flex-col gap-3 rounded-xl border border-rose-400/25 bg-rose-500/[0.08] px-4 py-3 text-sm text-rose-100 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/[0.08] px-4 py-3 text-sm text-[var(--danger)] sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="flex min-w-0 items-start gap-3">
         <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
           <p className="font-semibold">{title}</p>
-          <p className="mt-0.5 break-words text-rose-200/80">{message}</p>
+          <p className="mt-0.5 break-words text-[var(--danger)]/80">{message}</p>
         </div>
       </div>
       {onRetry ? (
         <button
           type="button"
           onClick={onRetry}
-          className="shrink-0 rounded-lg border border-rose-300/20 px-3 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300/50"
+          className="shrink-0 rounded-lg border border-[var(--danger)]/20 px-3 py-1.5 text-xs font-semibold text-[var(--danger)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)]/50"
         >
           Try again
         </button>
@@ -255,7 +254,7 @@ export function SuccessBanner({ message }: { message: string }) {
   return (
     <div
       role="status"
-      className="flex items-start gap-3 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.08] px-4 py-3 text-sm text-emerald-100"
+      className="flex items-start gap-3 rounded-lg border border-[var(--success)]/20 bg-[var(--success)]/[0.08] px-4 py-3 text-sm text-[var(--success)]"
     >
       <CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
       <p>{message}</p>
@@ -273,12 +272,7 @@ export function InlineNotice({
   const Icon = tone === "warning" ? AlertTriangle : AlertCircle;
   return (
     <div
-      className={cn(
-        "flex items-start gap-3 rounded-xl border px-4 py-3 text-sm",
-        tone === "warning"
-          ? "border-amber-400/20 bg-amber-400/[0.07] text-amber-100"
-          : "border-cyan-400/20 bg-cyan-400/[0.07] text-cyan-100",
-      )}
+      className={cn( "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm", tone === "warning" ? "border-[var(--warning)]/20 bg-[var(--warning)]/[0.07] text-[var(--warning)]" : "border-[var(--accent)]/20 bg-[var(--accent)]/[0.07] text-[var(--accent)]", )}
     >
       <Icon aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="leading-6">{children}</div>
@@ -296,28 +290,28 @@ export function MetricCard({
   label: string;
   value: number | string;
   detail: string;
-  icon: LucideIcon;
+  icon: ProductIcon;
   href: string;
 }) {
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-450">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">
           {label}
         </p>
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700/80 bg-zinc-800/70 text-zinc-400 transition group-hover:border-cyan-400/20 group-hover:text-cyan-300">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--panel-line)]/80 bg-[var(--panel-raised)] text-[var(--text-secondary)]">
           <Icon aria-hidden="true" className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-5 text-3xl font-semibold tracking-tight text-white">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-zinc-450">{detail}</p>
+      <p className="mt-5 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">{detail}</p>
     </>
   );
 
   return (
     <Link
       href={href}
-      className="group rounded-2xl border border-zinc-800/90 bg-zinc-900/55 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/25 hover:bg-zinc-900/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+      className="group rounded-lg border border-[var(--panel-line)]/90 bg-[var(--panel)]/55 p-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
     >
       {content}
     </Link>
@@ -334,7 +328,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn("animate-pulse rounded-xl bg-zinc-800/80", className)}
+      className={cn("animate-pulse rounded-lg bg-[var(--panel-raised)]/80", className)}
     />
   );
 }

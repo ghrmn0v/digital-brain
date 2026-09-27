@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Braces, Save, Settings2, Trash2 } from "lucide-react";
+import { Braces, Save, Settings2, Trash2 } from "@/components/icons";
 import type { SettingDto } from "@/modules/settings/contracts";
 import { apiRequest, getErrorMessage } from "@/lib/client/api";
 import { formatDateTime } from "@/lib/client/format";
@@ -87,10 +87,10 @@ function SettingEditor({
       <form onSubmit={save}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="break-all font-mono text-sm font-semibold text-cyan-200">
+            <h3 className="break-all font-mono text-sm font-semibold text-[var(--accent)]">
               {setting.key}
             </h3>
-            <p className="mt-1 text-xs text-zinc-450">
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
               Updated {formatDateTime(setting.updatedAt)}
             </p>
           </div>
@@ -105,7 +105,7 @@ function SettingEditor({
             Delete
           </button>
         </div>
-        <label className="mt-4 block space-y-1.5 text-xs font-medium text-zinc-400">
+        <label className="mt-4 block space-y-1.5 text-xs font-medium text-[var(--text-secondary)]">
           <span>JSON value</span>
           <textarea
             value={valueText}
@@ -117,7 +117,7 @@ function SettingEditor({
           />
         </label>
         {error ? (
-          <p role="alert" className="mt-2 text-xs leading-5 text-rose-300">{error}</p>
+          <p role="alert" className="mt-2 text-xs leading-5 text-[var(--danger)]">{error}</p>
         ) : null}
         <div className="mt-3 flex justify-end">
           <button
@@ -151,14 +151,14 @@ export function SettingsManager({ settings }: { settings: SettingDto[] }) {
           title="Product settings"
           description="Existing JSON-safe values from the local settings registry"
           action={
-            <span className="inline-flex items-center gap-2 text-xs text-zinc-450">
+            <span className="inline-flex items-center gap-2 text-xs text-[var(--text-muted)]">
               <Braces aria-hidden="true" className="h-3.5 w-3.5" />
               {settings.length} {settings.length === 1 ? "setting" : "settings"}
             </span>
           }
         />
         {settings.length > 0 ? (
-          <div className="divide-y divide-zinc-800/80">
+          <div className="divide-y divide-[var(--panel-line)]/80">
             {settings.map((setting) => (
               <SettingEditor
                 key={`${setting.key}:${setting.updatedAt}`}
@@ -173,7 +173,7 @@ export function SettingsManager({ settings }: { settings: SettingDto[] }) {
           <EmptyState
             icon={Settings2}
             title="No product settings"
-            description="The local settings registry is empty. No unverified defaults are invented by this screen."
+            description="No settings. No defaults are invented by this screen."
           />
         )}
       </Panel>

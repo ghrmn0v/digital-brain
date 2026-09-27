@@ -43,6 +43,9 @@ export type FetchLike = (
   text(): Promise<string>;
 }>;
 
+/** The path the method endpoint lives at, relative to the server root. */
+const METHOD_PATH = "/v1/brain";
+
 export interface HttpBrainClientOptions {
   /** Base URL of a running `core.transport.http` server, e.g. `http://127.0.0.1:8765`. */
   readonly baseUrl: string;
@@ -60,6 +63,8 @@ export interface HttpBrainClientOptions {
 
 export class HttpBrainClient {
   readonly baseUrl: string;
+  /** The full method endpoint, with `/v1/brain` present exactly once. */
+  private readonly methodUrl: string;
   readonly userId: string | null;
   readonly supportsEvents = false;
 
@@ -72,7 +77,19 @@ export class HttpBrainClient {
     if (typeof options.baseUrl !== "string" || options.baseUrl.trim() === "") {
       throw new BrainContractError("baseUrl is required");
     }
-    this.baseUrl = options.baseUrl.endsWith("/") ? options.baseUrl.slice(0, -1) : options.baseUrl;
+    const trimmed = options.baseUrl.endsWith("/") ? options.baseUrl.slice(0, -1) : options.baseUrl;
+    /**
+     * Two conventions are in use for this setting, and guessing wrong is silent:
+     * the Brain's own docs pass the *server root* and the client appends
+     * `/v1/brain`, while `CORE_BRAIN_URL` in this project already holds the
+     * method endpoint. Appending unconditionally then asks for
+     * `/v1/brain/v1/brain`, gets a 404, and reports it as "endpoint is not a
+     * Brain API endpoint" — which reads like a wrong address rather than a
+     * doubled path. Both are accepted; the method endpoint is recorded
+     * separately so the two are never derived from each other twice.
+     */
+    this.baseUrl = trimmed.endsWith(METHOD_PATH) ? trimmed.slice(0, -METHOD_PATH.length) : trimmed;
+    this.methodUrl = trimmed.endsWith(METHOD_PATH) ? trimmed : `${trimmed}${METHOD_PATH}`;
     this.userId = options.userId ?? null;
     const injected = options.fetch;
     const platformFetch = (globalThis as { fetch?: FetchLike }).fetch;
@@ -141,7 +158,7 @@ export class HttpBrainClient {
     options: RequestOptions,
   ): Promise<{ readonly id: string; readonly context: string; readonly parsed: unknown }> {
     const prepared = this.builder.prepare(method, params as JsonObject | undefined, options);
-    const url = joinUrl(this.baseUrl, "/v1/brain");
+    const url = this.methodUrl;
     const response = await this.send(
       url,
       "POST",

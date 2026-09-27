@@ -9,7 +9,7 @@ import {
   RadioTower,
   Rocket,
   ShieldCheck,
-} from "lucide-react";
+} from "@/components/icons";
 import { DeveloperInformationFeed } from "@/components/developer-information-feed";
 import { DeveloperProposalsManager } from "@/components/developer-proposals-manager";
 import {
@@ -52,10 +52,10 @@ export default async function DeveloperPage() {
           <Panel className="p-6">
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                   Developer Mode is off
                 </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">
                   Existing product behavior is unchanged. Shared Developer Updates
                   remain available, while the desktop workspace and proposal actions
                   stay inactive.
@@ -73,7 +73,7 @@ export default async function DeveloperPage() {
                 title="Developer execution boundary"
                 description="Preparation only — repository, Git, testing, and deployment ports have no implementation"
               />
-              <div className="grid gap-px bg-zinc-800 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="grid gap-px bg-[var(--panel-raised)] sm:grid-cols-2 xl:grid-cols-5">
                 {[
                   { label: "Core Brain", detail: "Analysis and explanation", icon: BrainCircuit },
                   { label: "Product API", detail: "Validate and persist", icon: Bot },
@@ -83,12 +83,12 @@ export default async function DeveloperPage() {
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} className="bg-zinc-900/70 p-5">
-                      <Icon aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-                      <p className="mt-3 text-sm font-semibold text-zinc-200">
+                    <div key={item.label} className="bg-[var(--panel)]/70 p-5">
+                      <Icon aria-hidden="true" className="h-4 w-4 text-[var(--accent)]" />
+                      <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
                         {item.label}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-450">
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                         {item.detail}
                       </p>
                     </div>
@@ -99,29 +99,29 @@ export default async function DeveloperPage() {
 
             <div className="grid gap-4 sm:grid-cols-3">
               <Panel className="p-5">
-                <Code2 aria-hidden="true" className="h-4 w-4 text-cyan-300" />
-                <p className="mt-3 text-sm font-semibold text-zinc-200">
+                <Code2 aria-hidden="true" className="h-4 w-4 text-[var(--accent)]" />
+                <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
                   Repository context
                 </p>
-                <p className="mt-1 text-xs leading-5 text-zinc-450">
+                <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                   {repositories.length > 0
                     ? repositories.join(", ")
                     : "Waiting for Core Brain repository context"}
                 </p>
               </Panel>
               <Panel className="p-5">
-                <GitBranch aria-hidden="true" className="h-4 w-4 text-amber-300" />
-                <p className="mt-3 text-sm font-semibold text-zinc-200">Git port</p>
-                <p className="mt-1 text-xs leading-5 text-zinc-450">
+                <GitBranch aria-hidden="true" className="h-4 w-4 text-[var(--warning)]" />
+                <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">Git port</p>
+                <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                   Interface prepared; no Git command or mutation is implemented.
                 </p>
               </Panel>
               <Panel className="p-5">
-                <Rocket aria-hidden="true" className="h-4 w-4 text-emerald-300" />
-                <p className="mt-3 text-sm font-semibold text-zinc-200">
+                <Rocket aria-hidden="true" className="h-4 w-4 text-[var(--success)]" />
+                <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
                   Test and deploy ports
                 </p>
-                <p className="mt-1 text-xs leading-5 text-zinc-450">
+                <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
                   Future capabilities only; no test runner or deployment adapter exists.
                 </p>
               </Panel>
