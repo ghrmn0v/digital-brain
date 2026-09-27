@@ -14,6 +14,7 @@ import { ConnectomeInspector } from "@/components/connectome/connectome-inspecto
 import { ConnectomeTimeline } from "@/components/connectome/connectome-timeline";
 import { ContextNav, type SourceFilterItem } from "@/components/connectome/context-nav";
 import { nodeStyles } from "@/components/connectome/theme";
+import { useDrawer } from "@/components/use-drawer";
 
 /**
  * The five-region workspace: command bar, context navigation, graph, timeline
@@ -27,67 +28,6 @@ import { nodeStyles } from "@/components/connectome/theme";
  * The shared focus trap is the one piece worth reading: a drawer that does not
  * manage focus is a drawer keyboard users get stuck behind.
  */
-
-/**
- * Overlay focus management, shared by the navigation and inspector drawers.
- *
- * A drawer that does not move focus is a drawer keyboard users get stranded
- * behind: Tab walks out into the page they cannot see, and Escape does nothing.
- * This pulls focus in, keeps it inside while the overlay is open, locks the
- * page behind it, and hands focus back to the control that opened it.
- */
-function useDrawer(
-  open: boolean,
-  close: () => void,
-  panelRef: React.RefObject<HTMLElement | null>,
-  toggleRef: React.RefObject<HTMLElement | null>,
-) {
-  useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    // Captured now, not in the cleanup, where the ref may already point at a
-    // different node.
-    const toggle = toggleRef.current;
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-
-    const selector =
-      "a[href], button:not([disabled]), input, [tabindex]:not([tabindex='-1'])";
-    const focusFirst = window.requestAnimationFrame(() => {
-      const target = panelRef.current?.querySelector<HTMLElement>(selector);
-      (target ?? panelRef.current)?.focus();
-    });
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        close();
-        return;
-      }
-      if (event.key !== "Tab" || !panelRef.current) return;
-      const focusable = [...panelRef.current.querySelectorAll<HTMLElement>(selector)]
-        .filter((element) => element.offsetParent !== null);
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.cancelAnimationFrame(focusFirst);
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = overflow;
-      (toggle ?? previouslyFocused)?.focus?.();
-    };
-  }, [open, close, panelRef, toggleRef]);
-}
 
 export interface ConnectomeWorkspaceProps {
   nodes: ConnectomeNodeDto[];

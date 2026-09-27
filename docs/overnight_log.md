@@ -252,3 +252,46 @@ Protected paths, never modified: `contracts/schemas/`, `contracts/api/schema.py`
   Rendering was re-checked by screenshot anyway, since JSX text nodes are
   whitespace-sensitive and a careless shift in a text line would compile
   cleanly and still change what a user reads.
+
+## Task 11 — one drawer hook, and a real focus trap on the dashboard
+
+- **Files:** `src/components/use-drawer.ts` (new),
+  `src/components/use-drawer.test.ts` (new),
+  `src/components/connectome/connectome-workspace.tsx`,
+  `src/components/dashboard-shell.tsx`
+- **Result:** PASS
+- **Notes:** The Connectome drawers had a proper focus trap; the dashboard drawer
+  set `aria-modal="true"` and then only moved focus in on open and back to the
+  toggle on close. Tab from the last nav item walked out into the page the user
+  could not see, so the attribute promised a containment the keyboard did not
+  deliver. Rather than copy the trap across, the behaviour moved to
+  `useDrawer` and both shells call it — one implementation, so the next drawer
+  inherits it by default.
+
+  Two defects were fixed in the course of that, both invisible to the type
+  checker. The dashboard's `<aside>` had no `tabIndex`, so the hook's fallback
+  for "no focusable child" targeted an element that cannot receive focus. And
+  the existing hook took `close` as a dependency while every caller passed an
+  inline arrow, so the effect tore down and re-ran on *every* render — and its
+  cleanup restores focus to the toggle, meaning any re-render while a drawer was
+  open would yank the user back to the first item mid-navigation. `close` is now
+  read through a ref and kept out of the dependency list.
+
+  The trap is unit-tested by extracting the only part with real logic in it,
+  `wrapFocus`, as a pure function of `(focusable, active, shiftKey)`. That was
+  forced by the environment rather than chosen for elegance: the suite runs in a
+  node environment with no jsdom, and installing one is not on the table, so
+  anything touching `document.activeElement` or real layout could only ever be
+  checked by hand. The return value distinguishes "wrap to this" from "leave
+  the event alone", which is the part worth pinning — calling `preventDefault`
+  unconditionally would break Tab for every element in the middle of the list.
+
+  Verified end to end, not just by unit test. Node 26 ships a global
+  `WebSocket`, so the DevTools Protocol was driven directly with no new
+  dependency: at 390x844 both drawers were opened, focus confirmed inside, then
+  21 Tab and 3 Shift+Tab presses dispatched. Focus never left the panel in
+  either direction (`insideDrawer` true for every step), Escape closed the
+  drawer, focus returned to the toggle that opened it, and the body scroll lock
+  was released. The Connectome drawer was re-checked the same way after the
+  refactor (20 tabbables, 23 presses, no escape) to confirm the extraction did
+  not regress the shell that already worked.

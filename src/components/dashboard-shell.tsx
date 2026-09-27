@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Bot,
   BrainCircuit,
@@ -30,6 +30,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/components/ui";
+import { useDrawer } from "@/components/use-drawer";
 
 type NavigationItem = {
   href: string;
@@ -218,39 +219,12 @@ export function DashboardShell({
   const toggleRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
-  // A drawer that only closes by tapping the overlay is unusable from the
-  // keyboard. Escape closes it, focus moves in on open and returns to the
-  // toggle on close, and the page behind is locked so a touch drag does not
-  // scroll the content out from under the panel.
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    // Captured now, not in the cleanup: by the time the effect tears down the
-    // ref may already point at a different node, and focusing whatever happens
-    // to be mounted then would drop the caret somewhere arbitrary.
-    const toggle = toggleRef.current;
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
-
-    const focusFirst = window.requestAnimationFrame(() => {
-      const target = drawerRef.current?.querySelector<HTMLElement>(
-        "a[href], button:not([disabled])",
-      );
-      (target ?? drawerRef.current)?.focus();
-    });
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setMobileOpen(false);
-    };
-    document.addEventListener("keydown", onKeyDown);
-
-    return () => {
-      window.cancelAnimationFrame(focusFirst);
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = overflow;
-      (toggle ?? previouslyFocused)?.focus();
-    };
-  }, [mobileOpen]);
+  // Escape closes it, focus moves in on open and returns to the toggle on
+  // close, the page behind is locked so a touch drag cannot scroll the content
+  // out from under the panel, and Tab is kept inside the drawer — without that
+  // last part `aria-modal` promises a containment the keyboard does not
+  // deliver, and Tab walks into a page the user cannot see.
+  useDrawer(mobileOpen, () => setMobileOpen(false), drawerRef, toggleRef);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -302,6 +276,7 @@ export function DashboardShell({
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
+            tabIndex={-1}
             className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-zinc-800 bg-zinc-950 shadow-2xl"
           >
             <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
