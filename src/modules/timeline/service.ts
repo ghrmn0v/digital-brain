@@ -86,7 +86,7 @@ export const timelineService = {
         description: action.error,
         occurredAt: action.requestedAt.toISOString(),
         status: action.status.toLowerCase(),
-        href: "/settings#approvals",
+        href: "/approvals",
         metadata: { source: action.source, permissionLevel: action.permissionLevel },
       })),
       ...integrationEvents.map((event) => ({

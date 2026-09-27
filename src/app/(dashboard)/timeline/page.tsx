@@ -55,7 +55,7 @@ function internalHref(kind: TimelineKind): string | null {
     case "job":
       return "/jobs";
     case "action":
-      return "/settings#approvals";
+      return "/approvals";
     case "event":
       return null;
   }

@@ -127,7 +127,7 @@ export default async function DashboardPage() {
               Review tasks
             </Link>
             <Link
-              href="/settings#approvals"
+              href="/approvals"
               className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
             >
               <CheckCheck aria-hidden="true" className="h-4 w-4" />
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
           value={approvals.pagination.total}
           detail="Actions waiting for an explicit decision"
           icon={CheckCheck}
-          href="/settings#approvals"
+          href="/approvals"
         />
       </section>
 
@@ -350,7 +350,7 @@ export default async function DashboardPage() {
             description="External actions held by ASK_FIRST policy"
             action={
               <Link
-                href="/settings#approvals"
+                href="/approvals"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
               >
                 Decision queue
@@ -394,7 +394,7 @@ export default async function DashboardPage() {
           description="Only operational health and enablement are shown; credentials never enter this view"
           action={
             <Link
-              href="/settings#connectors"
+              href="/connectors"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
             >
               Manage connectors

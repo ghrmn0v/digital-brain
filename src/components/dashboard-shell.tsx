@@ -7,7 +7,6 @@ import {
   Bug,
   BriefcaseBusiness,
   CalendarDays,
-  CheckCheck,
   ChevronRight,
   Code2,
   History,
@@ -17,12 +16,9 @@ import {
   Menu,
   MessageCircle,
   Motor,
-  PlugZap,
   Settings,
-  ShieldCheck,
   Users,
   X,
-  Zap,
   type ProductIcon,
 } from "@/components/icons";
 import { CerebroLogo } from "@/components/brand/cerebro-logo";
@@ -53,23 +49,6 @@ const navigation: NavigationSection[] = [
     ],
   },
   {
-    label: "Control plane",
-    items: [
-      { href: "/settings", label: "Settings", icon: Settings },
-      { href: "/settings#permissions", label: "Permissions", icon: ShieldCheck },
-      { href: "/settings#approvals", label: "Approvals", icon: CheckCheck },
-      { href: "/settings#automations", label: "Automations", icon: Zap },
-      { href: "/settings#connectors", label: "Connectors", icon: PlugZap },
-      {
-        href: "/developer",
-        label: "Developer Mode",
-        icon: Code2,
-        developerModeOnly: true,
-        desktopOnly: true,
-      },
-    ],
-  },
-  {
     label: "Knowledge & system",
     items: [
       { href: "/timeline", label: "Timeline", icon: History },
@@ -81,6 +60,14 @@ const navigation: NavigationSection[] = [
         href: "/developer-information",
         label: "Developer Updates",
         icon: Bug,
+      },
+      { href: "/settings", label: "Settings", icon: Settings },
+      {
+        href: "/developer",
+        label: "Developer Mode",
+        icon: Code2,
+        developerModeOnly: true,
+        desktopOnly: true,
       },
     ],
   },

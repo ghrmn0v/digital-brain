@@ -45,14 +45,14 @@ export function AiOperationsPanel({
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link
-              href="/settings#approvals"
+              href="/approvals"
               className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--accent-ink)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/60"
             >
               Review AI decisions
               <ArrowRight aria-hidden="true" className="h-4 w-4" />
             </Link>
             <Link
-              href="/settings#permissions"
+              href="/permissions"
               className="control-button inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--panel-line)] bg-[var(--panel)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50"
             >
               Control permissions
