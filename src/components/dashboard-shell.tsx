@@ -7,6 +7,7 @@ import {
   Bug,
   BriefcaseBusiness,
   CalendarDays,
+  CheckCheck,
   ChevronRight,
   Code2,
   History,
@@ -16,9 +17,12 @@ import {
   Menu,
   MessageCircle,
   Motor,
+  PlugZap,
   Settings,
+  ShieldCheck,
   Users,
   X,
+  Zap,
   type ProductIcon,
 } from "@/components/icons";
 import { CerebroLogo } from "@/components/brand/cerebro-logo";
@@ -46,6 +50,15 @@ const navigation: NavigationSection[] = [
       { href: "/tasks", label: "Tasks", icon: ListTodo },
       { href: "/calendar", label: "Calendar", icon: CalendarDays },
       { href: "/jobs", label: "Jobs", icon: BriefcaseBusiness },
+    ],
+  },
+  {
+    label: "Control plane",
+    items: [
+      { href: "/approvals", label: "Approvals", icon: CheckCheck },
+      { href: "/automations", label: "Automations", icon: Zap },
+      { href: "/permissions", label: "Permissions", icon: ShieldCheck },
+      { href: "/connectors", label: "Connectors", icon: PlugZap },
     ],
   },
   {
