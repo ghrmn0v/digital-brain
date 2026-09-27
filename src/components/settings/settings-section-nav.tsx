@@ -62,9 +62,9 @@ function subscribe(listener: () => void): () => void {
         if (!current) return;
         publish(current.target.id as SettingsSection);
       },
-      // A band across the upper third: the section the reader is looking
-      // at, not the one that merely touched the viewport.
-      { rootMargin: "-72px 0px -66% 0px", threshold: 0 },
+      // A band just below the nav: the section the reader is looking at,
+      // not the one that merely touched the viewport.
+      { rootMargin: "-52px 0px -70% 0px", threshold: 0 },
     );
   }
 
@@ -139,13 +139,13 @@ export function SettingsSectionNav() {
   return (
     <nav
       aria-label="Settings sections"
-      className="sticky top-16 z-20 -mx-4 border-b border-[var(--panel-line)] bg-[var(--background)]/90 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10"
+      className="sticky top-0 z-20 -mx-4 border-b border-[var(--panel-line)] bg-[var(--background)]/90 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:-mx-10 xl:px-10"
     >
-      <ul className="flex flex-wrap items-center gap-1.5">
+      <ul className="-mb-px flex items-center gap-1 overflow-x-auto">
         {SECTIONS.map((section) => {
           const current = section === activeSection;
           return (
-            <li key={section}>
+            <li key={section} className="shrink-0">
               <a
                 href={`#${section}`}
                 aria-current={current ? "true" : undefined}
@@ -158,8 +158,10 @@ export function SettingsSectionNav() {
                 }}
                 className={
                   current
-                    ? "inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1.5 text-[0.8125rem] font-semibold text-[var(--accent)]"
-                    : "inline-flex min-h-9 items-center gap-2 rounded-lg border border-[var(--panel-line)] px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--text-secondary)]"
+                    ? // The 2px underline sits on the container's border, so
+                      // the active tab marks itself without moving anything.
+                      "-mb-px inline-flex min-h-12 items-center gap-2 border-b-2 border-[var(--accent)] px-3 text-[0.8125rem] font-semibold text-[var(--text-primary)]"
+                    : "-mb-px inline-flex min-h-12 items-center gap-2 border-b-2 border-transparent px-3 text-[0.8125rem] font-medium text-[var(--text-secondary)]"
                 }
               >
                 {LABELS[section]}

@@ -22,6 +22,7 @@ import {
   type ProductIcon,
 } from "@/components/icons";
 import { CerebroLogo } from "@/components/brand/cerebro-logo";
+import { SidebarTheme } from "@/components/sidebar-theme";
 import { cn } from "@/components/ui";
 
 type NavigationItem = {
@@ -206,11 +207,12 @@ export function DashboardShell({
         Skip to content
       </a>
 
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-[var(--panel-line)] bg-[var(--panel)] lg:flex">
-        <div className="flex h-20 items-center border-b border-[var(--panel-line)]/80 px-5">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden h-screen w-64 flex-col border-r border-[var(--panel-line)] bg-[var(--panel)] lg:flex">
+        <div className="flex h-20 shrink-0 items-center border-b border-[var(--panel-line)]/80 px-5">
           <Brand />
         </div>
         <Navigation developerModeEnabled={developerModeEnabled} />
+        <SidebarTheme />
       </aside>
 
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--panel-line)]/80 bg-[var(--background)]/85 px-4 backdrop-blur-xl lg:hidden">
